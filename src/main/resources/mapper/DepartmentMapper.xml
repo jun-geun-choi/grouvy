@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.department.mapper.DepartmentMapper">
+
+    <resultMap id="departmentResultMap" type="com.example.grouvy.department.vo.Department">
+        <id property="departmentId" column="DEPARTMENT_ID"/>
+        <result property="departmentName" column="DEPARTMENT_NAME"/>
+        <result property="parentDepartmentId" column="PARENT_DEPARTMENT_ID"/>
+        <result property="departmentOrder" column="DEPARTMENT_ORDER"/>
+        <result property="createdDate" column="CREATED_DATE"/>
+        <result property="updatedDate" column="UPDATED_DATE"/>
+        <result property="isDeleted" column="IS_DELETED"/>
+        <!-- Oracle의 계층형 쿼리 'LEVEL' 가상 컬럼을 'level' 필드에 매핑 -->
+        <result property="level" column="LEVEL_VAL"/>
+    </resultMap>
+
+    <select id="findAllDepartmentHierarchy" resultMap="departmentResultMap">
+        SELECT
+            DEPARTMENT_ID,
+            DEPARTMENT_NAME,
+            PARENT_DEPARTMENT_ID,
+            DEPARTMENT_ORDER,
+            CREATED_DATE,
+            UPDATED_DATE,
+            IS_DELETED,
+            LEVEL AS LEVEL_VAL
+        FROM
+            GROUVY_DEPARTMENTS
+        WHERE
+            IS_DELETED = 'N'
+        START WITH PARENT_DEPARTMENT_ID IS NULL
+        CONNECT BY PRIOR DEPARTMENT_ID = PARENT_DEPARTMENT_ID
+        ORDER BY SIBLING BY DEPARTMENT_ORDER ASC, DEPARTMENT_NAME ASC
+    </select>
+
+    <select id="findAllDepts" resultMap="departmentResultMap">
+        SELECT
+            DEPARTMENT_ID,
+            DEPARTMENT_NAME,
+            PARENT_DEPARTMENT_ID,
+            DEPARTMENT_ORDER,
+            CREATED_DATE,
+            UPDATED_DATE,
+            IS_DELETED
+        FROM
+            GROUVY_DEPARTMENTS
+        WHERE
+            IS_DELETED = 'N'
+        ORDER BY PARENT_DEPARTMENT_ID NULLS FIRST, DEPARTMENT_ORDER ASC,
+                 DEPARTMENT_NAME ASC
+    </select>
+
+</mapper>

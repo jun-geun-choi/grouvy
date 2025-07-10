@@ -1,3 +1,4 @@
+// src/main/java/com/example/grouvy/config/SecurityConfig.java
 package com.example.grouvy.config;
 
 import jakarta.servlet.DispatcherType;
@@ -15,33 +16,33 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-  @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http)
-      throws Exception {
-    http
-        .authorizeHttpRequests(auth -> auth
-            .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
-            .requestMatchers("/**").permitAll()
-        )
-        .formLogin(formLogin -> formLogin
-            .usernameParameter("username")
-            .passwordParameter("password")
-            .loginPage("/login")
-            .loginProcessingUrl("/login")
-            .defaultSuccessUrl("/")
-            .failureUrl("/login?failed")
-        )
-        .logout(logout -> logout
-            .logoutUrl("/logout")
-            .logoutSuccessUrl("/")
-        );
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http)
+            throws Exception {
+        http
+                .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화 (개발 편의상)
+                .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
+                        .requestMatchers("/**").permitAll() // **모든 경로 허용 (인증 비활성화)**
+                )
+                .formLogin(formLogin -> formLogin // 로그인 폼 설정 (유지)
+                        .usernameParameter("username")
+                        .passwordParameter("password")
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/")
+                        .failureUrl("/login?failed")
+                )
+                .logout(logout -> logout // 로그아웃 폼 설정 (유지)
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                );
 
-
-    return http.build();
-  }
-// 비밀번호 암호화 코드
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
+        return http.build();
+    }
+    // 비밀번호 암호화 코드
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
