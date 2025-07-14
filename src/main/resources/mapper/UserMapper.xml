@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.grouvy.user.mapper.UserMapper"> <!-- namespace 변경 -->
+<mapper namespace="com.example.grouvy.user.mapper.UserMapper"> <!-- 이 namespace가 UserMapper.java의 패키지명과 정확히 일치해야 합니다. -->
 
- <!-- User VO와 DB 컬럼 매핑 정의 -->
- <resultMap id="userResultMap" type="com.example.grouvy.user.vo.User"> <!-- type 변경 -->
+ <!-- User VO와 GROUVY_USERS 테이블 컬럼 매핑 -->
+ <!-- 모든 <result> 태그의 'column' 속성 값이 실제 DB 테이블 컬럼명과 대소문자까지 정확히 일치해야 합니다. -->
+ <resultMap id="userResultMap" type="com.example.grouvy.user.vo.User">
   <id property="userId" column="USER_ID"/>
   <result property="departmentId" column="DEPARTMENT_ID"/>
   <result property="employeeNo" column="EMPLOYEE_NO"/>
@@ -28,59 +29,59 @@
  <!-- findByUserId 메서드에 대한 SQL 쿼리 -->
  <select id="findByUserId" parameterType="long" resultMap="userResultMap">
   SELECT
-  USER_ID,
-  DEPARTMENT_ID,
-  EMPLOYEE_NO,
-  NAME,
-  EMAIL,
-  PASSWORD,
-  LOGIN_PROVIDER,
-  SOCIAL_EMAIL,
-  PHONE_NUM,
-  ADDRESS,
-  PROFILE_IMG_PATH,
-  IS_DELETED,
-  CREATED_DATE,
-  UPDATED_DATE,
-  EMAIL_VERIFIED,
-  POSITION_NAME,
-  RESIGN_DATE
+   USER_ID,
+   DEPARTMENT_ID,
+   EMPLOYEE_NO,
+   NAME,
+   EMAIL,
+   PASSWORD,
+   LOGIN_PROVIDER,
+   SOCIAL_EMAIL,
+   PHONE_NUM,
+   ADDRESS,
+   PROFILE_IMG_PATH,
+   IS_DELETED,
+   CREATED_DATE,
+   UPDATED_DATE,
+   EMAIL_VERIFIED,
+   POSITION_NAME,
+   RESIGN_DATE
   FROM
-  GROUVY_USERS <!-- 테이블명 변경 -->
+   GROUVY_USERS
   WHERE
-  USER_ID = #{userId}
-  AND IS_DELETED = 'N' <!-- 삭제되지 않은 사용자만 조회 -->
+   USER_ID = #{userId}
+    AND IS_DELETED = 'N'
  </select>
 
  <!-- findUsersByDeptId 메서드에 대한 SQL 쿼리 -->
  <select id="findUsersByDeptId" parameterType="long" resultMap="userResultMap">
   SELECT
-  gu.USER_ID,
-  gu.DEPARTMENT_ID,
-  gu.NAME,
-  gu.POSITION_NAME,
-  gu.EMAIL,
-  gu.PHONE_NUM,
-  gd.DEPARTMENT_NAME <!-- GROUVY_DEPARTMENTS에서 부서 이름 가져오기 -->
+   gu.USER_ID,
+   gu.DEPARTMENT_ID,
+   gu.NAME,
+   gu.POSITION_NAME,
+   gu.EMAIL,
+   gu.PHONE_NUM,
+   gd.DEPARTMENT_NAME
   FROM
-  GROUVY_USERS gu <!-- 테이블명 변경 -->
-  JOIN
-  GROUVY_DEPARTMENTS gd ON gu.DEPARTMENT_ID = gd.DEPARTMENT_ID <!-- 부서 테이블 조인 -->
+   GROUVY_USERS gu
+    JOIN
+   GROUVY_DEPARTMENTS gd ON gu.DEPARTMENT_ID = gd.DEPARTMENT_ID
   WHERE
-  gu.DEPARTMENT_ID = #{departmentId} <!-- 컬럼명 변경 -->
-  AND gu.IS_DELETED = 'N' <!-- IS_DELETED 컬럼명 변경 -->
+   gu.DEPARTMENT_ID = #{departmentId}
+    AND gu.IS_DELETED = 'N'
   ORDER BY
-  gu.NAME ASC
+   gu.NAME ASC
  </select>
 
  <!-- findUserNmByUserId 메서드에 대한 SQL 쿼리 -->
  <select id="findUserNmByUserId" parameterType="long" resultType="string">
   SELECT
-  NAME <!-- 컬럼명 변경 -->
+   NAME
   FROM
-  GROUVY_USERS <!-- 테이블명 변경 -->
+   GROUVY_USERS
   WHERE
-  USER_ID = #{userId}
+   USER_ID = #{userId}
  </select>
 
  <!-- findRolesByUserId 메서드에 대한 SQL 쿼리 -->
@@ -92,7 +93,5 @@
   WHERE
    USER_ID = #{userId}
  </select>
-
- <!-- --- (이전에 있던 searchUsers, findUserDetailWithDeptNameByUserId 등의 쿼리는 현재 목표에 불필요하므로 제거) --- -->
 
 </mapper>

@@ -14,7 +14,7 @@
         <result property="level" column="LEVEL_VAL"/>
     </resultMap>
 
-    <select id="findAllDepartmentHierarchy" resultMap="departmentResultMap">
+    <select id="findAllDeptsHierarchy" resultMap="departmentResultMap">
         SELECT
             DEPARTMENT_ID,
             DEPARTMENT_NAME,
@@ -30,7 +30,7 @@
             IS_DELETED = 'N'
         START WITH PARENT_DEPARTMENT_ID IS NULL
         CONNECT BY PRIOR DEPARTMENT_ID = PARENT_DEPARTMENT_ID
-        ORDER BY SIBLING BY DEPARTMENT_ORDER ASC, DEPARTMENT_NAME ASC
+        ORDER SIBLINGS BY DEPARTMENT_ORDER ASC, DEPARTMENT_NAME ASC
     </select>
 
     <select id="findAllDepts" resultMap="departmentResultMap">

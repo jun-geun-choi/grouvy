@@ -1,4 +1,4 @@
-package com.example.grouvy.department.vo;
+package com.example.grouvy.department.dto;
 
 import com.example.grouvy.user.vo.User;
 import lombok.Getter;
