@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.message.mapper.MassageMapper">
+
+    <!-- Message VO 매핑 -->
+    <resultMap id="messageResultMap" type="com.example.grouvy.message.vo.Message">
+        <id property="messageId" column="MESSAGE_ID"/>
+        <result property="senderId" column="SENDER_ID"/>
+        <result property="subject" column="SUBJECT"/>
+        <result property="messageContent" column="MESSAGE_CONTENT"/>
+        <result property="sendDate" column="SEND_DATE"/>
+        <result property="recallAble" column="RECALL_ABLE"/>
+        <result property="sendId" column="SEND_ID"/>
+    </resultMap>
+
+    <!-- MessageReceiver VO 매핑 -->
+    <resultMap id="messageReceiverResultMap" type="com.example.grouvy.message.vo.MessageReceiver">
+        <id property="receiveId" column="RECEIVE_ID"/>
+        <result property="messageId" column="MESSAGE_ID"/>
+        <result property="receiverId" column="RECEIVER_ID"/>
+        <result property="receiverType" column="RECEIVER_TYPE"/>
+        <result property="readDate" column="READ_DATE"/>
+        <result property="inboxStatus" column="INBOX_STATUS"/>
+        <result property="isDeleted" column="IS_DELETED"/>
+        <result property="importantYn" column="IMPORTANT_YN"/>
+        <!-- 조인된 필드 -->
+        <result property="senderName" column="SENDER_NAME"/>
+        <result property="subject" column="SUBJECT"/>
+        <result property="sendDate" column="SEND_DATE"/>
+    </resultMap>
+
+    <!-- MessageSender VO 매핑 -->
+    <resultMap id="messageSenderResultMap" type="com.example.grouvy.message.vo.MessageSender">
+        <id property="sendId" column="SEND_ID"/>
+        <result property="messageId" column="MESSAGE_ID"/>
+        <result property="senderId" column="SENDER_ID"/>
+        <result property="isDeleted" column="IS_DELETED"/>
+    </resultMap>
+
+    <insert id="insertMessage" parameterType="com.example.grouvy.message.vo.Message" useGeneratedKeys="true" keyProperty="messageId">
+        <selectKey keyProperty="messageId" resultType="long" order="BEFORE">
+            SELECT GROUVY_MESSAGES_MESSAGE_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_MESSAGES (
+        MESSAGE_ID, SENDER_ID, SUBJECT, MESSAGE_CONTENT, SEND_DATE, RECALL_ABLE
+        ) VALUES (
+        #{messageId}, #{senderId}, #{subject}, #{messageContent}, SYSDATE, #{recallAble}
+        )
+    </insert>
+
+    <insert id="insertMessageSender" parameterType="com.example.grouvy.message.vo.MessageSender" useGeneratedKeys="true" keyProperty="sendId">
+        <selectKey keyProperty="sendId" resultType="long" order="BEFORE">
+            SELECT GROUVY_MESSAGE_SEND_SEND_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_MESSAGE_SEND (
+        SEND_ID, MESSAGE_ID, SENDER_ID, IS_DELETED
+        ) VALUES (
+        #{sendId}, #{messageId}, #{senderId}, #{isDeleted}
+        )
+    </insert>
+
+    <insert id="insertMessageReceiver" parameterType="com.example.grouvy.message.vo.MessageReceiver" useGeneratedKeys="true" keyProperty="receiveId">
+        <selectKey keyProperty="receiveId" resultType="long" order="BEFORE">
+            SELECT GROUVY_MESSAGE_RECEIVE_RECEIVE_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_MESSAGE_RECEIVE (
+        RECEIVE_ID, MESSAGE_ID, RECEIVER_ID, RECEIVER_TYPE, READ_DATE, INBOX_STATUS, IS_DELETED, IMPORTANT_YN
+        ) VALUES (
+        #{receiveId}, #{messageId}, #{receiverId}, #{receiverType}, #{readDate, jdbcType=DATE}, #{inboxStatus}, #{isDeleted}, #{importantYn}
+        )
+    </insert>
+
+</mapper>
