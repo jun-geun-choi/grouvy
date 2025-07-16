@@ -30,7 +30,5 @@ public interface UserMapper {
     List<String> findRolesByUserId(@Param("userId") Long userId);
 
 
-    // --- (이전에 있던 searchUsers, findUserDetailWithDeptNameByUserId 등은 현재 목표에 불필요하므로 제거) ---
-    // User findByUsername(@Param("name") String name); // 현재 로그인 기능을 사용하지 않으므로 제거
-
+    List<User> searchUsers(@Param("keyword") String keyword);
 }

@@ -7,6 +7,7 @@
         <div>
             <a href="/">홈</a> |
             <a href="/dept/chart">조직도</a> |
+            <a href="/message/send">쪽지 쓰기</a> <!-- **새로운 쪽지 발송 링크 추가** -->
         </div>
         <div>
             <a href="/login">로그인</a>

@@ -15,7 +15,7 @@ public class MessageReceiver {
     private Date readDate;
     private String inboxStatus;
     private String isDeleted;;
-    private String impotantYn;
+    private String importantYn;
 
     //join을 위한 필드(DB컬럼은 아님)
     private String senderName;

@@ -1,97 +1,102 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.grouvy.user.mapper.UserMapper"> <!-- 이 namespace가 UserMapper.java의 패키지명과 정확히 일치해야 합니다. -->
+<mapper namespace="com.example.grouvy.user.mapper.UserMapper">
 
- <!-- User VO와 GROUVY_USERS 테이블 컬럼 매핑 -->
- <!-- 모든 <result> 태그의 'column' 속성 값이 실제 DB 테이블 컬럼명과 대소문자까지 정확히 일치해야 합니다. -->
- <resultMap id="userResultMap" type="com.example.grouvy.user.vo.User">
-  <id property="userId" column="USER_ID"/>
-  <result property="departmentId" column="DEPARTMENT_ID"/>
-  <result property="employeeNo" column="EMPLOYEE_NO"/>
-  <result property="name" column="NAME"/>
-  <result property="email" column="EMAIL"/>
-  <result property="password" column="PASSWORD"/>
-  <result property="loginProvider" column="LOGIN_PROVIDER"/>
-  <result property="socialEmail" column="SOCIAL_EMAIL"/>
-  <result property="phoneNum" column="PHONE_NUM"/>
-  <result property="address" column="ADDRESS"/>
-  <result property="profileImgPath" column="PROFILE_IMG_PATH"/>
-  <result property="isDeleted" column="IS_DELETED"/>
-  <result property="createdDate" column="CREATED_DATE"/>
-  <result property="updatedDate" column="UPDATED_DATE"/>
-  <result property="emailVerified" column="EMAIL_VERIFIED"/>
-  <result property="positionName" column="POSITION_NAME"/>
-  <result property="resignDate" column="RESIGN_DATE"/>
-  <!-- 조인된 테이블에서 가져올 부서 이름 필드 -->
-  <result property="departmentName" column="DEPARTMENT_NAME"/>
- </resultMap>
+    <resultMap id="userResultMap" type="com.example.grouvy.user.vo.User">
+        <id property="userId" column="USER_ID"/>
+        <result property="departmentId" column="DEPARTMENT_ID"/>
+        <result property="employeeNo" column="EMPLOYEE_NO"/>
+        <result property="name" column="NAME"/>
+        <result property="email" column="EMAIL"/>
+        <result property="password" column="PASSWORD"/>
+        <result property="loginProvider" column="LOGIN_PROVIDER"/>
+        <result property="socialEmail" column="SOCIAL_EMAIL"/>
+        <result property="phoneNum" column="PHONE_NUM"/>
+        <result property="address" column="ADDRESS"/>
+        <result property="profileImgPath" column="PROFILE_IMG_PATH"/>
+        <result property="isDeleted" column="IS_DELETED"/>
+        <result property="createdDate" column="CREATED_DATE"/>
+        <result property="updatedDate" column="UPDATED_DATE"/>
+        <result property="emailVerified" column="EMAIL_VERIFIED"/>
+        <result property="positionName" column="POSITION_NAME"/>
+        <result property="resignDate" column="RESIGN_DATE"/>
+        <result property="departmentName" column="DEPARTMENT_NAME"/>
+    </resultMap>
 
- <!-- findByUserId 메서드에 대한 SQL 쿼리 -->
- <select id="findByUserId" parameterType="long" resultMap="userResultMap">
-  SELECT
-   USER_ID,
-   DEPARTMENT_ID,
-   EMPLOYEE_NO,
-   NAME,
-   EMAIL,
-   PASSWORD,
-   LOGIN_PROVIDER,
-   SOCIAL_EMAIL,
-   PHONE_NUM,
-   ADDRESS,
-   PROFILE_IMG_PATH,
-   IS_DELETED,
-   CREATED_DATE,
-   UPDATED_DATE,
-   EMAIL_VERIFIED,
-   POSITION_NAME,
-   RESIGN_DATE
-  FROM
-   GROUVY_USERS
-  WHERE
-   USER_ID = #{userId}
-    AND IS_DELETED = 'N'
- </select>
+    <select id="findByUserId" parameterType="long" resultMap="userResultMap">
+        SELECT USER_ID,
+               DEPARTMENT_ID,
+               EMPLOYEE_NO,
+               NAME,
+               EMAIL,
+               PASSWORD,
+               LOGIN_PROVIDER,
+               SOCIAL_EMAIL,
+               PHONE_NUM,
+               ADDRESS,
+               PROFILE_IMG_PATH,
+               IS_DELETED,
+               CREATED_DATE,
+               UPDATED_DATE,
+               EMAIL_VERIFIED,
+               POSITION_NAME,
+               RESIGN_DATE
+        FROM GROUVY_USERS
+        WHERE USER_ID = #{userId}
+          AND IS_DELETED = 'N'
+    </select>
 
- <!-- findUsersByDeptId 메서드에 대한 SQL 쿼리 -->
- <select id="findUsersByDeptId" parameterType="long" resultMap="userResultMap">
-  SELECT
-   gu.USER_ID,
-   gu.DEPARTMENT_ID,
-   gu.NAME,
-   gu.POSITION_NAME,
-   gu.EMAIL,
-   gu.PHONE_NUM,
-   gd.DEPARTMENT_NAME
-  FROM
-   GROUVY_USERS gu
-    JOIN
-   GROUVY_DEPARTMENTS gd ON gu.DEPARTMENT_ID = gd.DEPARTMENT_ID
-  WHERE
-   gu.DEPARTMENT_ID = #{departmentId}
-    AND gu.IS_DELETED = 'N'
-  ORDER BY
-   gu.NAME ASC
- </select>
+    <select id="findUsersByDeptId" parameterType="long" resultMap="userResultMap">
+        SELECT gu.USER_ID,
+               gu.DEPARTMENT_ID,
+               gu.NAME,
+               gu.POSITION_NAME,
+               gu.EMAIL,
+               gu.PHONE_NUM,
+               gd.DEPARTMENT_NAME
+        FROM GROUVY_USERS gu
+                 JOIN
+             GROUVY_DEPARTMENTS gd ON gu.DEPARTMENT_ID = gd.DEPARTMENT_ID
+        WHERE gu.DEPARTMENT_ID = #{departmentId}
+          AND gu.IS_DELETED = 'N'
+        ORDER BY gu.NAME ASC
+    </select>
 
- <!-- findUserNmByUserId 메서드에 대한 SQL 쿼리 -->
- <select id="findUserNmByUserId" parameterType="long" resultType="string">
-  SELECT
-   NAME
-  FROM
-   GROUVY_USERS
-  WHERE
-   USER_ID = #{userId}
- </select>
+    <select id="findUserNmByUserId" parameterType="long" resultType="string">
+        SELECT NAME
+        FROM GROUVY_USERS
+        WHERE USER_ID = #{userId}
+    </select>
 
- <!-- findRolesByUserId 메서드에 대한 SQL 쿼리 -->
- <select id="findRolesByUserId" parameterType="long" resultType="string">
-  SELECT
-   ROLE_NAME
-  FROM
-   GROUVY_USER_ROLES
-  WHERE
-   USER_ID = #{userId}
- </select>
+    <select id="findRolesByUserId" parameterType="long" resultType="string">
+        SELECT ROLE_NAME
+        FROM GROUVY_USER_ROLES
+        WHERE USER_ID = #{userId}
+    </select>
+
+    <!-- **다시 추가된 사용자 검색 쿼리** -->
+    <select id="searchUsers" parameterType="string" resultMap="userResultMap">
+        SELECT
+        gu.USER_ID,
+        gu.DEPARTMENT_ID,
+        gu.NAME,
+        gu.EMAIL,
+        gu.PHONE_NUM,
+        gu.POSITION_NAME,
+        gd.DEPARTMENT_NAME
+        FROM
+        GROUVY_USERS gu
+        LEFT JOIN
+        GROUVY_DEPARTMENTS gd ON gu.DEPARTMENT_ID = gd.DEPARTMENT_ID
+        WHERE
+        gu.IS_DELETED = 'N'
+        <if test="keyword != null and keyword != ''">
+            AND (gu.NAME LIKE '%' || #{keyword} || '%'
+            OR TO_CHAR(gu.USER_ID) LIKE '%' || #{keyword} || '%' <!-- USER_ID가 NUMBER이므로 TO_CHAR로 변환 -->
+            OR gu.EMAIL LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY
+        gu.NAME ASC
+    </select>
 
 </mapper>
