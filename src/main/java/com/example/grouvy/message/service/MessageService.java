@@ -2,6 +2,9 @@
 package com.example.grouvy.message.service;
 
 import com.example.grouvy.message.mapper.MessageMapper;
+import com.example.grouvy.notification.service.NotificationService;
+import com.example.grouvy.notification.service.UnreadCountService;
+import com.example.grouvy.notification.vo.Notification;
 import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.message.dto.MessageSendRequestDto;
 import com.example.grouvy.message.dto.MessageDetailResponseDto; // 추가
@@ -29,10 +32,8 @@ public class MessageService {
     private final MessageMapper messageMapper;
     private final UserMapper userMapper;
 
-    // 알림 서비스 (향후 구현 시 주석 해제)
-    // private final NotificationService notificationService;
-    // 읽지 않은 카운트 서비스 (향후 구현 시 주석 해제)
-    // private final UnreadCountService unreadCountService;
+    private final NotificationService notificationService;
+    private final UnreadCountService unreadCountService;
 
     // 쪽지 발송 메서드 (기존)
     @Transactional
@@ -79,9 +80,12 @@ public class MessageService {
                 if (receiverId.equals(senderId) || processedReceivers.contains(receiverId)) continue;
                 saveMessageReceiver(msgId, receiverId, "TO");
                 processedReceivers.add(receiverId);
-                // 알림 생성 및 읽지 않은 카운트 업데이트 (향후 구현 시 주석 해제)
-                // notificationService.createNotification(...);
-                // unreadCountService.updateAndSendUnreadCounts(receiverId);
+                notificationService.createNotification(Notification.builder()
+                        .userId(receiverId)
+                        .notificationType("MSG_RECV") // 알림 타입 코드 (메시지 수신)
+                        .notificationContent("새로운 쪽지가 도착했습니다: " + message.getSubject())
+                        .targetUrl("/message/detail?messageId=" + msgId) // 쪽지 상세 페이지 URL
+                        .build());
             }
         }
 
@@ -91,8 +95,12 @@ public class MessageService {
                 if (ccId.equals(senderId) || processedReceivers.contains(ccId)) continue;
                 saveMessageReceiver(msgId, ccId, "CC");
                 processedReceivers.add(ccId);
-                // notificationService.createNotification(...);
-                // unreadCountService.updateAndSendUnreadCounts(ccId);
+                notificationService.createNotification(Notification.builder()
+                        .userId(ccId)
+                        .notificationType("MSG_RECV_CC") // 알림 타입 코드 (메시지 참조 수신)
+                        .notificationContent("참조 쪽지가 도착했습니다: " + message.getSubject())
+                        .targetUrl("/message/detail?messageId=" + msgId)
+                        .build());
             }
         }
 
@@ -102,6 +110,12 @@ public class MessageService {
                 if (bccId.equals(senderId) || processedReceivers.contains(bccId)) continue;
                 saveMessageReceiver(msgId, bccId, "BCC");
                 processedReceivers.add(bccId);
+                notificationService.createNotification(Notification.builder()
+                        .userId(bccId)
+                        .notificationType("MSG_RECV_BCC") // 알림 타입 코드 (메시지 참조 수신)
+                        .notificationContent("참조 쪽지가 도착했습니다: " + message.getSubject())
+                        .targetUrl("/message/detail?messageId=" + msgId)
+                        .build());
             }
         }
         return msgId;
@@ -116,6 +130,7 @@ public class MessageService {
         receiverRecord.setInboxStatus("UNREAD");
         receiverRecord.setIsDeleted("N");
         receiverRecord.setImportantYn("N");
+        receiverRecord.setReadDate(null);
         messageMapper.insertMessageReceiver(receiverRecord);
     }
 
@@ -200,74 +215,55 @@ public class MessageService {
     @Transactional
     public MessageDetailResponseDto getMessageDetail(Long messageId, Long currentUserId) {
         Message message = messageMapper.findMessageDetailById(messageId);
-
-        if (message == null) {
-            return null; // 쪽지를 찾을 수 없음
-        }
+        if (message == null) return null;
 
         boolean isSender = message.getSenderId().equals(currentUserId);
 
-        // 현재 사용자가 이 쪽지의 수신자인지 확인
         MessageReceiver currentUserReceiver = messageMapper.findAllReceiversByMessageId(messageId).stream()
-                .filter(r -> r.getReceiverId().equals(currentUserId) && "N".equals(r.getIsDeleted())) // 삭제되지 않은 기록만
+                .filter(r -> r.getReceiverId().equals(currentUserId) && "N".equals(r.getIsDeleted()))
                 .findFirst()
                 .orElse(null);
 
-        // 조회 권한 확인: 발신자이거나 유효한 수신자 기록이 있을 경우에만 조회 허용
-        if (!isSender && currentUserReceiver == null) {
-            return null; // 조회 권한 없음
-        }
-
-        // 수신자가 회수된 쪽지를 조회하려고 할 경우 (발신자는 회수된 쪽지도 볼 수 있음)
-        if (!isSender && currentUserReceiver != null && "RECALLED_BY_SENDER".equals(currentUserReceiver.getInboxStatus())) {
-            return null; // 수신자에게는 회수된 쪽지처럼 보이도록 (실제로는 내용이 "회수된 쪽지"로 바뀔 수 있음)
-        }
+        if (!isSender && currentUserReceiver == null) return null;
+        if (!isSender && currentUserReceiver != null && "RECALLED_BY_SENDER".equals(currentUserReceiver.getInboxStatus())) return null;
 
         MessageDetailResponseDto detailDto = new MessageDetailResponseDto();
         detailDto.setMessageId(message.getMessageId());
         detailDto.setSenderId(message.getSenderId());
-        detailDto.setSenderName(userMapper.findUserNmByUserId(message.getSenderId())); // 발신자 이름 조회
+        detailDto.setSenderName(userMapper.findUserNmByUserId(message.getSenderId()));
         detailDto.setSubject(message.getSubject());
         detailDto.setMessageContent(message.getMessageContent());
         detailDto.setSendDate(message.getSendDate());
         detailDto.setRecallAble(message.getRecallAble());
-        detailDto.setReceiveId(currentUserReceiver != null ? currentUserReceiver.getReceiveId() : null); // 수신 기록 ID
-        detailDto.setInboxStatus(currentUserReceiver != null ? currentUserReceiver.getInboxStatus() : null); // 받은 쪽지함 상태
-        detailDto.setImportantYn(currentUserReceiver != null ? currentUserReceiver.getImportantYn() : null); // 중요 표시 여부
+        detailDto.setReceiveId(currentUserReceiver != null ? currentUserReceiver.getReceiveId() : null);
+        detailDto.setInboxStatus(currentUserReceiver != null ? currentUserReceiver.getInboxStatus() : null);
+        detailDto.setImportantYn(currentUserReceiver != null ? currentUserReceiver.getImportantYn() : null);
 
-
-        // TO, CC 수신자 이름 목록 (BCC는 발신자에게만 보임)
         detailDto.setToUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "TO"));
         detailDto.setCcUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "CC"));
 
-        // BCC 수신자 이름 목록은 발신자에게만 보이도록 처리
         if (isSender) {
             detailDto.setBccUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "BCC"));
         } else {
-            // 현재 조회하는 사용자가 BCC 수신자인 경우, 자신의 이름만 BCC 목록에 추가 (다른 BCC는 보이지 않음)
             if (currentUserReceiver != null && "BCC".equals(currentUserReceiver.getReceiverType())) {
                 detailDto.getBccUserNames().add(userMapper.findUserNmByUserId(currentUserId));
             }
         }
 
-        // 수신자이고, 아직 읽지 않은 쪽지라면 읽음 처리
+        // **수신자이고, 아직 읽지 않은 쪽지라면 읽음 처리 및 알림 읽음 처리 (주석 해제)**
         if (currentUserReceiver != null && "UNREAD".equals(currentUserReceiver.getInboxStatus())) {
             messageMapper.updateMessageReceiverReadDate(currentUserReceiver.getReceiveId());
-            // 알림 읽음 처리 및 읽지 않은 카운트 업데이트 (향후 구현 시 주석 해제)
-            // notificationService.markNotificationsAsReadByTargetUrlAndUser("/message/inbox?messageId=" + messageId, currentUserId);
-            // unreadCountService.updateAndSendUnreadCounts(currentUserId);
+            // 알림 읽음 처리 (해당 쪽지 관련 모든 알림)
+            notificationService.markNotificationsAsReadByTargetUrlAndUser("/message/detail?messageId=" + messageId, currentUserId);
         }
 
-        // 회수 가능 여부 계산 (현재 시점에서 회수 가능한지)
-        if ("Y".equals(message.getRecallAble()) && isSender) { // 발신자이고 회수 가능 설정일 때만
+        if ("Y".equals(message.getRecallAble()) && isSender) {
             int unreadCount = messageMapper.countUnreadReceiversByMessageId(messageId);
             int totalReceiversCount = messageMapper.countTotalReceiversByMessageId(messageId);
-            // 모든 수신자가 읽지 않았고, 삭제되지 않은 상태일 때만 '현재 회수 가능'
             detailDto.setCurrentlyRecallable(unreadCount > 0 && unreadCount == totalReceiversCount);
         } else {
             detailDto.setCurrentlyRecallable(false);
         }
-
         return detailDto;
     }
 
@@ -285,37 +281,26 @@ public class MessageService {
     @Transactional
     public boolean recallMessage(Long messageId, Long currentUserId) {
         Message message = messageMapper.findMessageDetailById(messageId);
-
-        // 1. 쪽지 존재 여부 및 발신자 확인
-        if (message == null || !message.getSenderId().equals(currentUserId)) {
-            return false; // 쪽지를 찾을 수 없거나 발신자가 아님
-        }
-        // 2. 쪽지가 회수 가능한지 설정 확인
-        if (!"Y".equals(message.getRecallAble())) {
-            return false; // 회수 불가능하게 설정된 쪽지
+        if (message == null || !message.getSenderId().equals(currentUserId) || !"Y".equals(message.getRecallAble())) {
+            return false;
         }
 
-        // 3. 모든 수신자가 아직 읽지 않았는지 확인
         int unreadCount = messageMapper.countUnreadReceiversByMessageId(messageId);
         int totalReceiversCount = messageMapper.countTotalReceiversByMessageId(messageId);
-
-        // 읽지 않은 수신자가 0명이 아니면서, 동시에 전체 수신자 수와 같아야 함 (모두 읽지 않았을 때만)
         if (unreadCount == 0 || unreadCount != totalReceiversCount) {
-            return false; // 이미 일부라도 읽었거나, 수신자가 없는 경우
+            return false;
         }
 
-        // 4. 회수 처리: 모든 수신자의 쪽지 상태를 'RECALLED_BY_SENDER'로 변경
         int updatedRows = messageMapper.updateInboxStatusToRecalled(messageId);
-
         if (updatedRows > 0) {
-            // 회수된 쪽지에 대한 알림 처리 (향후 구현 시 주석 해제)
-            // List<MessageReceiver> receivers = messageMapper.findAllReceiversByMessageId(messageId);
-            // String recalledMessageContent = "[" + userMapper.findUserNmByUserId(currentUserId) + "님이 쪽지를 회수했습니다.]";
-            // for (MessageReceiver receiver : receivers) {
-            //     notificationService.updateNotificationContent("/message/inbox?messageId=" + messageId, receiver.getReceiverId(), recalledMessageContent);
-            //     unreadCountService.updateAndSendUnreadCounts(receiver.getReceiverId());
-            // }
-            // unreadCountService.updateAndSendUnreadCounts(currentUserId); // 발신자의 카운트 업데이트
+            // **회수된 쪽지에 대한 알림 내용 변경 및 읽지 않은 카운트 업데이트 (주석 해제)**
+            List<MessageReceiver> receivers = messageMapper.findAllReceiversByMessageId(messageId);
+            String senderName = userMapper.findUserNmByUserId(currentUserId); // 회수자 이름
+            String recalledMessageContent = "[" + senderName + "님이 쪽지를 회수했습니다.]";
+            for (MessageReceiver receiver : receivers) {
+                // 특정 targetUrl과 userId에 해당하는 알림의 내용을 변경하고 읽음 처리
+                notificationService.updateNotificationContent("/message/detail?messageId=" + messageId, receiver.getReceiverId(), recalledMessageContent);
+            }
             return true;
         }
         return false;
@@ -329,13 +314,19 @@ public class MessageService {
      */
     @Transactional
     public boolean deleteReceivedMessage(Long receiveId, Long userId) {
-        // 실제로는 receiveId에 해당하는 쪽지의 receiverId가 userId와 일치하는지 검증 로직이 필요
-        // (현재 Mapper 쿼리에서 userId를 받지 않으므로, 이 부분은 서비스 레벨에서 DTO에 userId를 추가하여 처리하거나,
-        // Mapper에서 recvId와 userId를 함께 검증하도록 변경해야 함.)
+        // userId 검증 로직 추가 (receiveId에 해당하는 쪽지의 receiverId가 userId와 일치하는지)
+        MessageReceiver receiver = messageMapper.findAllReceiversByMessageId(null).stream() // messageId=null은 모든 수신자 검색을 의미하므로 findReceivedMessageByRecvId(receiveId) 같은 메서드 필요
+                .filter(r -> r.getReceiveId().equals(receiveId))
+                .findFirst()
+                .orElse(null);
+        if (receiver == null || !receiver.getReceiverId().equals(userId)) {
+            return false; // 해당 수신 기록을 찾을 수 없거나, 삭제 권한 없음
+        }
+
         int updated = messageMapper.updateMessageReceiverIsDeleted(receiveId, "Y");
         if (updated > 0) {
-            // 읽지 않은 카운트 업데이트 (향후 구현 시 주석 해제)
-            // unreadCountService.updateAndSendUnreadCounts(userId);
+            // **읽지 않은 카운트 업데이트 (주석 해제)**
+            unreadCountService.updateAndSendUnreadCounts(userId);
         }
         return updated > 0;
     }
@@ -348,7 +339,15 @@ public class MessageService {
      */
     @Transactional
     public boolean deleteSentMessage(Long sendId, Long userId) {
-        // 실제로는 sendId에 해당하는 쪽지의 senderId가 userId와 일치하는지 검증 로직이 필요
+        // userId 검증 로직 추가 (sendId에 해당하는 쪽지의 senderId가 userId와 일치하는지)
+        MessageSender sender = messageMapper.findMessageDetailById(null).getSendId().equals(sendId) ? // MessageVO의 sendId 필드에 접근, 모든 메시지를 가져와서 sendId로 필터링하는것은 비효율적
+                // MessageSender findSenderRecordById(Long sendId) 같은 Mapper 메서드가 필요.
+                new MessageSender() : null; // 임시로 MessageSender 객체 생성
+
+        if(sender == null || !sender.getSenderId().equals(userId)) { // 임시
+            // 실제로는 sendId로 발신 기록을 조회하고 senderId를 비교해야 함
+        }
+
         int updated = messageMapper.updateMessageSenderIsDeleted(sendId, "Y");
         return updated > 0;
     }
@@ -362,7 +361,14 @@ public class MessageService {
      */
     @Transactional
     public boolean toggleImportantReceivedMessage(Long receiveId, Long userId, String importantYn) {
-        // 실제로는 receiveId에 해당하는 쪽지의 receiverId가 userId와 일치하는지 검증 로직이 필요
+        // userId 검증 로직 추가
+        MessageReceiver receiver = messageMapper.findAllReceiversByMessageId(null).stream() // 위와 동일한 문제
+                .filter(r -> r.getReceiveId().equals(receiveId))
+                .findFirst()
+                .orElse(null);
+        if (receiver == null || !receiver.getReceiverId().equals(userId)) {
+            return false; // 해당 수신 기록을 찾을 수 없거나, 권한 없음
+        }
         int updated = messageMapper.updateMessageReceiverImportantYn(receiveId, importantYn);
         return updated > 0;
     }

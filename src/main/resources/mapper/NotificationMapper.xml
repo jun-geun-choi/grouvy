@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.notification.mapper.NotificationMapper"> <!-- namespace 변경 -->
+
+    <!-- Notification VO 매핑 -->
+    <resultMap id="notificationResultMap" type="com.example.grouvy.notification.vo.Notification">
+        <id property="notificationId" column="NOTIFICATION_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="notificationType" column="NOTIFICATION_TYPE"/>
+        <result property="notificationContent" column="NOTIFICATION_CONTENT"/>
+        <result property="targetUrl" column="TARGET_URL"/>
+        <result property="createDate" column="CREATE_DATE"/>
+        <result property="isRead" column="IS_READ"/>
+        <!-- isDeleted 컬럼은 DB 스키마에 없지만, VO에 있을 경우 매핑에서 제외하거나,
+             DB에 컬럼 추가 후 여기에 매핑을 추가해야 함. 현재는 없음. -->
+    </resultMap>
+
+    <!-- insertNotification: 새로운 알림 삽입 -->
+    <insert id="insertNotification" parameterType="com.example.grouvy.notification.vo.Notification" useGeneratedKeys="true" keyProperty="notificationId">
+        <selectKey keyProperty="notificationId" resultType="long" order="BEFORE">
+            SELECT NOTIFICATION_NOTIFICATION_ID_SEQ.NEXTVAL FROM DUAL <!-- 정확한 시퀀스 이름으로 수정 -->
+        </selectKey>
+        INSERT INTO GROUVY_NOTIFICATION (
+        NOTIFICATION_ID, USER_ID, NOTIFICATION_TYPE, NOTIFICATION_CONTENT, TARGET_URL, CREATE_DATE, IS_READ
+        ) VALUES (
+        #{notificationId}, #{userId}, #{notificationType}, #{notificationContent}, #{targetUrl}, SYSDATE, 'N'
+        )
+    </insert>
+
+    <!-- findNotificationsByUserIdPaginated: 특정 사용자의 알림 목록 페이징 조회 -->
+    <select id="findNotificationsByUserIdPaginated" resultMap="notificationResultMap">
+        SELECT
+        NOTIFICATION_ID, USER_ID, NOTIFICATION_TYPE, NOTIFICATION_CONTENT, TARGET_URL, CREATE_DATE, IS_READ
+        FROM
+        GROUVY_NOTIFICATION
+        WHERE
+        USER_ID = #{userId}
+        AND IS_READ = 'N' <!-- 일단은 읽지 않은 알림만 기본으로 조회 (혹은 IS_DELETED 컬럼이 있다면 'N') -->
+        ORDER BY
+        CREATE_DATE DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+    </select>
+
+    <!-- countTotalNotifications: 특정 사용자의 전체 알림 수 조회 -->
+    <select id="countTotalNotifications" parameterType="long" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        GROUVY_NOTIFICATION
+        WHERE
+        USER_ID = #{userId}
+        AND IS_READ = 'N' <!-- 위와 동일하게 '삭제되지 않은' 알림 (IS_READ='N' 또는 IS_DELETED='N') -->
+    </select>
+
+    <!-- countUnreadNotifications: 특정 사용자의 읽지 않은 알림 수 조회 -->
+    <select id="countUnreadNotifications" parameterType="long" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            GROUVY_NOTIFICATION
+        WHERE
+            USER_ID = #{userId} AND IS_READ = 'N'
+    </select>
+
+    <!-- markAsRead: 특정 알림 읽음 처리 -->
+    <update id="markAsRead">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            IS_READ = 'Y'
+        WHERE
+            NOTIFICATION_ID = #{notificationId}
+          AND IS_READ = 'N'
+    </update>
+
+    <!-- deleteNotification: 특정 알림 삭제 처리 (IS_READ='Y'로 변경, 논리적 삭제 흉내) -->
+    <update id="deleteNotification">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            IS_READ = 'Y'
+        WHERE
+            NOTIFICATION_ID = #{notificationId}
+          AND USER_ID = #{userId}
+    </update>
+
+    <!-- deleteAllNotificationsByUserId: 특정 사용자의 모든 알림 삭제 처리 -->
+    <update id="deleteAllNotificationsByUserId">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            IS_READ = 'Y'
+        WHERE
+            USER_ID = #{userId}
+          AND IS_READ = 'N'
+    </update>
+
+    <!-- deleteSelectedNotifications: 선택된 알림들 삭제 처리 -->
+    <update id="deleteSelectedNotifications">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+        IS_READ = 'Y'
+        WHERE
+        USER_ID = #{userId}
+        AND NOTIFICATION_ID IN
+        <foreach item="id" collection="notificationIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- findNotificationById: 특정 알림 조회 -->
+    <select id="findNotificationById" parameterType="long" resultMap="notificationResultMap">
+        SELECT
+        NOTIFICATION_ID, USER_ID, NOTIFICATION_TYPE, NOTIFICATION_CONTENT, TARGET_URL, CREATE_DATE, IS_READ
+        FROM
+        GROUVY_NOTIFICATION
+        WHERE
+        NOTIFICATION_ID = #{notificationId}
+        <!-- AND IS_READ = 'N' 이 조건은 필요에 따라 추가 (삭제된 알림은 조회 안 할 경우) -->
+    </select>
+
+    <!-- updateNotificationContent: 알림 내용 업데이트 및 읽음 처리 -->
+    <update id="updateNotificationContent">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+        NOTIFICATION_CONTENT = #{newContent},
+        IS_READ = 'Y'
+        WHERE
+        TARGET_URL = #{targetUrl}
+        AND USER_ID = #{userId}
+        AND NOTIFICATION_TYPE LIKE 'MSG_%' <!-- 쪽지 관련 알림만 대상으로 할 경우 -->
+        AND IS_READ = 'N' <!-- 아직 읽지 않은 알림만 대상으로 할 경우 -->
+    </update>
+
+    <!-- markNotificationsAsReadByTargetUrlAndUser: 특정 URL 관련 알림 일괄 읽음 처리 -->
+    <update id="markNotificationsAsReadByTargetUrlAndUser">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            IS_READ = 'Y'
+        WHERE
+            TARGET_URL = #{targetUrl}
+          AND USER_ID = #{userId}
+          AND IS_READ = 'N'
+    </update>
+
+</mapper>

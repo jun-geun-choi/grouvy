@@ -10,10 +10,23 @@
         <result property="createdDate" column="CREATED_DATE"/>
         <result property="updatedDate" column="UPDATED_DATE"/>
         <result property="isDeleted" column="IS_DELETED"/>
-        <!-- Oracle의 계층형 쿼리 'LEVEL' 가상 컬럼을 'level' 필드에 매핑 -->
         <result property="level" column="LEVEL_VAL"/>
     </resultMap>
 
+    <resultMap id="departmentHistoryResultMap" type="com.example.grouvy.department.vo.DepartmentHistory">
+        <id property="historyId" column="HISTORY_ID"/>
+        <result property="departmentId" column="DEPARTMENT_ID"/>
+        <result property="changeType" column="CHANGE_TYPE"/>
+        <result property="oldValue" column="OLD_VALUE"/>
+        <result property="newValue" column="NEW_VALUE"/>
+        <result property="changerUserId" column="CHANGER_USER_ID"/>
+        <result property="changeDate" column="CHANGE_DATE"/>
+        <!-- 조인된 필드 -->
+        <result property="departmentName" column="DEPARTMENT_NAME"/>
+        <result property="changerUserName" column="CHANGER_USER_NAME"/>
+    </resultMap>
+
+    <!-- 조직도 조회 관련 쿼리 (기존) -->
     <select id="findAllDeptsHierarchy" resultMap="departmentResultMap">
         SELECT
             DEPARTMENT_ID,
@@ -28,7 +41,7 @@
             GROUVY_DEPARTMENTS
         WHERE
             IS_DELETED = 'N'
-        START WITH PARENT_DEPARTMENT_ID IS NULL
+            START WITH PARENT_DEPARTMENT_ID IS NULL
         CONNECT BY PRIOR DEPARTMENT_ID = PARENT_DEPARTMENT_ID
         ORDER SIBLINGS BY DEPARTMENT_ORDER ASC, DEPARTMENT_NAME ASC
     </select>
@@ -46,8 +59,134 @@
             GROUVY_DEPARTMENTS
         WHERE
             IS_DELETED = 'N'
-        ORDER BY PARENT_DEPARTMENT_ID NULLS FIRST, DEPARTMENT_ORDER ASC,
-                 DEPARTMENT_NAME ASC
+        ORDER BY PARENT_DEPARTMENT_ID NULLS FIRST, DEPARTMENT_ORDER ASC, DEPARTMENT_NAME ASC
+    </select>
+
+    <!-- **새로 추가될 부서 관리 및 이력 관련 쿼리** -->
+
+    <!-- insertDepartment: 새로운 부서 삽입 -->
+    <insert id="insertDepartment" parameterType="com.example.grouvy.department.vo.Department" useGeneratedKeys="true" keyProperty="departmentId">
+        <selectKey keyProperty="departmentId" resultType="long" order="BEFORE">
+            SELECT DEPARTMENTS_DEPARTMENT_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_DEPARTMENTS (
+        DEPARTMENT_ID, DEPARTMENT_NAME, PARENT_DEPARTMENT_ID, DEPARTMENT_ORDER, CREATED_DATE, IS_DELETED
+        ) VALUES (
+        #{departmentId}, #{departmentName}, #{parentDepartmentId}, #{departmentOrder}, SYSDATE, 'N'
+        )
+    </insert>
+
+    <!-- findDepartmentById: 특정 부서 상세 조회 -->
+    <select id="findDepartmentById" parameterType="long" resultMap="departmentResultMap">
+        SELECT
+            DEPARTMENT_ID,
+            DEPARTMENT_NAME,
+            PARENT_DEPARTMENT_ID,
+            DEPARTMENT_ORDER,
+            CREATED_DATE,
+            UPDATED_DATE,
+            IS_DELETED
+        FROM
+            GROUVY_DEPARTMENTS
+        WHERE
+            DEPARTMENT_ID = #{departmentId}
+          AND IS_DELETED = 'N'
+    </select>
+
+    <!-- updateDepartment: 부서 정보 업데이트 -->
+    <update id="updateDepartment" parameterType="com.example.grouvy.department.vo.Department">
+        UPDATE GROUVY_DEPARTMENTS
+        SET
+            DEPARTMENT_NAME = #{departmentName},
+            PARENT_DEPARTMENT_ID = #{parentDepartmentId},
+            DEPARTMENT_ORDER = #{departmentOrder},
+            UPDATED_DATE = SYSDATE
+        WHERE
+            DEPARTMENT_ID = #{departmentId}
+    </update>
+
+    <!-- deleteDepartment: 부서 논리적 삭제 -->
+    <update id="deleteDepartment">
+        UPDATE GROUVY_DEPARTMENTS
+        SET
+            IS_DELETED = 'Y',
+            UPDATED_DATE = SYSDATE
+        WHERE
+            DEPARTMENT_ID = #{departmentId}
+    </update>
+
+    <!-- countChildDepartments: 특정 부서의 하위 부서 수 조회 -->
+    <select id="countChildDepartments" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM GROUVY_DEPARTMENTS
+        WHERE PARENT_DEPARTMENT_ID = #{departmentId}
+          AND IS_DELETED = 'N'
+    </select>
+
+    <!-- countUsersInDepartment: 특정 부서에 소속된 사용자 수 조회 -->
+    <select id="countUsersInDepartment" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM GROUVY_USERS
+        WHERE DEPARTMENT_ID = #{departmentId}
+        AND IS_DELETED = 'N' <!-- 삭제되지 않은 사용자만 카운트 -->
+    </select>
+
+    <!-- insertDepartmentHistory: 부서 변경 이력 삽입 -->
+    <insert id="insertDepartmentHistory" parameterType="com.example.grouvy.department.vo.DepartmentHistory">
+        <selectKey keyProperty="historyId" resultType="long" order="BEFORE">
+            SELECT DEPARTMENTS_HISTORIES_HISTORY_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_DEPARTMENTS_HISTORIES (
+        HISTORY_ID, DEPARTMENT_ID, CHANGE_TYPE, OLD_VALUE, NEW_VALUE, CHANGER_USER_ID, CHANGE_DATE
+        ) VALUES (
+        #{historyId}, #{departmentId}, #{changeType}, #{oldValue, jdbcType=CLOB}, #{newValue, jdbcType=CLOB}, #{changerUserId}, SYSDATE
+        )
+    </insert>
+
+    <!-- findDepartmentHistoriesByDepartmentId: 특정 부서의 변경 이력 조회 -->
+    <select id="findDepartmentHistoriesByDepartmentId" parameterType="long" resultMap="departmentHistoryResultMap">
+        SELECT
+        dh.HISTORY_ID,
+        dh.DEPARTMENT_ID,
+        d.DEPARTMENT_NAME, <!-- GROUVY_DEPARTMENTS에서 부서 이름 조인 -->
+        dh.CHANGE_TYPE,
+        dh.OLD_VALUE,
+        dh.NEW_VALUE,
+        dh.CHANGER_USER_ID,
+        u.NAME AS CHANGER_USER_NAME, <!-- GROUVY_USERS에서 변경자 이름 조인 -->
+        dh.CHANGE_DATE
+        FROM
+        GROUVY_DEPARTMENTS_HISTORIES dh
+        JOIN
+        GROUVY_DEPARTMENTS d ON dh.DEPARTMENT_ID = d.DEPARTMENT_ID
+        JOIN
+        GROUVY_USERS u ON dh.CHANGER_USER_ID = u.USER_ID
+        WHERE
+        dh.DEPARTMENT_ID = #{departmentId}
+        ORDER BY
+        dh.CHANGE_DATE DESC
+    </select>
+
+    <!-- findAllDepartmentHistories: 모든 부서의 변경 이력 조회 -->
+    <select id="findAllDepartmentHistories" resultMap="departmentHistoryResultMap">
+        SELECT
+            dh.HISTORY_ID,
+            dh.DEPARTMENT_ID,
+            d.DEPARTMENT_NAME,
+            dh.CHANGE_TYPE,
+            dh.OLD_VALUE,
+            dh.NEW_VALUE,
+            dh.CHANGER_USER_ID,
+            u.NAME AS CHANGER_USER_NAME,
+            dh.CHANGE_DATE
+        FROM
+            GROUVY_DEPARTMENTS_HISTORIES dh
+                JOIN
+            GROUVY_DEPARTMENTS d ON dh.DEPARTMENT_ID = d.DEPARTMENT_ID
+                JOIN
+            GROUVY_USERS u ON dh.CHANGER_USER_ID = u.USER_ID
+        ORDER BY
+            dh.CHANGE_DATE DESC
     </select>
 
 </mapper>

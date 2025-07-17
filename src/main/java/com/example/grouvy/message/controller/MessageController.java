@@ -125,10 +125,14 @@ public class MessageController {
             @RequestParam("type") String type,
             Model model, HttpSession session) {
 
+        // **발신자 정보 세션에서 가져와 Model에 추가 (누락되었을 가능성 있는 부분)**
         User senderUser = (User) session.getAttribute("selectedUser");
-        if (senderUser == null || senderUser.getUserId() == null) {
-            model.addAttribute("errorMessage", "쪽지 작성을 위해 발신자 정보를 선택해주세요. (조직도에서 사용자 클릭)");
-            return "message/message_send"; // 발신자 없으면 일반 발송 폼으로 리다이렉트
+        if (senderUser != null && senderUser.getUserId() != null) {
+            model.addAttribute("currentSender", senderUser);
+        } else {
+            // 발신자 정보가 없으면 에러 메시지를 Model에 추가하고 페이지는 유지
+            model.addAttribute("errorMessage", "쪽지 작성을 위해 발신자 정보가 필요합니다. 조직도에서 발신자를 먼저 선택해주세요.");
+            // preparedDto는 null로 두어 폼 필드를 채우지 않도록 합니다.
         }
 
         MessageSendRequestDto preparedDto = null;
@@ -142,20 +146,20 @@ public class MessageController {
             formTitle = "쪽지 전달";
         } else {
             model.addAttribute("errorMessage", "잘못된 쪽지 준비 요청입니다.");
-            return "message/message_send";
         }
 
-        if (preparedDto == null) {
+        // preparedDto가 null이거나 (원본 쪽지 없음/권한 없음)
+        // 또는 senderUser가 null인 경우에도 에러 메시지를 설정 (중복 체크)
+        if (preparedDto == null && model.getAttribute("errorMessage") == null) {
             model.addAttribute("errorMessage", "원본 쪽지를 찾을 수 없거나 접근 권한이 없습니다.");
-            return "message/message_send";
         }
 
-        model.addAttribute("preparedMessage", preparedDto); // 준비된 DTO를 JSP로 전달
+        model.addAttribute("preparedMessage", preparedDto);
         model.addAttribute("formTitle", formTitle);
-        model.addAttribute("originalMessageId", originalMessageId); // JS에서 사용할 수 있도록 전달
-        model.addAttribute("messageType", type); // JS에서 사용할 수 있도록 전달
+        model.addAttribute("originalMessageId", originalMessageId);
+        model.addAttribute("messageType", type);
 
-        model.addAttribute("currentPage", "send"); // 사이드바 활성화를 위한 값
-        return "message/message_send_prepared"; // 답장/전달 전용 뷰 (새로 생성)
+        model.addAttribute("currentPage", "send");
+        return "message/message_send_prepared"; // 답장/전달 전용 뷰 반환
     }
 }
