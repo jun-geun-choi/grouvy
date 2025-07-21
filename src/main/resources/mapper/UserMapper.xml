@@ -2,110 +2,162 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.grouvy.user.mapper.UserMapper">
 
- <!-- void insertUser(User user); -->
- <!-- TODO login_provider : 이메일 인증 여부 구현 -->
- <insert id="insertUser" parameterType="User">
-  <selectKey keyProperty="userId"
-             resultType="int"
-             order="BEFORE">
-   SELECT USERS_USER_ID_SEQ.NEXTVAL
-   FROM DUAL
-  </selectKey>
+    <!-- **최종 확정된 UserResultMap (UserResultMapWithRoleNames 이름 그대로 유지)** -->
+    <resultMap id="UserResultMapWithRoleNames" type="User">
+        <!-- 기본 User VO 필드들 -->
+        <id column="user_id" property="userId"/>
+        <result column="employee_no" property="employeeNo"/>
+        <result column="name" property="name"/>
+        <result column="email" property="email"/>
+        <result column="password" property="password"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="login_provider" property="loginProvider"/>
+        <result column="social_email" property="socialEmail"/>
+        <result column="email_verified" property="emailVerified"/>
+        <result column="phone_number" property="phoneNumber"/>
+        <result column="address" property="address"/>
+        <result column="profile_img_path" property="profileImgPath"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="updated_date" property="updatedDate"/>
+        <result column="resign_date" property="resignDate"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="position_no" property="positionNo"/>
 
-  INSERT INTO GROUVY_USERS
-  (USER_ID, NAME, EMAIL, PASSWORD, LOGIN_PROVIDER, PHONE_NUMBER)
-  VALUES
-  (#{userId}, #{name}, #{email}, #{password}, 'local', #{phoneNumber})
- </insert>
+        <!-- 부서 정보 매핑 (Department VO 객체에 자동 매핑) -->
+        <association property="department" javaType="Department">
+            <id column="department_id" property="departmentId"/>
+            <result column="department_name" property="departmentName"/> <!-- **컬럼명은 department_name 유지** -->
+        </association>
 
- <!--  User getUserByEmail(String email);  -->
- <select id="getUserByEmail" resultType="User">
-  SELECT
-   USER_ID userId
-       , DEPARTMENT_ID departmentId
-       , EMPLOYEE_NO employeeNo
-       , NAME
-       , EMAIL
-       , PASSWORD
-       , LOGIN_PROVIDER loginProvider
-       , SOCIAL_EMAIL socialEmail
-       , PHONE_NUMBER phoneNumber
-       , ADDRESS
-       , PROFILE_IMG_PATH profileImgPath
-       , IS_DELETED isDeleted
-       , CREATED_DATE createdDate
-       , UPDATED_DATE updatedDate
-       , EMAIL_VERIFIED emailVerified
-       , POSITION_NO positionNo
-       , RESIGN_DATE resignDate
-  FROM
-   GROUVY_USERS
-  WHERE
-   EMAIL = #{email}
- </select>
+        <!-- 직위 정보 매핑 (Position VO 객체에 자동 매핑) -->
+        <association property="position" javaType="Position">
+            <id column="position_no" property="positionNo"/>
+            <result column="position_name" property="positionName"/>
+        </association>
 
- <!--  List<String> getRoleNamesByUserId(int userId);  -->
- <select id="getRoleNamesByUserId" resultType="string">
-  SELECT
-   ROLE_NAME
-  FROM
-   GROUVY_USER_ROLES
-  WHERE
-   USER_ID = #{userId}
- </select>
+        <!-- 사용자 역할 목록 매핑 -->
+        <collection property="roleNames"
+                    column="user_id"
+                    ofType="string"
+                    select="getRoleNamesByUserId"/>
+    </resultMap>
 
- <!--  User getUserByUsernameWithRoleNames(String username);  -->
- <resultMap id="UserResultMapWithRoleNames" type="User">
-  <id column="user_id" property="userId" />
-  <result column="department_id" property="departmentId" />
-  <result column="employee_no" property="employeeNo" />
-  <result column="name" property="name" />
-  <result column="email" property="email" />
-  <result column="password" property="password" />
-  <result column="is_deleted" property="isDeleted" />
-  <result column="position_no" property="positionNo" />
 
-  <!-- 부서 정보 매핑 -->
-  <association property="department" javaType="Department">
-   <id column="department_id" property="departmentId"/>
-   <result column="department_name" property="departmentName"/>
-  </association>
+    <!-- void insertUser(User user); -->
+    <insert id="insertUser" parameterType="User">
+        <selectKey keyProperty="userId"
+                   resultType="int"
+                   order="BEFORE">
+            SELECT USERS_USER_ID_SEQ.NEXTVAL
+            FROM DUAL
+        </selectKey>
 
-  <!-- 직위 정보 매핑 -->
-  <association property="position" javaType="Position">
-   <id column="position_no" property="positionNo"/>
-   <result column="position_name" property="positionName"/>
-  </association>
+        INSERT INTO GROUVY_USERS
+        (USER_ID, NAME, EMAIL, PASSWORD, LOGIN_PROVIDER, PHONE_NUMBER, POSITION_NO)
+        VALUES
+        (#{userId}, #{name}, #{email}, #{password}, 'local', #{phoneNumber}, #{positionNo})
+    </insert>
 
-  <collection property="roleNames"
-              column="user_id"
-              ofType="string"
-              select="getRoleNamesByUserId" />
- </resultMap>
+    <!-- User getUserByEmail(String email); -->
+    <select id="getUserByEmail" resultMap="UserResultMapWithRoleNames"> <!-- **resultMap 변경** -->
+        SELECT
+        U.USER_ID, U.DEPARTMENT_ID, U.EMPLOYEE_NO, U.NAME, U.EMAIL, U.PASSWORD, U.LOGIN_PROVIDER,
+        U.SOCIAL_EMAIL, U.PHONE_NUMBER, U.ADDRESS, U.PROFILE_IMG_PATH, U.IS_DELETED, U.CREATED_DATE,
+        U.UPDATED_DATE, U.EMAIL_VERIFIED, U.POSITION_NO, U.RESIGN_DATE,
 
- <select id="getUserByUsernameWithRoleNames" resultMap="UserResultMapWithRoleNames">
-  SELECT
-   U.USER_ID,
-   U.DEPARTMENT_ID,
-   U.EMPLOYEE_NO,
-   U.NAME,
-   U.EMAIL,
-   U.PASSWORD,
-   U.IS_DELETED,
-   U.POSITION_NO,
+        D.DEPARTMENT_ID,
+        D.DEPARTMENT_NAME,
 
-   D.DEPARTMENT_ID,
-   D.DEPARTMENT_NAME,
+        P.POSITION_NO,
+        P.POSITION_NAME
+        FROM GROUVY_USERS U
+        LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+        LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        WHERE U.EMAIL = #{email}
+    </select>
 
-   P.POSITION_NO,
-   P.POSITION_NAME
+    <!-- List<String> getRoleNamesByUserId(int userId); -->
+    <select id="getRoleNamesByUserId" parameterType="int" resultType="string">
+        SELECT ROLE_NAME
+        FROM GROUVY_USER_ROLES
+        WHERE USER_ID = #{userId}
+    </select>
 
-  FROM
-   GROUVY_USERS U
-    LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
-    LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+    <!-- User getUserByUsernameWithRoleNames(String username); -->
+    <select id="getUserByUsernameWithRoleNames" resultMap="UserResultMapWithRoleNames">
+        SELECT U.USER_ID,
+               U.DEPARTMENT_ID,
+               U.EMPLOYEE_NO,
+               U.NAME,
+               U.EMAIL,
+               U.PASSWORD,
+               U.IS_DELETED,
+               U.POSITION_NO,
+               U.LOGIN_PROVIDER,
+               U.SOCIAL_EMAIL,
+               U.EMAIL_VERIFIED,
+               U.PHONE_NUMBER,
+               U.ADDRESS,
+               U.PROFILE_IMG_PATH,
+               U.CREATED_DATE,
+               U.UPDATED_DATE,
+               U.RESIGN_DATE,
 
-  WHERE
-   U.EMAIL = #{username}
- </select>
+               D.DEPARTMENT_ID,
+               D.DEPARTMENT_NAME,
+
+               P.POSITION_NO,
+               P.POSITION_NAME
+
+        FROM GROUVY_USERS U
+                 LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+                 LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        WHERE U.EMAIL = #{username}
+    </select>
+
+
+    <!-- findByUserId: 특정 사용자 ID로 사용자 정보를 조회합니다. -->
+    <select id="findByUserId" parameterType="int" resultMap="UserResultMapWithRoleNames"> <!-- **resultMap 변경** -->
+        SELECT
+        gu.USER_ID, gu.DEPARTMENT_ID, gu.EMPLOYEE_NO, gu.NAME, gu.EMAIL, gu.PASSWORD, gu.LOGIN_PROVIDER,
+        gu.SOCIAL_EMAIL, gu.PHONE_NUMBER, gu.ADDRESS, gu.PROFILE_IMG_PATH, gu.IS_DELETED, gu.CREATED_DATE,
+        gu.UPDATED_DATE, gu.EMAIL_VERIFIED, gu.POSITION_NO, gu.RESIGN_DATE,
+        gd.DEPARTMENT_NAME,
+        gp.POSITION_NAME
+        FROM GROUVY_USERS gu
+        LEFT JOIN GROUVY_DEPARTMENTS gd ON gu.DEPARTMENT_ID = gd.DEPARTMENT_ID
+        LEFT JOIN GROUVY_POSITIONS gp ON gu.POSITION_NO = gp.POSITION_NO
+        WHERE gu.USER_ID = #{userId}
+        AND gu.IS_DELETED = 'N'
+    </select>
+
+    <!-- findUsersByDeptId: 특정 부서 ID로 소속 사용자 목록을 조회합니다. -->
+    <select id="findUsersByDeptId" parameterType="long"
+            resultMap="UserResultMapWithRoleNames"> <!-- **resultMap 변경** -->
+        SELECT
+        u.USER_ID, u.DEPARTMENT_ID, u.EMPLOYEE_NO, u.NAME, u.EMAIL, u.PHONE_NUMBER,u.POSITION_NO,
+        d.DEPARTMENT_NAME,
+        p.POSITION_NAME
+        FROM GROUVY_USERS u
+        LEFT JOIN GROUVY_DEPARTMENTS d ON u.DEPARTMENT_ID = d.DEPARTMENT_ID
+        LEFT JOIN GROUVY_POSITIONS p ON u.POSITION_NO = p.POSITION_NO
+        WHERE u.DEPARTMENT_ID = #{departmentId}
+        AND u.IS_DELETED = 'N'
+        ORDER BY u.NAME ASC
+    </select>
+
+    <!-- findUserNameByUserId: 특정 사용자 ID로 사용자 이름(NAME)만 조회합니다. -->
+    <select id="findUserNameByUserId" parameterType="int" resultType="string"> <!-- **메서드명 변경** -->
+        SELECT NAME
+        FROM GROUVY_USERS
+        WHERE USER_ID = #{userId}
+    </select>
+
+    <!-- countUsersInDepartment: 특정 부서에 소속된 사용자 수 조회 -->
+    <select id="countUsersInDepartment" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM GROUVY_USERS
+        WHERE DEPARTMENT_ID = #{departmentId}
+          AND IS_DELETED = 'N'
+    </select>
 </mapper>
