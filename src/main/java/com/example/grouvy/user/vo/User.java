@@ -31,10 +31,10 @@ public class User {
     private Date resignDate;
     private String isDeleted;
 
-    private int departmentId;
+    private Long departmentId;
     private Department department;
 
-    private String positionNo;
+    private int positionNo;
     private Position position;
 
     private List<String> roleNames;

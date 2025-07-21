@@ -113,13 +113,10 @@
 
         const orgChartTree = document.getElementById('orgChartTree');
 
-        // 조직도 데이터를 백엔드에서 불러와 렌더링하는 함수
         async function fetchAndRenderOrgChart() {
             orgChartTree.innerHTML = '<p>조직도 데이터를 백엔드에서 불러오는 중...</p>';
 
             try {
-                // API 경로가 /api/v1/departments/tree 인지 /api/v1/dept/tree 인지 확인해주세요.
-                // 여기서는 /api/v1/departments/tree 로 가정합니다.
                 const response = await fetch('/api/v1/dept/tree');
 
                 if (!response.ok) {
@@ -131,11 +128,7 @@
 
                 orgChartTree.innerHTML = ''; // 로딩 메시지 제거
 
-                // 재귀적으로 부서 트리를 렌더링 시작.
-                // departmentTreeData는 최상위 부서들의 리스트이고, parentElement는 렌더링될 부모 DOM 요소입니다.
                 renderDepartmentTree(departmentTreeData, orgChartTree);
-
-                // 부서명 클릭 이벤트 리스너 설정 (DOM이 다 그려진 후)
                 setupEventListeners();
 
             } catch (error) {
@@ -144,39 +137,33 @@
             }
         }
 
-        // 재귀적으로 부서 트리를 렌더링하는 함수
-        // department.level (백엔드에서 1부터 시작)을 프론트엔드 들여쓰기 level (0부터 시작)에 맞춤.
         function renderDepartmentTree(departments, parentElement) {
             if (!departments || departments.length === 0) {
-                return; // 부서 배열이 없거나 비어있으면 렌더링 중단
+                return;
             }
 
             const ul = document.createElement('ul');
-            // 자식 부서 목록일 경우, 'child-dept-list' 클래스 추가
-            // 최상위 목록은 이 조건에 해당하지 않음 (parentElement가 orgChartTree 일 때)
-            if (parentElement.id !== 'orgChartTree') { // 부모 요소가 orgChartTree가 아니면 (즉, 자식 부서 목록이면)
+            if (parentElement.id !== 'orgChartTree') {
                 ul.className = 'dept-list child-dept-list';
             } else {
-                ul.className = 'dept-list'; // 최상위 목록
+                ul.className = 'dept-list';
             }
 
             departments.forEach(department => {
-                // 백엔드에서 받은 department.level (1부터 시작)을 CSS indent-level-X (0부터 시작)에 맞게 조정
                 const currentIndentLevel = (department.level != null) ? department.level - 1 : 0;
 
                 const li = document.createElement('li');
-                li.className = `dept-item indent-level-\${currentIndentLevel}`; // 들여쓰기 클래스 적용
+                li.className = `dept-item indent-level-\${currentIndentLevel}`;
 
                 const deptNameContainer = document.createElement('span');
-                deptNameContainer.className = `department-name department-level-\${currentIndentLevel}`; // 부서명 컨테이너
+                deptNameContainer.className = `department-name department-level-\${currentIndentLevel}`;
 
                 const toggleIcon = document.createElement('span');
                 toggleIcon.className = 'toggle-icon';
-                // 해당 부서에 사용자가 존재할 때만 토글 아이콘 표시
                 if (department.users && department.users.length > 0) {
-                    toggleIcon.textContent = '▶'; // 펼치기 아이콘
+                    toggleIcon.textContent = '▶';
                 } else {
-                    toggleIcon.textContent = ''; // 사용자가 없으면 아이콘 표시 안 함
+                    toggleIcon.textContent = '';
                 }
                 deptNameContainer.appendChild(toggleIcon);
 
@@ -184,13 +171,11 @@
                 deptNameContainer.appendChild(deptText);
                 li.appendChild(deptNameContainer);
 
-                // 사용자 리스트 렌더링 (ul.user-list는 초기 display: none;)
                 const userListUl = document.createElement('ul');
                 userListUl.className = 'user-list';
 
                 if (department.users && department.users.length > 0) {
                     department.users.forEach(user => {
-                        // 유효성 검사 (사용자 ID나 이름이 없는 경우)
                         if (!user || (!user.userId && !user.name)) {
                             const userLi = document.createElement('li');
                             userLi.className = 'user-item';
@@ -214,23 +199,19 @@
                     noUserLi.textContent = '소속된 사용자가 없습니다.';
                     userListUl.appendChild(noUserLi);
                 }
-                li.appendChild(userListUl); // 사용자 리스트를 부서 li에 직접 추가
+                li.appendChild(userListUl);
 
-                // 자식 부서 리스트 렌더링 (재귀 호출)
-                // 자식 부서는 항상 표시되므로, 별도의 래퍼 없이 li에 직접 추가
                 if (department.children && department.children.length > 0) {
-                    renderDepartmentTree(department.children, li); // 자식 부서는 항상 보이도록 li에 직접 추가
+                    renderDepartmentTree(department.children, li);
                 }
 
-                ul.appendChild(li); // 완성된 li를 현재 ul에 추가
+                ul.appendChild(li);
             });
-            parentElement.appendChild(ul); // 완성된 ul을 부모 요소에 추가
+            parentElement.appendChild(ul);
         }
 
-        // 이벤트 리스너 설정 함수
         function setupEventListeners() {
             console.log("이벤트 리스너 설정 시작...");
-            // 모든 .department-name 요소에 클릭 이벤트 리스너 추가
             document.querySelectorAll('.department-name').forEach(deptNameElement => {
                 deptNameElement.addEventListener('click', function(event) {
                     const deptItem = deptNameElement.closest('.dept-item');
@@ -239,33 +220,27 @@
                         return;
                     }
 
-                    // 클릭 시 토글 대상은 해당 부서의 'user-list'만
                     const userList = deptItem.querySelector('.user-list');
                     const toggleIcon = deptNameElement.querySelector('.toggle-icon');
 
-                    // 사용자 리스트가 존재하고, 토글 아이콘이 있는 경우에만 토글 기능 수행
-                    if (userList && toggleIcon && toggleIcon.textContent === '▶') { // 아이콘이 있을 때만
-                        // userList의 'expanded-users' 클래스를 토글하여 표시 상태 변경
-                        if (userList.classList.contains('expanded-users')) { // 이미 펼쳐져 있다면 접기
+                    if (userList && toggleIcon && toggleIcon.textContent === '▶') {
+                        if (userList.classList.contains('expanded-users')) {
                             userList.classList.remove('expanded-users');
-                            toggleIcon.style.transform = 'rotate(0deg)'; // 아이콘 회전 원상복귀
+                            toggleIcon.style.transform = 'rotate(0deg)';
                             console.log("사용자 접기:", deptNameElement.textContent.trim());
-                        } else { // 접혀 있다면 펼치기
+                        } else {
                             userList.classList.add('expanded-users');
-                            toggleIcon.style.transform = 'rotate(90deg)'; // 아이콘 90도 회전
+                            toggleIcon.style.transform = 'rotate(90deg)';
                             console.log("사용자 펼치기:", deptNameElement.textContent.trim());
                         }
                     } else if (userList) {
-                        // 사용자 리스트는 있지만 토글 아이콘이 없는 경우 (사용자가 없어서 아이콘이 없는 부서)
                         console.log("부서 클릭: 해당 부서에 사용자가 없어 토글 기능이 없습니다.", deptNameElement.textContent.trim());
                     }
-                    // userList가 아예 없는 경우 (renderDepartmentTree에서 생성되지 않는 경우)는 무시
                 });
             });
             console.log("이벤트 리스너 설정 완료.");
         }
 
-        // 페이지 로드 시 조직도 데이터 불러오기 및 렌더링 시작
         fetchAndRenderOrgChart();
     });
 </script>
