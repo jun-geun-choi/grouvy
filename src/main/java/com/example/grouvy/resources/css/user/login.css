@@ -1,0 +1,40 @@
+body {
+    background: #f7f7f7;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 370px;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+    padding: 2.5rem 2rem 2rem 2rem;
+    background: #fff;
+    margin: 80px auto;
+}
+
+.auth-logo {
+    display: block;
+    margin: 0 auto 1.5rem auto;
+    width: 120px;
+}
+
+.auth-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.auth-link {
+    color: #00c3aa;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.95rem;
+}
+
+.btn-grouvy {
+    background-color: #e6002d; /* 붉은 계열 색상 */
+    border-color: #e6002d;
+    color: #fff;
+    font-weight: 500;
+}
