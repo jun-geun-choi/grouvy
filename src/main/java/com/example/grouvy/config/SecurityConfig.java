@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 // 보안 설정을 위한 클래스
 @Configuration
@@ -35,8 +36,6 @@ public class SecurityConfig {
             .logoutUrl("/logout")
             .logoutSuccessUrl("/login")
         );
-
-
     return http.build();
   }
 
@@ -45,4 +44,5 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
+
 }
