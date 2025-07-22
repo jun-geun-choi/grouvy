@@ -47,4 +47,60 @@
             IS_DELETED = 'N'
         ORDER BY PARENT_DEPARTMENT_ID NULLS FIRST, DEPARTMENT_ORDER ASC, DEPARTMENT_NAME ASC
     </select>
+
+    <select id="findDepartmentById" parameterType="long" resultMap="departmentResultMap">
+        SELECT
+            DEPARTMENT_ID,
+            DEPARTMENT_NAME,
+            PARENT_DEPARTMENT_ID,
+            DEPARTMENT_ORDER,
+            CREATED_DATE,
+            UPDATED_DATE,
+            IS_DELETED
+        FROM
+            GROUVY_DEPARTMENTS
+        WHERE
+            DEPARTMENT_ID = #{departmentId}
+          AND IS_DELETED = 'N'
+    </select>
+
+    <insert id="insertDepartment" parameterType="com.example.grouvy.department.vo.Department" keyProperty="departmentId">
+        <selectKey keyProperty="departmentId" resultType="long" order="BEFORE">
+            SELECT DEPARTMENTS_DEPARTMENT_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_DEPARTMENTS (
+        DEPARTMENT_ID, DEPARTMENT_NAME, PARENT_DEPARTMENT_ID, DEPARTMENT_ORDER, CREATED_DATE, IS_DELETED
+        ) VALUES (
+        #{departmentId}, #{departmentName}, #{parentDepartmentId}, #{departmentOrder}, SYSDATE, 'N'
+        )
+    </insert>
+
+    <update id="updateDepartment" parameterType="com.example.grouvy.department.vo.Department">
+        UPDATE GROUVY_DEPARTMENTS
+        SET
+            DEPARTMENT_NAME = #{departmentName},
+            PARENT_DEPARTMENT_ID = #{parentDepartmentId},
+            DEPARTMENT_ORDER = #{departmentOrder},
+            UPDATED_DATE = SYSDATE
+        WHERE
+            DEPARTMENT_ID = #{departmentId}
+    </update>
+
+    <update id="deleteDepartment">
+        UPDATE GROUVY_DEPARTMENTS
+        SET
+            IS_DELETED = 'Y',
+            UPDATED_DATE = SYSDATE
+        WHERE
+            DEPARTMENT_ID = #{departmentId}
+    </update>
+
+    <select id="countChildDepartments" resultType="int">
+        SELECT COUNT(DEPARTMENT_ID)
+        FROM GROUVY_DEPARTMENTS
+        WHERE PARENT_DEPARTMENT_ID = #{parentDepartmentId}
+          AND IS_DELETED = 'N'
+    </select>
+
+
 </mapper>

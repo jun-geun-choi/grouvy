@@ -34,9 +34,9 @@
             <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
             <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
             <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
+            <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/dept/list">조직도</a></li>
             <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-            <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
+            <li class="nav-item"><a class="nav-link" href="/admin">관리자</a></li>
         </ul>
         <div class="d-flex align-items-center">
             <!-- 로그인 사용자 드롭다운 -->
