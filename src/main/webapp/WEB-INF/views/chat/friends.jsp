@@ -271,6 +271,7 @@
     loadMyList();
     renderFriendsList();
   });
+  /*  */
 </script>
 </body>
 </html>
