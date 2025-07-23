@@ -13,9 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -59,7 +57,6 @@ public class AdminDepartmentService {
 
         try {
             int changerUserId = getCurrentUserId();
-            // [수정] Department 객체 전체를 직렬화하여 원본 JSON 저장
             String newValueJson = objectMapper.writeValueAsString(department);
             departmentHistoryService.recordDepartmentHistory(
                     department.getDepartmentId(), "CREATE", null, newValueJson, changerUserId
@@ -81,9 +78,7 @@ public class AdminDepartmentService {
         if (updatedRows > 0) {
             try {
                 int changerUserId = getCurrentUserId();
-                // [수정] Department 객체 전체를 직렬화하여 원본 JSON 저장
                 String oldValueJson = objectMapper.writeValueAsString(oldDepartment);
-                // 업데이트 후의 객체를 DB에서 다시 조회하여 정확한 스냅샷을 만듭니다.
                 Department newDepartment = departmentMapper.findDepartmentById(department.getDepartmentId());
                 String newValueJson = objectMapper.writeValueAsString(newDepartment);
 
@@ -112,7 +107,7 @@ public class AdminDepartmentService {
 
         Department departmentToDelete = departmentMapper.findDepartmentById(departmentId);
         if (departmentToDelete == null) {
-            return 0; // 이미 삭제되었거나 없는 부서
+            return 0;
         }
 
         int deletedRows = departmentMapper.deleteDepartment(departmentId);
@@ -120,7 +115,6 @@ public class AdminDepartmentService {
         if (deletedRows > 0) {
             try {
                 int changerUserId = getCurrentUserId();
-                // [수정] Department 객체 전체를 직렬화하여 원본 JSON 저장
                 String deletedValueJson = objectMapper.writeValueAsString(departmentToDelete);
                 departmentHistoryService.recordDepartmentHistory(
                         departmentId, "DELETE", deletedValueJson, null, changerUserId

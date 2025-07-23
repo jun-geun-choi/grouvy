@@ -6,7 +6,6 @@
 <head>
     <meta charset="UTF-8">
     <title><c:out value="${formTitle}"/></title>
-    <%-- Bootstrap CSS CDN 직접 추가 --%>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* 관리자 페이지 공통 스타일 */
@@ -181,9 +180,7 @@
     </style>
 </head>
 <body>
-<%-- 상단 내비게이션 (navbar)은 요청에 따라 포함하지 않습니다. --%>
 
-<%-- currentPage 변수를 설정하여 사이드바에서 현재 페이지를 활성화 --%>
 <c:set var="currentPage" value="departmentList" scope="request"/>
 
 <div class="container">
@@ -217,7 +214,6 @@
                 <label for="parentDepartmentId" class="form-label">상위 부서:</label>
                 <select id="parentDepartmentId" name="parentDepartmentId" class="form-select">
                     <option value="">-- 최상위 부서 --</option>
-                    <!-- JavaScript로 상위 부서 목록이 로드됩니다 -->
                 </select>
             </div>
             <div class="mb-3">
@@ -239,11 +235,8 @@
 <footer>
     <p>© 2025 그룹웨어 Corp.</p>
 </footer>
-<%-- Bootstrap JS CDN 직접 추가 --%>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-<!-- admin_department_update.jsp 내 script 태그 -->
-<!-- admin_department_update.jsp 내 script 태그 -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const departmentForm = document.getElementById('departmentForm');
@@ -253,23 +246,20 @@
         const departmentOrderField = document.getElementById('departmentOrder');
         const serverMessageArea = document.getElementById('serverMessageArea');
 
-        const formMode = document.getElementById('formMode') ? document.getElementById('formMode').value : 'create'; // Hidden input에서 가져오는 방식으로 변경
-        const currentDepartmentId = departmentIdField.value; // 생성 모드일 경우 비어있을 수 있음
+        const formMode = document.getElementById('formMode') ? document.getElementById('formMode').value : 'create';
+        const currentDepartmentId = departmentIdField.value;
 
         async function loadParentDepartments() {
             try {
-                // 상위 부서 목록 API 경로: /api/v1/dept/list
-                const response = await fetch('/api/v1/dept/list'); // OK, 기존 경로 유지
+                const response = await fetch('/api/v1/dept/list');
                 if (!response.ok) throw new Error('상위 부서 목록 로드 실패');
                 const departments = await response.json();
 
                 let optionsHtml = '<option value="">-- 최상위 부서 --</option>';
                 departments.forEach(dept => {
-                    // 현재 수정 중인 부서는 상위 부서 목록에서 제외 (자기 자신을 부모로 가질 수 없음)
                     if (formMode === 'update' && dept.departmentId == currentDepartmentId) {
                         return;
                     }
-                    // 백슬래시 제거 확인
                     optionsHtml += `<option value="\${dept.departmentId}">\${dept.departmentName} (ID: \${dept.departmentId})</option>`;
                 });
                 parentDepartmentIdField.innerHTML = optionsHtml;
@@ -281,11 +271,9 @@
         }
 
         async function loadDepartmentDataForUpdate() {
-            // 'update' 모드이고 departmentId가 유효할 때만 실행
             if (formMode === 'update' && currentDepartmentId) {
                 try {
-                    // 특정 부서 상세 조회 API 경로: /api/v1/dept/{id}
-                    const response = await fetch(`/api/v1/dept/\${currentDepartmentId}`); // 수정!
+                    const response = await fetch(`/api/v1/dept/\${currentDepartmentId}`);
                     if (!response.ok) {
                         if (response.status === 404) {
                             throw new Error('해당 부서를 찾을 수 없습니다.');
@@ -293,7 +281,7 @@
                             displayClientMessage('관리자 권한이 없습니다.', 'danger');
                             return;
                         }
-                        throw new Error(`HTTP error! status: \${response.status}`); // 백슬래시 제거 확인
+                        throw new Error(`HTTP error! status: \${response.status}`);
                     }
                     const department = await response.json();
                     console.log('로드된 부서 데이터:', department);
@@ -301,27 +289,25 @@
                     departmentNameField.value = department.departmentName;
                     departmentOrderField.value = department.departmentOrder;
 
-                    // 부모 부서가 있다면 선택
                     if (department.parentDepartmentId) {
                         parentDepartmentIdField.value = department.parentDepartmentId;
                     }
 
                 } catch (error) {
                     console.error('부서 데이터를 불러오는 중 오류:', error);
-                    displayClientMessage(`부서 데이터를 불러올 수 없습니다: \${error.message}`, 'danger'); // 백슬래시 제거 확인
+                    displayClientMessage(`부서 데이터를 불러올 수 없습니다: \${error.message}`, 'danger');
                 }
             }
         }
 
         departmentForm.addEventListener('submit', async function(event) {
-            event.preventDefault(); // 기본 폼 제출 방지
+            event.preventDefault();
 
             console.log('Form Mode:', formMode);
             console.log('Current Department ID:', currentDepartmentId);
 
             const departmentData = {
                 departmentName: departmentNameField.value.trim(),
-                // value가 빈 문자열이면 null로 변환 (상위 부서 없음)
                 parentDepartmentId: parentDepartmentIdField.value ? parseInt(parentDepartmentIdField.value) : null,
                 departmentOrder: parseInt(departmentOrderField.value),
             };
@@ -335,13 +321,13 @@
                 return;
             }
 
-            let url = '/api/v1/dept'; // 생성 API 기본 URL
+            let url = '/api/v1/dept';
             let method = 'POST';
 
             if (formMode === 'update') {
-                url += `/\${currentDepartmentId}`; // 수정 API URL
+                url += `/\${currentDepartmentId}`;
                 method = 'PUT';
-                departmentData.departmentId = parseInt(currentDepartmentId); // ID 포함하여 전송
+                departmentData.departmentId = parseInt(currentDepartmentId);
             }
 
             console.log('API URL:', url);
@@ -356,9 +342,9 @@
 
                 if (response.ok) {
                     displayClientMessage(result.message, 'info');
-                    setTimeout(() => window.location.href = '/admin/dept/list', 1000); // 목록 페이지로 이동
+                    setTimeout(() => window.location.href = '/admin/dept/list', 1000);
                 } else {
-                    displayClientMessage(result.message || (formMode === 'create' ? '부서 생성 실패!' : '부서 수정 실패!'), 'danger'); // 백슬래시 제거 확인
+                    displayClientMessage(result.message || (formMode === 'create' ? '부서 생성 실패!' : '부서 수정 실패!'), 'danger');
                 }
             } catch (error) {
                 console.error('부서 저장 중 오류:', error);
@@ -366,14 +352,13 @@
             }
         });
 
-        // displayClientMessage 함수 (common function)
         function displayClientMessage(message, type) {
             if (!serverMessageArea) {
                 console.error('serverMessageArea 엘리먼트를 찾을 수 없습니다.');
                 return;
             }
             const tempMessageDiv = document.createElement('div');
-            tempMessageDiv.innerHTML = `<p class="alert alert-\${type} text-center">\${message}</p>`; // 백슬래시 제거 확인
+            tempMessageDiv.innerHTML = `<p class="alert alert-\${type} text-center">\${message}</p>`;
             serverMessageArea.prepend(tempMessageDiv);
 
             setTimeout(() => {
@@ -381,8 +366,8 @@
             }, 5000);
         }
 
-        loadParentDepartments(); // 상위 부서 목록 로드
-        loadDepartmentDataForUpdate(); // 수정 모드 시 데이터 로드
+        loadParentDepartments();
+        loadDepartmentDataForUpdate();
     });
 </script>
 </body>

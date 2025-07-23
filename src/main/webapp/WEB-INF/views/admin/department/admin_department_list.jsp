@@ -5,10 +5,7 @@
 <html>
 <head>
     <title>부서 관리</title> <%-- 페이지 타이틀 명확화 --%>
-    <%-- [핵심] Bootstrap CSS CDN 제거. 스타일은 아래 통합 CSS에서 처리 --%>
-    <%-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> --%>
     <style>
-        /* 통합 CSS for both admin_department_history.jsp and admin_department_list.jsp */
         body {
             background-color: #f7f7f7;
             font-family: Arial, sans-serif; /* 폰트 통일 */
@@ -166,12 +163,6 @@
             color: #212529;
             background-color: rgba(0, 0, 0, 0.075);
         }
-
-        /* 이력 테이블 전용 스타일은 list 페이지에서는 필요 없음 */
-        /* .history-table { ... } */
-        /* .history-table th, .history-table td { ... } */
-        /* .history-table td.value-cell { ... } */
-        /* .json-data { ... } */
 
         /* 기타 유틸리티 */
         .text-muted {
@@ -334,23 +325,20 @@
             }
         }
     </style>
-    <%-- [핵심] 통합된 스타일 시트 끝 --%>
 </head>
 <body>
 <div class="container">
     <div class="sidebar">
         <h3>관리 기능</h3>
         <ul>
-            <%-- [수정] 사이드바 메뉴 활성화 클래스 적용 --%>
             <li><a href="/admin" class="${currentPage == 'adminHome' ? 'active' : ''}">대시보드</a></li>
             <li><a href="/admin/dept/list" class="${currentPage == 'departmentList' ? 'active' : ''}">부서 관리</a></li>
             <li><a href="/admin/dept/history" class="${currentPage == 'departmentHistory' ? 'active' : ''}">부서 기록</a></li>
         </ul>
     </div>
     <div class="main-content">
-        <h2>부서 관리</h2> <%-- [추가] 제목 추가 --%>
+        <h2>부서 관리</h2>
 
-        <%-- 서버 메시지 또는 클라이언트 메시지를 표시할 영역 추가 --%>
         <div id="serverMessageArea"></div>
 
         <div class="d-flex justify-content-end mb-3">
@@ -362,13 +350,10 @@
         </div>
     </div>
 </div>
-<%-- [핵심] Bootstrap JS CDN 제거 --%>
-<%-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script> --%>
-<%-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script> --%>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const departmentListTable = document.getElementById('departmentListTable')
-        const serverMessageArea = document.getElementById('serverMessageArea'); // 메시지 표시 영역 변수 선언
+        const serverMessageArea = document.getElementById('serverMessageArea');
 
         async function fetchAndRenderDepartments() {
             departmentListTable.innerHTML = '<p>로딩중...</p>';
@@ -380,8 +365,8 @@
                 const departments = await response.json();
                 console.log('부서 목록 데이터: ', departments);
 
-                renderDepartmentTable(departments); // 렌더링
-                attachTableEventListeners(); // 렌더링 후 이벤트 리스너 부착
+                renderDepartmentTable(departments);
+                attachTableEventListeners();
             } catch (error) {
                 console.error('부서 목록을 불러오는 중 오류 발생: ', error);
                 departmentListTable.innerHTML = `<p class="alert alert-danger">부서 목록을 불러올 수 없습니다. 오류: \${error.message}</p>`;
@@ -410,7 +395,6 @@
                             <tbody>
                     `;
             departments.forEach(dept => {
-                // [수정] 날짜 포맷 통일 (YYYY-MM-DD)
                 const createdDate = dept.createdDate ? new Date(dept.createdDate).toISOString().split('T')[0] : '-';
                 const updatedDate = dept.updatedDate ? new Date(dept.updatedDate).toISOString().split('T')[0] : '-';
 
