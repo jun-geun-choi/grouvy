@@ -19,5 +19,4 @@ public class DepartmentController {
     public String getDepartmentList() {
         return "department/department_list";
     }
-
 }

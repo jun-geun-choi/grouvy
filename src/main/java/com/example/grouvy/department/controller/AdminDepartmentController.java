@@ -2,6 +2,8 @@ package com.example.grouvy.department.controller;
 
 import com.example.grouvy.department.service.AdminDepartmentService;
 import com.example.grouvy.department.vo.Department; // Department VO/Entity 필요
+import com.example.grouvy.user.vo.User;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model; // 뷰에 데이터 전달용
@@ -17,7 +19,6 @@ public class AdminDepartmentController {
     private final AdminDepartmentService adminDepartmentService;
 
     // 1. 부서 목록 관리 페이지 (admin_department_list.jsp 렌더링)
-    // URL: /admin/dept/list
     @GetMapping("/list")
     public String getAllDepartmentsPage(Model model) {
         model.addAttribute("currentPage", "departmentList"); // 사이드바 활성화용
@@ -25,7 +26,6 @@ public class AdminDepartmentController {
     }
 
     // 2. 새 부서 생성 폼 페이지 (admin_department_update.jsp 렌더링 - 생성 모드)
-    // URL: /admin/dept/form
     @GetMapping("/form")
     public String showCreateDepartmentForm(Model model) {
         model.addAttribute("department", new Department()); // 빈 Department 객체 (폼 바인딩용)
@@ -35,7 +35,6 @@ public class AdminDepartmentController {
     }
 
     // 3. 부서 수정 폼 페이지 (admin_department_update.jsp 렌더링 - 수정 모드)
-    // URL: /admin/dept/update/{id} <-- 이 경로를 JSP 링크와 일치시킬 예정
     @GetMapping("/update/{id}")
     public String showUpdateDepartmentForm(@PathVariable("id") Long departmentId, Model model) {
         Department department = adminDepartmentService.getDepartmentById(departmentId);
@@ -51,15 +50,13 @@ public class AdminDepartmentController {
         return "admin/department/admin_department_update"; // 'admin_department_update.jsp' 사용
     }
 
-    // 4. 부서 이력 페이지 (admin_department_history.jsp 렌더링 - 이 파일이 없다면 생성)
-    // URL: /admin/dept/history/{id}
-    @GetMapping("/history/{id}")
-    public String showDepartmentHistory(@PathVariable("id") Long departmentId, Model model) {
-        model.addAttribute("departmentId", departmentId);
-        model.addAttribute("currentPage", "departmentList"); // 사이드바 활성화용
-        // 'admin_department_history.jsp' 파일이 없다면 생성해주세요.
+    @GetMapping({"/history", "/history/{departmentId}"})
+    public String departmentHistory(
+            @PathVariable(value = "departmentId", required = false) Long departmentId,
+            Model model) {
+        model.addAttribute("selectedDepartmentId", departmentId); // JS에서 사용
+        model.addAttribute("currentPage", "departmentHistory"); // 사이드바 활성화를 위한 값
         return "admin/department/admin_department_history";
     }
-
 
 }

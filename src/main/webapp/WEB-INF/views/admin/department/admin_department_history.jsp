@@ -1,17 +1,17 @@
-<%-- src/main/webapp/WEB-INF/views/admin/department/admin_department_list.jsp --%>
+<%-- /WEB-INF/views/admin/department/admin_department_history.jsp --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<html>
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-    <title>부서 관리</title> <%-- 페이지 타이틀 명확화 --%>
-    <%-- [핵심] Bootstrap CSS CDN 제거. 스타일은 아래 통합 CSS에서 처리 --%>
-    <%-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> --%>
+    <meta charset="UTF-8">
+    <title>부서 이력 관리</title>
+    <%-- [핵심] 통합된 스타일 시트 시작 --%>
     <style>
         /* 통합 CSS for both admin_department_history.jsp and admin_department_list.jsp */
         body {
             background-color: #f7f7f7;
-            font-family: Arial, sans-serif; /* 폰트 통일 */
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -20,7 +20,7 @@
         .container {
             display: flex;
             padding: 20px;
-            max-width: 1400px; /* 넓은 화면에서 더 많은 내용이 보이도록 확장 */
+            max-width: 1400px; /* 콘텐츠가 많으므로 너비를 조금 넓힘 */
             margin: 20px auto;
         }
 
@@ -82,7 +82,7 @@
             padding-bottom: 18px;
         }
 
-        /* 필터 섹션 (history 페이지의 filter-section 기준) - list 페이지에는 이 클래스 없음 */
+        /* 필터 섹션 (history 페이지의 filter-section 기준) */
         .filter-section {
             margin-bottom: 25px;
             padding: 20px;
@@ -167,11 +167,34 @@
             background-color: rgba(0, 0, 0, 0.075);
         }
 
-        /* 이력 테이블 전용 스타일은 list 페이지에서는 필요 없음 */
-        /* .history-table { ... } */
-        /* .history-table th, .history-table td { ... } */
-        /* .history-table td.value-cell { ... } */
-        /* .json-data { ... } */
+        /* 추가된 이력 테이블 전용 스타일 */
+        #historyTableContainer {
+            margin-top: 20px; /* 여백 유지 */
+        }
+
+        .history-table th, .history-table td {
+            text-align: center; /* 이력 테이블은 중앙 정렬 유지 */
+            vertical-align: middle; /* 세로 중앙 정렬로 다시 오버라이드 */
+        }
+
+        .history-table td.value-cell {
+            text-align: left; /* 값 컬럼은 왼쪽 정렬 유지 */
+            background-color: #fdfdfd;
+        }
+
+        /* JSON 데이터 표시용 스타일 (history 페이지 전용) */
+        .json-data {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.88em;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f1f3f5;
+            color: #495057;
+            max-height: 200px;
+            overflow-y: auto;
+        }
 
         /* 기타 유틸리티 */
         .text-muted {
@@ -344,143 +367,192 @@
             <%-- [수정] 사이드바 메뉴 활성화 클래스 적용 --%>
             <li><a href="/admin" class="${currentPage == 'adminHome' ? 'active' : ''}">대시보드</a></li>
             <li><a href="/admin/dept/list" class="${currentPage == 'departmentList' ? 'active' : ''}">부서 관리</a></li>
-            <li><a href="/admin/dept/history" class="${currentPage == 'departmentHistory' ? 'active' : ''}">부서 기록</a></li>
+            <li><a href="/admin/dept/history" class="${currentPage == 'departmentHistory' ? 'active' : ''}">부서 이력</a></li>
         </ul>
     </div>
+    <%-- [변경] 기존 main-container를 main-content로 변경하여 레이아웃 통일 --%>
     <div class="main-content">
-        <h2>부서 관리</h2> <%-- [추가] 제목 추가 --%>
+        <h2>부서 이력 조회</h2> <%-- [변경] h1 대신 h2로 통일 --%>
 
-        <%-- 서버 메시지 또는 클라이언트 메시지를 표시할 영역 추가 --%>
-        <div id="serverMessageArea"></div>
-
-        <div class="d-flex justify-content-end mb-3">
-            <a href="/admin/dept/form" class="btn btn-primary">새 부서 생성</a>
+        <div class="filter-section">
+            <label for="departmentSelect">부서 선택:</label>
+            <select id="departmentSelect">
+                <option value="">전체 부서</option>
+                <%-- 부서 목록은 JavaScript로 채워집니다 --%>
+            </select>
+            <button id="searchButton">조회</button>
         </div>
 
-        <div id="departmentListTable" class="table-responsive">
-            <p>부서 목록을 불러오는 중...</p>
+        <div id="historyTableContainer">
+            <p class="text-center text-muted">조회할 부서를 선택하거나, 전체 부서로 조회해주세요.</p>
         </div>
     </div>
 </div>
-<%-- [핵심] Bootstrap JS CDN 제거 --%>
-<%-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script> --%>
-<%-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script> --%>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const departmentListTable = document.getElementById('departmentListTable')
-        const serverMessageArea = document.getElementById('serverMessageArea'); // 메시지 표시 영역 변수 선언
 
-        async function fetchAndRenderDepartments() {
-            departmentListTable.innerHTML = '<p>로딩중...</p>';
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 컨트롤러에서 전달받은 값 (URL에 departmentId가 있는 경우)
+        // \${...} EL 충돌 방지용은 그대로 유지
+        const initialDepartmentId = "\${selectedDepartmentId}";
+
+        const departmentSelect = document.getElementById('departmentSelect');
+        const searchButton = document.getElementById('searchButton');
+        const historyTableContainer = document.getElementById('historyTableContainer');
+
+        // 1. 부서 목록 로딩 함수
+        async function loadDepartmentOptions() {
             try {
                 const response = await fetch('/api/v1/dept/list');
                 if (!response.ok) {
+                    // [확인] 백슬래시 제거된 상태
                     throw new Error(`HTTP error! status: \${response.status}`);
                 }
                 const departments = await response.json();
-                console.log('부서 목록 데이터: ', departments);
 
-                renderDepartmentTable(departments); // 렌더링
-                attachTableEventListeners(); // 렌더링 후 이벤트 리스너 부착
-            } catch (error) {
-                console.error('부서 목록을 불러오는 중 오류 발생: ', error);
-                departmentListTable.innerHTML = `<p class="alert alert-danger">부서 목록을 불러올 수 없습니다. 오류: \${error.message}</p>`;
-            }
-        }
-
-        function renderDepartmentTable(departments) {
-            if (!departments || departments.length === 0) {
-                departmentListTable.innerHTML = '<p class="text-center text-muted">등록된 부서가 없습니다.</p>';
-                return;
-            }
-            let tableHtml = `
-                    <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>부서명</th>
-                                    <th>상위 부서 ID</th>
-                                    <th>정렬 순서</th>
-                                    <th>등록일</th>
-                                    <th>수정일</th>
-                                    <th>삭제 여부</th>
-                                    <th>액션</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-            departments.forEach(dept => {
-                // [수정] 날짜 포맷 통일 (YYYY-MM-DD)
-                const createdDate = dept.createdDate ? new Date(dept.createdDate).toISOString().split('T')[0] : '-';
-                const updatedDate = dept.updatedDate ? new Date(dept.updatedDate).toISOString().split('T')[0] : '-';
-
-                tableHtml += `
-                            <tr>
-                                <td>\${dept.departmentId}</td>
-                                <td>\${dept.departmentName}</td>
-                                <td>\${dept.parentDepartmentId || '최상위 부서'}</td>
-                                <td>\${dept.departmentOrder}</td>
-                                <td>\${createdDate}</td>
-                                <td>\${updatedDate}</td>
-                                <td>\${dept.isDeleted}</td>
-                                <td>
-                                    <a href="/admin/dept/update/\${dept.departmentId}" class="btn btn-info btn-sm me-1">수정</a>
-                                    <button type="button" class="btn btn-danger btn-sm delete-dept-btn" data-dept-id="\${dept.departmentId}">삭제</button>
-                                    <a href="/admin/dept/history/\${dept.departmentId}" class="btn btn-secondary btn-sm ms-1">이력</a>
-                                </td>
-                            </tr>
-                    `;
-            });
-            tableHtml += '</tbody></table>';
-            departmentListTable.innerHTML = tableHtml;
-
-        }
-
-        function attachTableEventListeners() {
-            document.querySelectorAll('.delete-dept-btn').forEach(button => {
-                button.addEventListener('click', async  function() {
-                    const departmentId = this.dataset.deptId;
-                    if(!confirm(`정말 ID \${departmentId} 부서를 삭제하시겠습니까? 하위 부서나 소속 직원이 있는 경우 삭제할 수 없습니다.`)) {
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch(`/api/v1/dept/\${departmentId}`, {
-                            method: 'DELETE',
-                        });
-                        const result = await response.json();
-
-                        if (response.ok) {
-                            displayClientMessage(result.message, 'info');
-                            fetchAndRenderDepartments();
-                        } else {
-                            displayClientMessage(result.message || '부서 삭제 실패!', 'danger');
-                        }
-                    } catch(error) {
-                        console.error('부서 삭제 중 오류:', error);
-                        displayClientMessage('부서 삭제 중 네트워크 오류.', 'danger');
-                    }
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.departmentId;
+                    // [확인] 백슬래시 제거된 상태
+                    option.textContent = `\${dept.departmentName} (ID: \${dept.departmentId})`;
+                    departmentSelect.appendChild(option);
                 });
-            });
+
+                if (initialDepartmentId) {
+                    departmentSelect.value = initialDepartmentId;
+                    fetchAndRenderHistories();
+                }
+
+            } catch (error) {
+                console.error('부서 목록 로딩 실패:', error);
+                departmentSelect.innerHTML = '<option value="">부서 목록을 불러올 수 없습니다.</option>';
+            }
         }
 
-        function displayClientMessage(message, type) {
-            if (!serverMessageArea) {
-                console.error('serverMessageArea 엘리먼트를 찾을 수 없습니다.');
+        // 2. 이력 데이터 조회 함수
+        async function fetchAndRenderHistories() {
+            const selectedId = departmentSelect.value;
+            // [확인] 백슬래시 제거된 상태
+            const apiUrl = selectedId ? `/api/v1/dept/history/\${selectedId}` : '/api/v1/dept/history';
+
+            historyTableContainer.innerHTML = '<p class="text-center text-muted">이력 데이터를 불러오는 중...</p>';
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        historyTableContainer.innerHTML = '<p class="text-center text-muted">해당 부서의 이력이 존재하지 않습니다.</p>';
+                    } else {
+                        // [확인] 백슬래시 제거된 상태
+                        throw new Error(`HTTP error! status: \${response.status}`);
+                    }
+                    return;
+                }
+                const histories = await response.json();
+                renderHistoryTable(histories);
+
+            } catch (error) {
+                console.error('이력 조회 중 오류:', error);
+                // [확인] 백슬래시 제거된 상태
+                historyTableContainer.innerHTML = `<p class="alert alert-danger">이력 조회 중 오류가 발생했습니다: \${error.message}</p>`;
+            }
+        }
+
+
+        // 원본 JSON을 받아 가독성 좋은 텍스트로 가공
+        function formatHistoryValue(jsonString) {
+            if (!jsonString || jsonString.trim() === '') return '-';
+
+            try {
+                const data = JSON.parse(jsonString);
+                const output = [];
+
+                // 1. 부서명 추출
+                if (data.departmentName) {
+                    // [확인] 백슬래시 제거된 상태
+                    output.push(`부서명: \${data.departmentName}`);
+                }
+
+                // 2. 상위 부서 정보 추출 (parentDepartmentId는 null일 수 있음)
+                if (data.parentDepartmentId) {
+                    // [확인] 백슬래시 제거된 상태
+                    output.push(`상위 부서 ID: \${data.parentDepartmentId}`);
+                } else if (data.parentDepartmentId === null) {
+                    output.push(`상위 부서: 최상위`);
+                }
+
+                // 3. 정렬 순서 추출
+                if (data.departmentOrder !== undefined && data.departmentOrder !== null) {
+                    // [확인] 백슬래시 제거된 상태
+                    output.push(`정렬 순서: \${data.departmentOrder}`);
+                }
+
+                // 가공된 텍스트들을 줄바꿈 문자로 연결하여 반환
+                return output.join('\n');
+
+            } catch (e) {
+                // JSON 파싱 실패 시 원본 텍스트 반환 (만약을 대비)
+                // [확인] 백슬래시 제거된 상태
+                return jsonString.replace(/\r?\n/g, '<br>');
+            }
+        }
+
+        // 테이블 렌더링 함수
+        function renderHistoryTable(histories) {
+            if (!histories || histories.length === 0) {
+                historyTableContainer.innerHTML = '<p class="text-center text-muted">조회된 이력이 없습니다.</p>';
                 return;
             }
-            const tempMessageDiv = document.createElement('div');
-            tempMessageDiv.innerHTML = `<p class="alert alert-\${type} text-center">\${message}</p>`;
-            serverMessageArea.prepend(tempMessageDiv);
 
-            setTimeout(() => {
-                tempMessageDiv.remove();
-            }, 5000);
+            // [수정] Bootstrap table 클래스 추가 (여기서 추가하면 history-table에도 적용됨)
+            const tableClasses = "history-table table table-bordered table-hover";
+
+            const tableRows = histories.map(history => {
+                const changeDate = new Date(history.changeDate).toISOString().split('T')[0];
+                // [확인] 백슬래시 제거된 상태
+                const departmentInfo = `\${history.departmentName} (\${history.departmentId})`;
+                // [확인] 백슬래시 제거된 상태
+                const changerInfo = `\${history.changerUserName} (\${history.changerUserId})`;
+
+                // 헬퍼 함수를 사용하여 oldValue, newValue 가공
+                const oldValueFormatted = formatHistoryValue(history.oldValue);
+                const newValueFormatted = formatHistoryValue(history.newValue);
+
+                return `
+                    <tr>
+                        <td>\${history.historyId}</td>
+                        <td>\${departmentInfo}</td>
+                        <td>\${history.changeType}</td>
+                        <td class="value-cell"><pre class="json-data">\${oldValueFormatted}</pre></td>
+                        <td class="value-cell"><pre class="json-data">\${newValueFormatted}</pre></td>
+                        <td>\${changerInfo}</td>
+                        <td>\${changeDate}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const tableHtml = `
+                <table class="\${tableClasses}">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">이력ID</th>
+                            <th style="width: 15%;">부서</th>
+                            <th style="width: 8%;">변경 타입</th>
+                            <th>이전 값</th>
+                            <th>새로운 값</th>
+                            <th style="width: 12%;">변경자</th>
+                            <th style="width: 10%;">변경일</th>
+                        </tr>
+                    </thead>
+                    <tbody>\${tableRows}</tbody>
+                </table>
+            `;
+            historyTableContainer.innerHTML = tableHtml;
         }
 
-        fetchAndRenderDepartments();
+        // 이벤트 리스너 등록 및 초기 데이터 로드
+        searchButton.addEventListener('click', fetchAndRenderHistories);
+        loadDepartmentOptions();
     });
-
 </script>
 </body>
 </html>
