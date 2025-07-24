@@ -8,6 +8,7 @@ import java.util.Date;
 @Getter
 @Setter
 public class Department {
+
   private Long departmentId;
   private String departmentName;
   private Long parentDepartmentId;

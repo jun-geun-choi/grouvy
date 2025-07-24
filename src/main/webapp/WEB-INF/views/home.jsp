@@ -30,13 +30,15 @@
         <ul class="navbar-nav mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link active" href="#">전자결재</a></li>
             <!-- 커서 active-->
-            <li class="nav-item"><a class="nav-link" href="#">업무문서함</a></li>
+
+            <li class="nav-item"><a class="nav-link" href="/file/personal">업무문서함</a></li>
             <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
             <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
             <li class="nav-item"><a class="nav-link" href="#" onclick="window.open('chat/friends', 'messengerPopup', 'width=380,height=650,resizable=no,scrollbars=yes'); return false;">메신저</a></li>
             <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/dept/list">조직도</a></li>
             <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
             <li class="nav-item"><a class="nav-link" href="/admin">관리자</a></li>
+
         </ul>
         <div class="d-flex align-items-center">
             <!-- 로그인 사용자 드롭다운 -->

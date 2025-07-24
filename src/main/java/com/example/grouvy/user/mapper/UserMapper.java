@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 
+
 import java.util.List;
 
 @Mapper
@@ -15,7 +16,7 @@ public interface UserMapper {
     User getUserByUsernameWithRoleNames(String username);
     List<String> getRoleNamesByUserId(int userId);
 
-
     User findByUserId(@Param("userId") String userId);
     List<User> findUsersByDeptId(@Param("departmentId") Long departmentId);
+
 }
