@@ -7,6 +7,7 @@ import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,6 +22,7 @@ public class DepartmentService {
     private final DepartmentMapper departmentMapper;
     private final UserMapper userMapper;
 
+    @Transactional(readOnly = true)
     public List<DepartmentTreeDto> getDepartmentTree() {
         List<Department> allDepts = departmentMapper.findAllDeptsTree();
 

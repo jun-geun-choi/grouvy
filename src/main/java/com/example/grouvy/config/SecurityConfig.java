@@ -15,29 +15,33 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-  @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            //.dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
-            .requestMatchers("/**").permitAll()
-        )
-        .formLogin(formLogin -> formLogin
-            .usernameParameter("email")
-            .passwordParameter("password")
-            .loginPage("/login")
-            .loginProcessingUrl("/login")
-            .defaultSuccessUrl("/")
-            .permitAll()
-            .failureUrl("/login?failed")
-        )
-        .logout(logout -> logout
-            .logoutUrl("/logout")
-            .logoutSuccessUrl("/login")
-        );
-    return http.build();
-  }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
+                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/resources/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .formLogin(formLogin -> formLogin
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", true)
+                        .permitAll()
+                        .failureUrl("/login?failed")
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                );
+
 
   // 비밀번호 암호화 코드
   @Bean
