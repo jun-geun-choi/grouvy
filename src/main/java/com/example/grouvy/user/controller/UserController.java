@@ -1,6 +1,8 @@
 package com.example.grouvy.user.controller;
 
+
 import com.example.grouvy.security.SecurityUser;
+
 import com.example.grouvy.user.exception.UserRegisterException;
 import com.example.grouvy.user.form.UserRegisterForm;
 import com.example.grouvy.user.service.UserService;
@@ -8,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,9 +24,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/")
-    public String home(SecurityUser securityUser) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = auth.getPrincipal();
+    public String home() {
         return "home";
     }
 

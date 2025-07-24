@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.chat.mapper.ChatMapper">
+
+ <!--public List<User> getMyListByDeptNo(int departmentNo, int userId);-->
+ <select id="getMyListByDeptNo" resultType="User">
+    SELECT
+          U.USER_ID                             AS userId
+         ,D.DEPARTMENT_NAME                     AS "department.departmentName"
+         , U.NAME                               AS name
+         , P.POSITION_NAME                      AS "position.positionName"
+        ,U.PROFILE_IMG_PATH                     AS profileImgPath
+    FROM
+         GROUVY_USERS U,
+         GROUVY_DEPARTMENTS D,
+         GROUVY_POSITIONS P
+    WHERE
+        U.DEPARTMENT_ID = D.DEPARTMENT_ID
+      AND U.POSITION_NO = P.POSITION_NO
+      AND U.DEPARTMENT_ID = #{departmentNo}
+      AND U.IS_DELETED = 'N'
+      AND U.USER_ID != #{userId}
+    ORDER BY P.POSITION_NO ASC
+ </select>
+
+  <!--public User getUserInfoByUserId(int userId);-->
+  <select id="getUserInfoByUserId" resultType="User">
+    SELECT
+          U.PROFILE_IMG_PATH                AS profileImgPath
+         ,U.NAME                            AS name
+         , P.POSITION_NAME                  AS "position.positionName"
+         , D.DEPARTMENT_NAME                AS "department.departmentName"
+         , U.PHONE_NUMBER                   AS phoneNumber
+         , U.EMAIL                          AS email
+         , U.USER_ID                        AS userId
+    FROM
+         GROUVY_USERS U,
+         GROUVY_DEPARTMENTS D,
+         GROUVY_POSITIONS P
+    WHERE U.DEPARTMENT_ID = D.DEPARTMENT_ID
+      AND U.POSITION_NO = P.POSITION_NO
+      AND U.USER_ID = #{userId}
+
+  </select>
+
+  <!--public ChatRoom getChatRoomIdByUserId(int userId, int selectUserId);-->
+  <select id="getChatRoomIdByUserId" resultType="int">
+    SELECT
+        U.ROOM_ID
+    FROM
+      GROUVY_CHAT_ROOMS R,
+      GROUVY_CHAT_ROOM_USERS U
+    WHERE
+        R.ROOM_ID = U.ROOM_ID
+        AND U.USER_ID IN(#{userId},#{selectUserId})
+        AND R.IS_GROUP = 'N'
+    GROUP BY
+            U.ROOM_ID
+    HAVING COUNT(DISTINCT U.USER_ID) = 2
+  </select>
+
+  <select id="getRoomId" resultType="int">
+    select CHAT_ROOMS_ROOM_ID_SEQ.NEXTVAL from dual
+  </select>
+
+  <!--public void insertRoom(int roomId, String roomName);-->
+  <insert id="insertRoom">
+    INSERT INTO GROUVY_CHAT_ROOMS
+        (ROOM_ID,ROOM_NAME)
+    VALUES
+        (#{roomId}, #{roomName})
+  </insert>
+
+  <!--public void insertChatRoomUser(int roomId, int userId);-->
+  <insert id="insertChatRoomUser">
+    INSERT INTO GROUVY_CHAT_ROOM_USERS
+        (ROOM_ID,USER_ID)
+    VALUES
+        (#{roomId}, #{userId})
+  </insert>
+
+</mapper>
