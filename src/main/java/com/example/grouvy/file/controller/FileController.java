@@ -62,7 +62,7 @@ public class  FileController {
     public String departmentFiles(@AuthenticationPrincipal SecurityUser securityUser, Model model) {
 
 
-        List<FileVo> files = fileService.getDepartmentFiles((int) securityUser.getUser().getDepartment().getDepartmentId());
+        List<FileVo> files = fileService.getDepartmentFiles(Math.toIntExact(securityUser.getUser().getDepartment().getDepartmentId()));
 
         model.addAttribute("files", files);
         // 테스트
