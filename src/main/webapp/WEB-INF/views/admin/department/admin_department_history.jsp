@@ -151,10 +151,12 @@
         .table-bordered { /* Bootstrap의 .table-bordered와 유사하게 */
             border: 1px solid #dee2e6;
         }
+
         .table-bordered th,
         .table-bordered td {
             border: 1px solid #dee2e6;
         }
+
         .table-bordered thead th,
         .table-bordered thead td {
             border-bottom-width: 2px;
@@ -198,9 +200,11 @@
         .text-muted {
             color: #6c757d;
         }
+
         .text-center {
             text-align: center;
         }
+
         .alert-danger { /* 메시지 박스 스타일 */
             color: #721c24;
             background-color: #f8d7da;
@@ -210,6 +214,7 @@
             margin-bottom: 15px;
             text-align: center;
         }
+
         .alert-info { /* 메시지 박스 스타일 */
             color: #0c5460;
             background-color: #d1ecf1;
@@ -238,58 +243,82 @@
             border-radius: 0.25rem;
             transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
+
         .btn-primary {
             color: #fff;
             background-color: #0d6efd;
             border-color: #0d6efd;
         }
+
         .btn-primary:hover {
             color: #fff;
             background-color: #0b5ed7;
             border-color: #0a58ca;
         }
+
         .btn-info {
             color: #fff;
             background-color: #0dcaf0;
             border-color: #0dcaf0;
         }
+
         .btn-info:hover {
             color: #fff;
             background-color: #31d2f2;
             border-color: #25cff2;
         }
+
         .btn-danger {
             color: #fff;
             background-color: #dc3545;
             border-color: #dc3545;
         }
+
         .btn-danger:hover {
             color: #fff;
             background-color: #bb2d3b;
             border-color: #bb2d3b;
         }
+
         .btn-secondary {
             color: #fff;
             background-color: #6c757d;
             border-color: #6c757d;
         }
+
         .btn-secondary:hover {
             color: #fff;
             background-color: #5c636a;
             border-color: #565e64;
         }
+
         .btn-sm { /* 작은 버튼 */
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
             border-radius: 0.2rem;
         }
-        .me-1 { margin-right: 0.25rem !important; }
-        .ms-1 { margin-left: 0.25rem !important; }
+
+        .me-1 {
+            margin-right: 0.25rem !important;
+        }
+
+        .ms-1 {
+            margin-left: 0.25rem !important;
+        }
 
         /* Flexbox 유틸리티 (Bootstrap d-flex, justify-content-end, mb-3 대체) */
-        .d-flex { display: flex !important; }
-        .justify-content-end { justify-content: flex-end !important; }
-        .mb-3 { margin-bottom: 1rem !important; }
+        .d-flex {
+            display: flex !important;
+        }
+
+        .justify-content-end {
+            justify-content: flex-end !important;
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem !important;
+        }
+
         .table-responsive {
             display: block;
             width: 100%;
@@ -303,53 +332,66 @@
                 flex-direction: column;
                 padding: 15px;
             }
+
             .sidebar {
                 width: 100%;
                 margin-right: 0;
                 margin-bottom: 20px;
                 padding: 15px;
             }
+
             .main-content {
                 padding: 20px;
             }
+
             .main-content .d-flex.justify-content-end.mb-3 {
                 justify-content: center !important;
             }
+
             .main-content .d-flex.justify-content-end.mb-3 .btn {
                 width: 100%;
             }
+
             .department-form-container { /* form 페이지용. 일단 남겨둠 */
                 padding: 20px;
             }
         }
+
         @media (max-width: 576px) {
             .container {
                 padding: 10px;
             }
+
             .main-content {
                 padding: 15px;
             }
+
             .main-content h2 {
                 font-size: 1.2em;
                 margin-bottom: 15px;
                 padding-bottom: 10px;
             }
+
             .table thead th,
             .table tbody td { /* .table 대신 .table-responsive 안의 table에 적용될 수 있음 */
                 padding: 8px 10px;
                 font-size: 0.85em;
             }
+
             .department-form-container {
                 padding: 20px;
             }
+
             .department-form-container .btn-group { /* form 페이지용. 일단 남겨둠 */
                 flex-direction: column;
             }
+
             .department-form-container .btn {
                 width: 100%;
                 margin-bottom: 10px;
                 margin-right: 0 !important;
             }
+
             .department-form-container .btn:last-child {
                 margin-bottom: 0;
             }
@@ -363,7 +405,8 @@
         <ul>
             <li><a href="/admin" class="${currentPage == 'adminHome' ? 'active' : ''}">대시보드</a></li>
             <li><a href="/admin/dept/list" class="${currentPage == 'departmentList' ? 'active' : ''}">부서 관리</a></li>
-            <li><a href="/admin/dept/history" class="${currentPage == 'departmentHistory' ? 'active' : ''}">부서 이력</a></li>
+            <li><a href="/admin/dept/history" class="${currentPage == 'departmentHistory' ? 'active' : ''}">부서 이력</a>
+            </li>
         </ul>
     </div>
     <div class="main-content">
@@ -384,147 +427,110 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const initialDepartmentId = "\${selectedDepartmentId}";
-
+    document.addEventListener('DOMContentLoaded', function () {
+        const initialDepartmentId = "${selectedDepartmentId}" === "null" || "${selectedDepartmentId}" === "" ? null : parseInt("${selectedDepartmentId}");
         const departmentSelect = document.getElementById('departmentSelect');
         const searchButton = document.getElementById('searchButton');
         const historyTableContainer = document.getElementById('historyTableContainer');
 
-        //조직도이력 로드
-        async function loadDepartmentOptions() {
+        async function fetchAndRenderHistories(departmentId) {
+            const apiUrl = departmentId ? `/api/v1/dept/history/\${departmentId}` : '/api/v1/dept/history';
+            historyTableContainer.innerHTML = '<p class="text-center text-muted">로딩 중...</p>';
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    if (response.status === 404) throw new Error('데이터 없음');
+                    else throw new Error(`HTTP 오류! Status: \${response.status}`);
+                }
+                const histories = await response.json();
+                renderHistoryTable(histories);
+            } catch (error) {
+                historyTableContainer.innerHTML = (error.message === '데이터 없음')
+                    ? '<p class="text-center text-muted">해당 이력이 없습니다.</p>'
+                    : '<p class="alert alert-danger">이력 조회 중 오류가 발생했습니다.</p>';
+            }
+        }
+
+        async function setupDepartmentDropdown() {
             try {
                 const response = await fetch('/api/v1/dept/list');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: \${response.status}`);
-                }
+                if (!response.ok) throw new Error('부서 목록 로딩 실패');
                 const departments = await response.json();
-
+                departmentSelect.innerHTML = '<option value="">-- 모든 부서 이력 --</option>';
                 departments.forEach(dept => {
                     const option = document.createElement('option');
                     option.value = dept.departmentId;
                     option.textContent = `\${dept.departmentName} (ID: \${dept.departmentId})`;
                     departmentSelect.appendChild(option);
                 });
-
                 if (initialDepartmentId) {
                     departmentSelect.value = initialDepartmentId;
-                    fetchAndRenderHistories();
                 }
-
             } catch (error) {
-                console.error('부서 목록 로딩 실패:', error);
-                departmentSelect.innerHTML = '<option value="">부서 목록을 불러올 수 없습니다.</option>';
+                console.error(error);
+                departmentSelect.innerHTML = '<option value="">로딩 실패</option>';
             }
         }
 
-        //이력 데이터 조회
-        async function fetchAndRenderHistories() {
-            const selectedId = departmentSelect.value;
-            const apiUrl = selectedId ? `/api/v1/dept/history/\${selectedId}` : '/api/v1/dept/history';
-
-            historyTableContainer.innerHTML = '<p class="text-center text-muted">이력 데이터를 불러오는 중...</p>';
-
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        historyTableContainer.innerHTML = '<p class="text-center text-muted">해당 부서의 이력이 존재하지 않습니다.</p>';
-                    } else {
-                        throw new Error(`HTTP error! status: \${response.status}`);
-                    }
-                    return;
-                }
-                const histories = await response.json();
-                renderHistoryTable(histories);
-
-            } catch (error) {
-                console.error('이력 조회 중 오류:', error);
-                historyTableContainer.innerHTML = `<p class="alert alert-danger">이력 조회 중 오류가 발생했습니다: \${error.message}</p>`;
-            }
-        }
-
-
-        // json꾸미기
-        function formatHistoryValue(jsonString) {
-            if (!jsonString || jsonString.trim() === '') return '-';
-
-            try {
-                const data = JSON.parse(jsonString);
-                const output = [];
-
-                if (data.departmentName) {
-                    output.push(`부서명: \${data.departmentName}`);
-                }
-
-                if (data.parentDepartmentId) {
-                    output.push(`상위 부서 ID: \${data.parentDepartmentId}`);
-                } else if (data.parentDepartmentId === null) {
-                    output.push(`상위 부서: 최상위`);
-                }
-
-                if (data.departmentOrder !== undefined && data.departmentOrder !== null) {
-                    output.push(`정렬 순서: \${data.departmentOrder}`);
-                }
-
-                return output.join('\n');
-
-            } catch (e) {
-                return jsonString.replace(/\r?\n/g, '<br>');
-            }
-        }
-
-        //테이블 렌더링
         function renderHistoryTable(histories) {
             if (!histories || histories.length === 0) {
                 historyTableContainer.innerHTML = '<p class="text-center text-muted">조회된 이력이 없습니다.</p>';
                 return;
             }
-
             const tableClasses = "history-table table table-bordered table-hover";
-
             const tableRows = histories.map(history => {
                 const changeDate = new Date(history.changeDate).toISOString().split('T')[0];
                 const departmentInfo = `\${history.departmentName} (\${history.departmentId})`;
                 const changerInfo = `\${history.changerUserName} (\${history.changerUserId})`;
-
                 const oldValueFormatted = formatHistoryValue(history.oldValue);
                 const newValueFormatted = formatHistoryValue(history.newValue);
-
-                return `
-                    <tr>
-                        <td>\${history.historyId}</td>
-                        <td>\${departmentInfo}</td>
-                        <td>\${history.changeType}</td>
-                        <td class="value-cell"><pre class="json-data">\${oldValueFormatted}</pre></td>
-                        <td class="value-cell"><pre class="json-data">\${newValueFormatted}</pre></td>
-                        <td>\${changerInfo}</td>
-                        <td>\${changeDate}</td>
-                    </tr>
-                `;
+                return `<tr>
+                            <td>\${history.historyId}</td>
+                            <td>\${departmentInfo}</td>
+                            <td>\${history.changeType}</td>
+                            <td class="value-cell"><pre class="json-data">\${oldValueFormatted}</pre></td>
+                            <td class="value-cell"><pre class="json-data">\${newValueFormatted}</pre></td>
+                            <td>\${changerInfo}</td><td>\${changeDate}</td>
+                        </tr>`;
             }).join('');
-
-            const tableHtml = `
-                <table class="\${tableClasses}">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">이력ID</th>
-                            <th style="width: 15%;">부서</th>
-                            <th style="width: 8%;">변경 타입</th>
-                            <th>이전 값</th>
-                            <th>새로운 값</th>
-                            <th style="width: 12%;">변경자</th>
-                            <th style="width: 10%;">변경일</th>
-                        </tr>
-                    </thead>
-                    <tbody>\${tableRows}</tbody>
-                </table>
-            `;
+            const tableHtml = `<table class="\${tableClasses}">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%;">이력ID</th>
+                                            <th style="width: 15%;">부서</th>
+                                            <th style="width: 8%;">변경 타입</th>
+                                            <th>이전 값</th>
+                                            <th>새로운 값</th>
+                                            <th style="width: 12%;">변경자</th>
+                                            <th style="width: 10%;">변경일</th>
+                                        </tr>
+                                    </thead>
+                                <tbody>\${tableRows}</tbody>
+                                </table>`;
             historyTableContainer.innerHTML = tableHtml;
         }
 
-        searchButton.addEventListener('click', fetchAndRenderHistories);
-        loadDepartmentOptions();
+        function formatHistoryValue(jsonString) {
+            if (!jsonString || jsonString.trim() === '') return '-';
+            try {
+                const data = JSON.parse(jsonString);
+                const output = [];
+                if (data.departmentName) output.push(`부서명: \${data.departmentName}`);
+                if (data.parentDepartmentId !== undefined) output.push(`상위 부서 ID: \${data.parentDepartmentId === null ? '최상위' : data.parentDepartmentId}`);
+                if (data.departmentOrder !== undefined) output.push(`정렬 순서: \${data.departmentOrder}`);
+                return output.join('\n');
+            } catch (e) {
+                return jsonString.replace(/\r?\n/g, '<br>');
+            }
+        }
+
+        searchButton.addEventListener('click', () => {
+            const selectedId = departmentSelect.value ? parseInt(departmentSelect.value) : null;
+            fetchAndRenderHistories(selectedId);
+        });
+
+        fetchAndRenderHistories(initialDepartmentId);
+        setupDepartmentDropdown();
     });
 </script>
 </body>
