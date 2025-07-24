@@ -31,6 +31,7 @@ public class User {
     private Date resignDate;
     private String isDeleted;
 
+
     private Long departmentId;
     private Department department;
 

@@ -4,6 +4,7 @@ import com.example.grouvy.user.vo.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+
 import java.util.List;
 
 @Mapper
@@ -14,7 +15,7 @@ public interface UserMapper {
     User getUserByUsernameWithRoleNames(String username);
     List<String> getRoleNamesByUserId(int userId);
 
-    //임시매퍼
+
     User findByUserId(@Param("userId") String userId);
     List<User> findUsersByDeptId(@Param("departmentId") Long departmentId);
 }
