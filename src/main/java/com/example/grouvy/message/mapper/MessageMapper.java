@@ -27,10 +27,6 @@ public interface MessageMapper {
             @Param("offset") int offset,
             @Param("limit") int limit);
 
-    // **중요 쪽지함 관련 매퍼는 이 시점에 포함되지 않습니다.**
-    // List<MessageReceiver> findImportantMessagesByReceiverIdPaginated(...)
-    // int countImportantMessages(...)
-
     //쪽지 수신자이름 목록조회.
     List<String> findReceiverUserNamesByMessageIdAndType(
             @Param("messageId") Long messageId,
@@ -49,7 +45,7 @@ public interface MessageMapper {
     int updateInboxStatusToRecalled(@Param("messageId") Long messageId);
     List<MessageReceiver> findAllReceiversByMessageId(@Param("messageId") Long messageId);
 
-    //쪽지 crud (삭제/중요 표시 포함)
+    //쪽지 crud
     int updateMessageReceiverReadDate(@Param("receiveId") Long receiveId);
     int updateMessageReceiverIsDeleted(@Param("receiveId") Long receiveId, @Param("isDeleted") String isDeleted);
     int updateMessageSenderIsDeleted(@Param("sendId") Long sendId, @Param("isDeleted") String isDeleted);

@@ -116,6 +116,7 @@
         }
     });
 
+    // 쪽지 상세 정보 Fetch 함수
     function fetchMessageDetail(msgId) {
         fetch(`/api/v1/messages/detail/\${msgId}`)
             .then(response => {
@@ -149,15 +150,14 @@
             });
     }
 
+    // 받아온 데이터를 화면에 렌더링하는 함수
     function renderMessageDetail(data) {
         document.getElementById('messageSubjectDisplay').innerHTML = `<i class="fas fa-envelope-open-text mr-2"></i> \${data.subject}`;
         document.getElementById('senderNameDisplay').textContent = data.senderName;
         document.getElementById('sendDateDisplay').textContent = formatDate(data.sendDate);
 
-        // **수정: null 또는 undefined 체크 추가**
         document.getElementById('toRecipientsDisplay').innerHTML = (data.toUserNames || []).map(name => `<span class="recipient-box">\${name}</span>`).join('');
 
-        // **수정: null 또는 undefined 체크 추가**
         if (data.ccUserNames && data.ccUserNames.length > 0) {
             document.getElementById('ccRow').style.display = 'block';
             document.getElementById('ccRecipientsDisplay').innerHTML = (data.ccUserNames || []).map(name => `<span class="recipient-box">\${name}</span>`).join('');
@@ -165,7 +165,6 @@
             document.getElementById('ccRow').style.display = 'none';
         }
 
-        // **수정: null 또는 undefined 체크 추가**
         if (data.bccUserNames && data.bccUserNames.length > 0) {
             document.getElementById('bccRow').style.display = 'block';
             document.getElementById('bccRecipientsDisplay').innerHTML = (data.bccUserNames || []).map(name => `<span class="recipient-box">\${name}</span>`).join('');
@@ -194,9 +193,11 @@
         }
     }
 
+    // 액션 버튼 설정 함수 (로그인 사용자 권한에 따라 버튼 표시/숨김 및 이벤트 연결)
     async function setupActionButtons(messageDetailData) {
         let currentUserId = null;
         try {
+            // 현재 로그인 사용자 ID를 가져오는 임시 API를 활용
             const response = await fetch('/api/v1/messages/users/current/id');
             if (response.ok) {
                 currentUserId = await response.json();
@@ -218,12 +219,14 @@
         const replyBtn = document.getElementById('replyBtn');
         const forwardBtn = document.getElementById('forwardBtn');
 
+        // 회수 버튼 표시 여부: 발신자이고 현재 회수 가능할 때만 표시
         if (messageDetailData.senderId === currentUserId && messageDetailData.currentlyRecallable) {
             recallBtn.style.display = 'inline-block';
         } else {
             recallBtn.style.display = 'none';
         }
 
+        // 삭제 및 중요 표시 버튼 로직 (받은 쪽지함에서만 활성화)
         if (messageDetailData.receiveId && messageDetailData.inboxStatus !== 'RECALLED_BY_SENDER') {
             deleteBtn.style.display = 'inline-block';
             importantToggleBtn.style.display = 'inline-block';
@@ -237,10 +240,12 @@
                 toggleImportant(messageDetailData.receiveId, messageDetailData.importantYn === 'Y' ? 'N' : 'Y');
             };
         } else {
+            // 수신자가 아니거나, 회수된 쪽지인 경우 삭제/중요 버튼 숨김
             deleteBtn.style.display = 'none';
             importantToggleBtn.style.display = 'none';
         }
 
+        // 답장/전달 버튼 (모든 쪽지에 대해 활성화)
         replyBtn.onclick = function() {
             window.location.href = `/message/send-prepared?originalMessageId=\${messageId}&type=reply`;
         };
@@ -248,12 +253,15 @@
             window.location.href = `/message/send-prepared?originalMessageId=\${messageId}&type=forward`;
         };
 
+        // 회수 버튼 클릭 리스너
         recallBtn.addEventListener('click', function() {
             if (confirm('정말로 쪽지를 회수하시겠습니까? (수신자가 읽지 않았을 경우에만 가능합니다)')) {
                 recallMessage(messageId);
             }
         });
     }
+
+    // ---------- AJAX 호출 함수들 (CSRF 토큰 로직 제거됨) ----------
 
     function recallMessage(messageId) {
         fetch(`/api/v1/messages/recall/\${messageId}`, {
@@ -336,6 +344,7 @@
             });
     }
 
+    // 날짜 포맷 함수
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);

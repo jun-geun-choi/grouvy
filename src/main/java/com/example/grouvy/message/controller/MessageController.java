@@ -1,4 +1,4 @@
-// src/main/java/com/example.grouvy.message.controller/MessageController.java
+// src/main/java/com/example/grouvy/message/controller/MessageController.java
 package com.example.grouvy.message.controller;
 
 import com.example.grouvy.message.dto.MessageSendRequestDto;
@@ -145,6 +145,7 @@ public class MessageController {
         return "message/message_send_prepared";
     }
 
-    // **제거:** @GetMapping("/important")
+    // **중요 쪽지함 관련 엔드포인트는 이 시점에 포함되지 않습니다.**
+    // @GetMapping("/important")
     // public String importantInbox(...) { ... }
 }

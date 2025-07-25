@@ -1,4 +1,4 @@
-// src/main/java/com/example.grouvy.message.controller/MessageRestController.java
+// src/main/java/com/example/grouvy/message/controller/MessageRestController.java
 package com.example.grouvy.message.controller;
 
 import com.example.grouvy.message.dto.MessageDetailResponseDto;
@@ -83,7 +83,8 @@ public class MessageRestController {
         return ResponseEntity.ok(messages);
     }
 
-    // **제거:** @GetMapping("/important")
+    // **중요 쪽지함 관련 엔드포인트는 이 시점에 포함되지 않습니다.**
+    // @GetMapping("/important")
     // public ResponseEntity<PaginationResponse<MessageReceiver>> getImportantMessages(...) { ... }
 
     @GetMapping("/sentbox")
@@ -189,6 +190,7 @@ public class MessageRestController {
         return ResponseEntity.ok(securityUser.getUser().getUserId());
     }
 
+    // 새롭게 추가: 받은 쪽지 삭제 API
     @PostMapping("/inbox/delete/{receiveId}")
     public ResponseEntity<Map<String, Object>> deleteInboxMessage(
             @PathVariable("receiveId") Long receiveId,
@@ -222,6 +224,7 @@ public class MessageRestController {
         }
     }
 
+    // 새롭게 추가: 보낸 쪽지 삭제 API
     @PostMapping("/sentbox/delete/{sendId}")
     public ResponseEntity<Map<String, Object>> deleteSentMessage(
             @PathVariable("sendId") Long sendId,
@@ -255,6 +258,7 @@ public class MessageRestController {
         }
     }
 
+    // 새롭게 추가: 받은 쪽지 중요 표시/해제 API
     @PostMapping("/inbox/toggleImportant/{receiveId}")
     public ResponseEntity<Map<String, Object>> toggleImportant(
             @PathVariable("receiveId") Long receiveId,

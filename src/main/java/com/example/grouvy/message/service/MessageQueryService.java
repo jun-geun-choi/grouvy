@@ -33,7 +33,8 @@ public class MessageQueryService {
         return new PaginationResponse<>(messages, page - 1, size, totalElements);
     }
 
-    // **제거:** public PaginationResponse<MessageReceiver> getImportantMessages(...)
+    // **중요 쪽지함 관련 조회 메서드는 이 시점에 포함되지 않습니다.**
+    // public PaginationResponse<MessageReceiver> getImportantMessages(...)
 
     @Transactional(readOnly = true)
     public PaginationResponse<MessageSentResponseDto> getSentMessages(int userId, int page, int size) {

@@ -134,12 +134,13 @@
     </div>
 
     <!-- 조직도 모달 포함 -->
-    <%-- **include 경로 수정 없음:** application.properties 설정에 맞춥니다. --%>
+    <%-- **include 경로:** application.properties 설정에 맞춥니다. --%>
     <%@ include file="/WEB-INF/views/department/department_list_modal.jsp" %>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // currentRecipientType 변수를 전역에 노출하여 department_list_modal.jsp에서 접근 가능하게 함
         window.currentRecipientType = ''; // 'to', 'cc', 'bcc' 중 현재 선택된 수신자 타입
 
         const selectedUsers = {
@@ -161,10 +162,9 @@
                 fetch(`/api/v1/messages/users/\${initialReceiverId}/name`)
                     .then(response => {
                         if (!response.ok) {
-                            // HTTP 오류 상태 (예: 404 Not Found)
                             return response.text().then(text => { throw new Error(text || '사용자를 찾을 수 없습니다.'); });
                         }
-                        return response.text(); // 응답 본문을 텍스트로 파싱 (사용자 이름만 반환하므로)
+                        return response.text();
                     })
                     .then(userName => {
                         addSelectedUser('to', initialReceiverId, userName);
@@ -191,7 +191,6 @@
                 }
 
                 const payload = {
-                    // hidden input 필드의 value (쉼표 구분 문자열)를 파싱
                     receiverIds: parseIds(document.getElementById('toRecipientIds').value),
                     ccIds: parseIds(document.getElementById('ccRecipientIds').value),
                     bccIds: parseIds(document.getElementById('bccRecipientIds').value),
@@ -201,74 +200,66 @@
 
                 // CSRF 토큰 관련 로직 제거 (SecurityConfig에서 csrf.disable() 했으므로 불필요)
                 const headers = {
-                    'Content-Type': 'application/json' // JSON 데이터임을 명시
+                    'Content-Type': 'application/json'
                 };
 
                 fetch('/api/v1/messages/send', {
-                    method: 'POST', // POST 요청
+                    method: 'POST',
                     headers: headers,
-                    body: JSON.stringify(payload) // JavaScript 객체를 JSON 문자열로 변환
+                    body: JSON.stringify(payload)
                 })
                 .then(response => {
-                    // HTTP 응답 상태가 200번대가 아니면 오류 처리
                     if (!response.ok) {
-                        // 오류 응답의 JSON 본문을 파싱하여 에러 메시지 추출
                         return response.json().then(errorData => {
-                            throw new Error(errorData.message || '쪽지 발송 실패'); // 서버에서 보낸 메시지 사용
+                            throw new Error(errorData.message || '쪽지 발송 실패');
                         });
                     }
-                    return response.json(); // 성공 응답의 JSON 본문을 파싱
+                    return response.json();
                 })
                 .then(data => {
-                    // 서버에서 받은 성공 데이터 처리
-                    if (data.success) { // 서버 응답에 success 필드가 true인 경우
+                    if (data.success) {
                         alert(data.message + '\n쪽지 ID: ' + data.messageId);
-                        // 폼 및 선택된 수신자 목록 초기화
-                        document.getElementById('sendMessageForm').reset(); // 폼 필드 초기화
+                        document.getElementById('sendMessageForm').reset();
                         selectedUsers.to.clear();
                         selectedUsers.cc.clear();
                         selectedUsers.bcc.clear();
                         allSelectedUserIds.clear();
-                        updateRecipientInputs(); // hidden input도 초기화
-                        document.getElementById('toRecipients').innerHTML = ''; // 화면에 보이는 목록 초기화
+                        updateRecipientInputs();
+                        document.getElementById('toRecipients').innerHTML = '';
                         document.getElementById('ccRecipients').innerHTML = '';
                         document.getElementById('bccRecipients').innerHTML = '';
                     } else {
-                        alert('쪽지 발송 실패: ' + data.message); // 서버 응답에 success 필드가 false인 경우
+                        alert('쪽지 발송 실패: ' + data.message);
                     }
                 })
                 .catch(error => {
-                    // 네트워크 오류 또는 파싱/로직에서 발생한 오류 처리
-                    console.error('Error:', error); // 콘솔에 상세 에러 출력
-                    alert('쪽지 발송 중 오류가 발생했습니다: ' + error.message); // 사용자에게 알림
+                    console.error('Error:', error);
+                    alert('쪽지 발송 중 오류가 발생했습니다: ' + error.message);
                 });
             });
         });
 
         // 쉼표로 구분된 ID 문자열을 Integer 배열로 변환하는 헬퍼 함수
         function parseIds(idString) {
-            if (!idString) return []; // 문자열이 없으면 빈 배열 반환
-            return idString.split(',') // 쉼표로 분리
-                           .map(id => {
-                               const trimmedId = String(id).trim(); // 각 ID 문자열 공백 제거
-                               if (trimmedId === '') return null; // 빈 문자열은 null로 처리
-                               const parsedId = parseInt(trimmedId, 10); // 10진수 정수로 변환
-                               return isNaN(parsedId) ? null : parsedId; // 숫자가 아니면 null
-                           })
-                           .filter(id => id !== null); // null 값 제거
+            if (!idString) return [];
+            return idString.split(',').map(id => {
+                const trimmedId = String(id).trim();
+                if (trimmedId === '') return null;
+                const parsedId = parseInt(trimmedId, 10);
+                return isNaN(parsedId) ? null : parsedId;
+            }).filter(id => id !== null);
         }
 
         // 조직도 모달 열기 함수
         function openRecipientModal(type) {
-            window.currentRecipientType = type; // 현재 어떤 타입의 수신자를 추가하는지 전역 변수에 저장
-            $('#departmentListModal').modal('show'); // Bootstrap 모달 열기
+            window.currentRecipientType = type;
+            $('#departmentListModal').modal('show');
         }
 
         // 선택된 사용자 추가 함수 (department_list_modal.jsp에서 호출됨)
         window.addSelectedUser = function(type, userId, userName) {
-            const recipientList = document.getElementById(`\${type}Recipients`); // 해당 타입의 ul 요소
+            const recipientList = document.getElementById(`\${type}Recipients`);
 
-            // 모든 타입(TO, CC, BCC)에 걸쳐 이미 선택된 사용자인지 중복 확인
             if (allSelectedUserIds.has(userId)) {
                 let existingType = '';
                 if (selectedUsers.to.has(userId)) existingType = 'TO';
@@ -276,42 +267,37 @@
                 else if (selectedUsers.bcc.has(userId)) existingType = 'BCC';
 
                 alert(`\${userName}님은 이미 \${existingType} 목록에 추가되어 있습니다.`);
-                return; // 이미 있으면 추가하지 않고 종료
+                return;
             }
 
-            // 새로운 사용자이므로 Map과 Set에 추가
             selectedUsers[type].set(userId, userName);
             allSelectedUserIds.add(userId);
 
-            // 화면에 보이는 목록에 항목 추가
             const listItem = document.createElement('li');
-            listItem.className = 'recipient-item'; // 스타일 적용을 위한 클래스
-            listItem.setAttribute('data-user-id', userId); // 삭제를 위해 userId 저장
+            listItem.className = 'recipient-item';
+            listItem.setAttribute('data-user-id', userId);
             listItem.innerHTML = `\
                 \${userName}\
                 <button type="button" class="remove-btn" data-user-id="\${userId}">×</button>\
             `;
-            // 삭제 버튼에 이벤트 리스너 추가
             listItem.querySelector('.remove-btn').addEventListener('click', function() {
                 removeSelectedUser(type, userId);
             });
-            recipientList.appendChild(listItem); // 목록에 추가
-            updateRecipientInputs(); // hidden input 필드 업데이트
+            recipientList.appendChild(listItem);
+            updateRecipientInputs();
         };
 
         // 선택된 사용자 제거 함수
         function removeSelectedUser(type, userId) {
-            // Map에서 해당 사용자 삭제
             if (selectedUsers[type].delete(userId)) {
-                allSelectedUserIds.delete(userId); // 전체 ID Set에서도 삭제
+                allSelectedUserIds.delete(userId);
 
-                // 화면에서 해당 항목 제거
                 const recipientList = document.getElementById(`\${type}Recipients`);
                 const itemToRemove = recipientList.querySelector(`li[data-user-id="\${userId}"]`);
                 if (itemToRemove) {
                     recipientList.removeChild(itemToRemove);
                 }
-                updateRecipientInputs(); // hidden input 필드 업데이트
+                updateRecipientInputs();
             }
         }
 
