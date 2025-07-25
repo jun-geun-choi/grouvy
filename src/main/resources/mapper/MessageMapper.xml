@@ -138,13 +138,14 @@
         WHERE MESSAGE_ID = #{messageId} AND IS_DELETED = 'N'
     </select>
 
+    <!-- **수정:** findReceiverUserNamesByMessageIdAndType 쿼리에서 mr.IS_DELETED = 'N' 조건 제거 -->
     <select id="findReceiverUserNamesByMessageIdAndType" resultType="string">
         SELECT u.NAME
         FROM GROUVY_MESSAGE_RECEIVE mr
-                 JOIN GROUVY_USERS u ON mr.RECEIVER_ID = u.USER_ID
+        JOIN GROUVY_USERS u ON mr.RECEIVER_ID = u.USER_ID
         WHERE mr.MESSAGE_ID = #{messageId}
-          AND mr.RECEIVER_TYPE = #{receiverType}
-          AND mr.IS_DELETED = 'N'
+        AND mr.RECEIVER_TYPE = #{receiverType}
+        <!-- **삭제:** AND mr.IS_DELETED = 'N' -->
         ORDER BY u.NAME
     </select>
 
@@ -192,8 +193,30 @@
         WHERE RECEIVER_ID = #{receiverId} AND IS_DELETED = 'N' AND INBOX_STATUS = 'UNREAD'
     </select>
 
-    <!-- **제거:** 중요 쪽지함 목록 조회 및 개수 쿼리는 이 시점에 포함되지 않습니다. -->
-    <!-- <select id="findImportantMessagesByReceiverIdPaginated" resultMap="messageReceiverResultMap"> ... </select> -->
-    <!-- <select id="countImportantMessages" parameterType="int" resultType="int"> ... </select> -->
+    <!-- 중요 쪽지함 관련 쿼리 (현재 코드에서는 아직 사용하지 않음) -->
+    <select id="findImportantMessagesByReceiverIdPaginated" resultMap="messageReceiverResultMap">
+        SELECT
+            mr.RECEIVE_ID, mr.MESSAGE_ID, mr.RECEIVER_ID, mr.RECEIVER_TYPE, mr.READ_DATE, mr.INBOX_STATUS, mr.IS_DELETED, mr.IMPORTANT_YN,
+            m.SUBJECT, u.NAME AS SENDER_NAME, m.SEND_DATE
+        FROM GROUVY_MESSAGE_RECEIVE mr
+                 JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
+                 JOIN GROUVY_USERS u ON m.SENDER_ID = u.USER_ID
+        WHERE mr.RECEIVER_ID = #{receiverId}
+          AND mr.IS_DELETED = 'N'
+          AND mr.IMPORTANT_YN = 'Y'
+          AND mr.INBOX_STATUS != 'RECALLED_BY_SENDER'
+        ORDER BY m.SEND_DATE DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+    </select>
+
+    <select id="countImportantMessages" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM GROUVY_MESSAGE_RECEIVE mr
+                 JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
+        WHERE mr.RECEIVER_ID = #{receiverId}
+          AND mr.IS_DELETED = 'N'
+          AND mr.IMPORTANT_YN = 'Y'
+          AND mr.INBOX_STATUS != 'RECALLED_BY_SENDER'
+    </select>
 
 </mapper>

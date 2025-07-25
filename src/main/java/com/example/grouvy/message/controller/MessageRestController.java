@@ -83,9 +83,21 @@ public class MessageRestController {
         return ResponseEntity.ok(messages);
     }
 
-    // **중요 쪽지함 관련 엔드포인트는 이 시점에 포함되지 않습니다.**
-    // @GetMapping("/important")
-    // public ResponseEntity<PaginationResponse<MessageReceiver>> getImportantMessages(...) { ... }
+    // **새롭게 추가:** 중요 쪽지함 목록 조회 API
+    @GetMapping("/important")
+    public ResponseEntity<PaginationResponse<MessageReceiver>> getImportantMessages(
+            @AuthenticationPrincipal SecurityUser securityUser,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        int receiverId = securityUser.getUser().getUserId();
+
+        PaginationResponse<MessageReceiver> messages = messageQueryService.getImportantMessages(receiverId, page, size);
+        return ResponseEntity.ok(messages);
+    }
 
     @GetMapping("/sentbox")
     public ResponseEntity<PaginationResponse<MessageSentResponseDto>> getSentboxMessages(
@@ -190,7 +202,6 @@ public class MessageRestController {
         return ResponseEntity.ok(securityUser.getUser().getUserId());
     }
 
-    // 새롭게 추가: 받은 쪽지 삭제 API
     @PostMapping("/inbox/delete/{receiveId}")
     public ResponseEntity<Map<String, Object>> deleteInboxMessage(
             @PathVariable("receiveId") Long receiveId,
@@ -224,7 +235,6 @@ public class MessageRestController {
         }
     }
 
-    // 새롭게 추가: 보낸 쪽지 삭제 API
     @PostMapping("/sentbox/delete/{sendId}")
     public ResponseEntity<Map<String, Object>> deleteSentMessage(
             @PathVariable("sendId") Long sendId,
@@ -258,7 +268,6 @@ public class MessageRestController {
         }
     }
 
-    // 새롭게 추가: 받은 쪽지 중요 표시/해제 API
     @PostMapping("/inbox/toggleImportant/{receiveId}")
     public ResponseEntity<Map<String, Object>> toggleImportant(
             @PathVariable("receiveId") Long receiveId,

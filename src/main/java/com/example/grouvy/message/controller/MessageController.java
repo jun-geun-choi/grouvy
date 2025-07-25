@@ -145,7 +145,14 @@ public class MessageController {
         return "message/message_send_prepared";
     }
 
-    // **중요 쪽지함 관련 엔드포인트는 이 시점에 포함되지 않습니다.**
-    // @GetMapping("/important")
-    // public String importantInbox(...) { ... }
+    // **새롭게 추가:** 중요 쪽지함 페이지
+    @GetMapping("/important")
+    public String importantInbox(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+        model.addAttribute("currentPage", "important");
+        return "message/important_inbox";
+    }
 }

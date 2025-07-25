@@ -27,6 +27,12 @@ public interface MessageMapper {
             @Param("offset") int offset,
             @Param("limit") int limit);
 
+    // **새롭게 추가:** 중요 쪽지함 목록 조회 (페이지네이션)
+    List<MessageReceiver> findImportantMessagesByReceiverIdPaginated(
+            @Param("receiverId") int receiverId,
+            @Param("offset") int offset,
+            @Param("limit") int limit);
+
     //쪽지 수신자이름 목록조회.
     List<String> findReceiverUserNamesByMessageIdAndType(
             @Param("messageId") Long messageId,
@@ -39,6 +45,9 @@ public interface MessageMapper {
     int countTotalSentMessages(@Param("senderId") int senderId);
     int countUnreadReceiversByMessageId(@Param("messageId") Long messageId);
     int countTotalReceiversByMessageId(@Param("messageId") Long messageId);
+
+    // **새롭게 추가:** 중요 쪽지 전체 개수 (페이지네이션을 위함)
+    int countImportantMessages(@Param("receiverId") int receiverId);
 
     //메세지 회수
     Message findMessageDetailById(@Param("messageId") Long messageId);

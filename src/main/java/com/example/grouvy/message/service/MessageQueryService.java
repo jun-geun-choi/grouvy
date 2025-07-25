@@ -33,8 +33,14 @@ public class MessageQueryService {
         return new PaginationResponse<>(messages, page - 1, size, totalElements);
     }
 
-    // **중요 쪽지함 관련 조회 메서드는 이 시점에 포함되지 않습니다.**
-    // public PaginationResponse<MessageReceiver> getImportantMessages(...)
+    // **새롭게 추가:** 중요 쪽지함 목록 조회
+    @Transactional(readOnly = true)
+    public PaginationResponse<MessageReceiver> getImportantMessages(int userId, int page, int size) {
+        int offset = (page - 1) * size;
+        List<MessageReceiver> messages = messageMapper.findImportantMessagesByReceiverIdPaginated(userId, offset, size);
+        int totalElements = messageMapper.countImportantMessages(userId);
+        return new PaginationResponse<>(messages, page - 1, size, totalElements);
+    }
 
     @Transactional(readOnly = true)
     public PaginationResponse<MessageSentResponseDto> getSentMessages(int userId, int page, int size) {
@@ -66,7 +72,7 @@ public class MessageQueryService {
         return new PaginationResponse<>(dtos, page - 1, size, totalElements);
     }
 
-    @Transactional(readOnly = true) // Read-only 트랜잭션 (쪽지 읽음 처리도 포함되므로 @Transactional 필요)
+    @Transactional(readOnly = true)
     public MessageDetailResponseDto getMessageDetail(Long messageId, int currentUserId) {
         Message message = messageMapper.findMessageDetailById(messageId);
         if (message == null) {
@@ -80,7 +86,6 @@ public class MessageQueryService {
                 .filter(r -> r.getReceiverId() == currentUserId && "N".equals(r.getIsDeleted()))
                 .findFirst().orElse(null);
 
-        // Access control: If not sender and current user is not a receiver OR if it's recalled
         if (!isSender && (currentUserReceiver == null || "RECALLED_BY_SENDER".equals(currentUserReceiver.getInboxStatus()))) {
             return null;
         }
@@ -98,7 +103,6 @@ public class MessageQueryService {
         detailDto.setInboxStatus(currentUserReceiver != null ? currentUserReceiver.getInboxStatus() : null);
         detailDto.setImportantYn(currentUserReceiver != null ? currentUserReceiver.getImportantYn() : null);
 
-        // DTO 필드명 toUserNames, ccUserNames, bccUserNames에 맞춰 setter 호출
         detailDto.setToUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "TO"));
         detailDto.setCcUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "CC"));
 
