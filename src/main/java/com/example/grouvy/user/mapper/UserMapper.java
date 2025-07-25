@@ -16,7 +16,7 @@ public interface UserMapper {
     User getUserByUsernameWithRoleNames(String username);
     List<String> getRoleNamesByUserId(int userId);
 
-    User findByUserId(@Param("userId") String userId);
+    User findByUserId(@Param("userId") int userId);
     List<User> findUsersByDeptId(@Param("departmentId") Long departmentId);
 
 }
