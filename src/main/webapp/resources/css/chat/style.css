@@ -1,0 +1,340 @@
+/* ── 공통 스타일 ── */
+body {
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 100%;
+  height: 100vh;
+  background: #fff;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar_header {
+  padding: 1.5rem 1rem 1rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+  position: relative;
+}
+
+.sidebar_header img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.navigation_buttons {
+  display: flex;
+  justify-content: space-around;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 0.5rem 0;
+}
+
+.navigation_buttons button {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #888;
+  transition: color 0.2s;
+  border-radius: 6px;
+}
+
+.navigation_buttons button:hover {
+  color: #b8000d;
+  background: #f8f9fa;
+}
+
+.navigation_buttons button.active {
+  color: #b8000d;
+  background: #f3f6fa;
+  font-weight: 600;
+}
+
+/* ── 채팅 리스트 ── */
+.chat_list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  margin: 0;
+}
+
+/* 내 부서 섹션 스크롤 제어 */
+#my-department-section {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-bottom: 0.3rem;
+}
+
+/* 전체 친구 리스트 스크롤 제어 */
+#friends-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.chat_list_item {
+  display: flex;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 10px;
+  margin: 0.15rem 0.2rem;
+  font-size: 1.01rem;
+  background: #fff;
+  border: 1px solid transparent;
+}
+
+.chat_list_item:hover,
+.chat_list_item.active {
+  background: #f3f6fa;
+  border: 1px solid #b8000d;
+}
+
+.chat_avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 1.05rem;
+  margin-right: 0.7rem;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+}
+
+.chat_info {
+  flex: 1;
+}
+
+.chat_info .chat_name {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.chat_info .chat_last {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* ── 커스텀 컨텍스트 메뉴 ── */
+.custom_context_menu {
+  position: fixed;
+  z-index: 9999;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  min-width: 120px;
+  padding: 0.3rem 0;
+  display: none;
+}
+
+.custom_context_menu button {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0.5rem 1.1rem;
+  font-size: 1rem;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.custom_context_menu button:hover {
+  background: #f3f6fa;
+  color: #b8000d;
+}
+
+/* ── 아코디언 스타일 ── */
+.accordion_item {
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+}
+.accordion_body {
+  padding: 0.3rem 0.5rem 0.7rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.accordion-collapse {
+  max-height: none !important;
+  overflow: visible;
+}
+
+.accordion_button {
+  background: #f7f8fa;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #333;
+  padding: 0.7rem 1rem;
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+.accordion_button:not(.collapsed) {
+  background: #e9ecef;
+  color: #b8000d;
+}
+
+/* ── 프로필 모달 스타일 ── */
+.modal_profile_img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+.modal_profile_label {
+  font-weight: 600;
+  color: #888;
+  font-size: 0.98rem;
+  margin-right: 0.5rem;
+}
+
+.modal_profile_value {
+  font-size: 1.08rem;
+  font-weight: 500;
+}
+
+/* ── 팀 레벨(중첩 아코디언) 스타일 ── */
+.accordion_item .accordion_item {
+  border: none;
+  margin-bottom: 0.2rem;
+  margin-left: 1.5rem;
+  border-left: 2px solid #dee2e6;
+  background: #fff;
+}
+
+.accordion_item .accordion-header {
+  margin: 0;
+}
+
+.accordion_item .accordion_button {
+  background: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 0.7rem;
+  color: #666;
+  border: none;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  border-radius: 0;
+}
+
+.accordion_item .accordion_button:not(.collapsed) {
+  background: #f8f9fa;
+  color: #b8000d;
+  border-left: 2px solid #b8000d;
+}
+
+.accordion_item .accordion_button:hover {
+  background: #f8f9fa;
+  color: #b8000d;
+}
+
+/* ── 채팅 페이지 스타일 ── */
+.main_panel {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.main_header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+}
+.main_header .chat_title {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.chat_body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 1.5rem 1rem 1.5rem;
+  background: #f7f8fa;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.chat_message {
+  max-width: 60%;
+  padding: 0.7rem 1.1rem;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  font-size: 1rem;
+  align-self: flex-start;
+}
+.chat_message.me {
+  background: #b8000d;
+  color: #fff;
+  align-self: flex-end;
+}
+
+.chat_date {
+  text-align: center;
+  color: #bbb;
+  font-size: 0.9rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.chat_input_area {
+  border-top: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.chat_input_area input {
+  flex: 1;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+}
+.chat_input_area button {
+  border-radius: 4px;
+  width: 44px;
+  height: 44px;
+  background: #b8000d;
+  color: #fff;
+  border: none;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.chat_input_area button:hover {
+  background: #a3000b;
+}

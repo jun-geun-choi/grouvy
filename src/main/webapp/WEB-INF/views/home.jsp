@@ -1,84 +1,35 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@include file="common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <title>GROUVY 메인 화면</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap CSS CDN -->
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-            rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="resources/css/user/home.css">
-
+    <%@include file="common/head.jsp" %>
 </head>
 <body>
-<!-- 네비게이션바 -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="/">
-				<span class="logo-crop">
-					<img src="resources/image/grouvy_logo.png" alt="GROUVY 로고" class="logo-img">
-				</span>
-        </a>
-        <ul class="navbar-nav mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link active" href="#">전자결재</a></li>
-            <!-- 커서 active-->
-            <li class="nav-item"><a class="nav-link" href="#">업무문서함</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-            <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-        </ul>
-        <div class="d-flex align-items-center">
-            <!-- 로그인 사용자 드롭다운 -->
-            <c:choose>
-                <c:when test="${not empty pageContext.request.userPrincipal}">
-                    <div class="dropdown ms-3">
-                        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle"
-                           id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="ms-2 fw-semibold">
-                                    ${pageContext.request.userPrincipal.name}
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item d-flex align-items-center" href="/mypage_profile.html">
-                                <i class="bi bi-person me-2"></i> 마이페이지
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item d-flex align-items-center text-danger" href="/logout">
-                                <i class="bi bi-box-arrow-right me-2"></i> 로그아웃
-                            </a></li>
-                        </ul>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <!-- 로그인 안 한 경우 -->
-                    <a href="/login" class="btn btn-outline-secondary btn-sm ms-3">로그인</a>
-                </c:otherwise>
-            </c:choose>
-
-        </div>
-    </div>
-</nav>
-
+<%@include file="common/nav.jsp" %>
 <div class="container-fluid mt-3">
     <div class="row">
         <!-- 왼쪽 사이드바 -->
         <div class="col-lg-3 col-md-3 col-12 mb-3">
             <div class="card p-5 mb-3 text-center">
-                <img
-                        src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-                        alt="프로필" class="rounded-circle mx-auto" width="80" height="80">
-                <h5 class="mt-2 mb-1">그루비 사원</h5>
+                <c:set var="profilePath">
+                    <sec:authentication property="principal.user.profileImgPath"/>
+                </c:set>
+                <c:choose>
+                    <c:when test="${empty profilePath or profilePath eq 'null'}">
+                        <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
+                             alt="기본 프로필"
+                             class="rounded-circle mx-auto" width="80" height="80"/>
+                    </c:when>
+                    <c:otherwise>
+                        <img src="https://storage.googleapis.com/grouvy-bucket/${profilePath}" alt="사용자 프로필"
+                             class="rounded-circle mx-auto" width="80" height="80"/>
+                    </c:otherwise>
+                </c:choose>
+
+                <h5 class="mt-2 mb-1"><sec:authentication property="principal.user.name"/> 사원</h5>
                 <small class="text-muted">사원</small>
                 <div class="icon-group mt-3">
                     <a href="#" class="text-dark text-decoration-none"> <i
@@ -273,8 +224,6 @@
         </div>
     </div>
 </div>
-<footer> © 2025 그룹웨어 Corp.</footer>
-<!-- Bootstrap JS (필수: 드롭다운 등 작동에 필요) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<%@include file="common/footer.jsp" %>
 </body>
 </html>
