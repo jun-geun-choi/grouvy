@@ -14,21 +14,25 @@ public class AdminController {
     }
 
     @GetMapping("/admin/user/list")
+
     public String userList() {
         return "admin/user/admin_user_list";
     }
 
     @GetMapping("/admin/user/approval")
+
     public String userApproval() {
         return "admin/user/admin_user_approval";
     }
 
     @GetMapping("/admin/user/login-history")
+
     public String userLoginHistory() {
         return "admin/user/admin_login_history";
     }
 
     @GetMapping("/admin/user/attendance-history")
+
     public String userAttendanceHistory() {
         return "admin/user/admin_attendance_history";
     }

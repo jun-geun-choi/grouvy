@@ -21,4 +21,5 @@ public interface UserMapper {
     int countUsersInDepartment(long departmentId);
 
     void updateUserProfile(@Param("userId") int userId, @Param("imageUrl")  String imageUrl);
+
 }

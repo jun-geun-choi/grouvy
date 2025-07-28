@@ -17,11 +17,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userMapper.getUserByEmailWithRoleNames(email);
+
         if (user == null) {
             throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
-        // TODO : USER 권한이 있는 사람만 접속 가능하도록 설정
+
 
         return new SecurityUser(user);
     }

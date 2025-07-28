@@ -16,6 +16,7 @@
     <img src="https://storage.googleapis.com/grouvy-profile-bucket/grouvy_logo.png" alt="GROUVY 로고" class="auth-logo">
     <div class="auth-title">로그인</div>
     <form action="/login" method="post">
+      <!-- <sec:csrfInput/> -->
         <div class="mb-3">
             <label for="loginEmail" class="form-label small">이메일</label> <input
                 type="text" class="form-control" id="loginEmail" name="email" required>

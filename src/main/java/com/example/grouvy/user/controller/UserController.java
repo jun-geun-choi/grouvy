@@ -31,6 +31,7 @@ public class UserController {
     private final UserMapper userMapper;
     private final MailService mailService;
 
+
     @GetMapping("/")
     public String home() {
         return "home";
@@ -97,5 +98,6 @@ public class UserController {
         Authentication newAuth = new UsernamePasswordAuthenticationToken(updatedSecurityUser, updatedSecurityUser.getPassword(), updatedSecurityUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(newAuth);
         return "redirect:/mypage-profile";
+
     }
 }

@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.io.IOException;
 import java.util.UUID;
 
@@ -36,6 +35,7 @@ public class UserService {
 //            throw new UserRegisterException("email", "이미 사용 중인 이메일입니다.");
 //        }
 
+
         if (!form.getPassword().equals(form.getConfirmPassword())) {
             throw new UserRegisterException("confirmPassword", "비밀번호가 일치하지 않습니다.");
         }
@@ -44,6 +44,7 @@ public class UserService {
         if (sessionCode == null || !sessionCode.equals(form.getConfirmCode())) {
             throw new UserRegisterException("confirmCode", "이메일 인증이 완료되지 않았습니다.");
         }
+
 
         User user = modelMapper.map(form, User.class);
         user.setPassword(passwordEncoder.encode(form.getPassword()));
@@ -74,4 +75,5 @@ public class UserService {
 
         userMapper.updateUserProfile(foundUser.getUserId(), uuid);
     }
+
 }
