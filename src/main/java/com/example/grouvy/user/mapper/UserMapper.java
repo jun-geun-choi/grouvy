@@ -22,4 +22,5 @@ public interface UserMapper {
 
     void updateUserProfile(@Param("userId") int userId, @Param("imageUrl")  String imageUrl);
 
+
 }
