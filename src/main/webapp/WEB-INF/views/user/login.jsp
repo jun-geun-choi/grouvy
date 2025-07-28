@@ -1,8 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@include file="../common/taglib.jsp"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -16,10 +13,10 @@
 </head>
 <body>
 <div class="auth-card">
-    <img src="resources/image/grouvy_logo.png" alt="GROUVY 로고" class="auth-logo">
+    <img src="https://storage.googleapis.com/grouvy-profile-bucket/grouvy_logo.png" alt="GROUVY 로고" class="auth-logo">
     <div class="auth-title">로그인</div>
     <form action="/login" method="post">
-        <sec:csrfInput/>
+      <!-- <sec:csrfInput/> -->
         <div class="mb-3">
             <label for="loginEmail" class="form-label small">이메일</label> <input
                 type="text" class="form-control" id="loginEmail" name="email" required>
