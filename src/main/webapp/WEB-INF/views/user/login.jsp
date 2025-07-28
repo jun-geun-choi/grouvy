@@ -13,7 +13,7 @@
 </head>
 <body>
 <div class="auth-card">
-    <img src="https://storage.googleapis.com/grouvy-profile-bucket/grouvy_logo.png" alt="GROUVY 로고" class="auth-logo">
+    <img src="https://storage.googleapis.com/grouvy-bucket/grouvy_logo.png" alt="GROUVY 로고" class="auth-logo">
     <div class="auth-title">로그인</div>
     <form action="/login" method="post">
       <!-- <sec:csrfInput/> -->
