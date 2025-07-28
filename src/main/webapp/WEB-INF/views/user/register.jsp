@@ -89,7 +89,7 @@
 
                 $.ajax({
                     type: "POST",
-                    url: "register/mailConfirm",
+                    url: "/register/mailConfirm",
                     data: { email: email },
                     success: function(data) {
                         // $emailCodeDiv.show(); // 인증 코드 입력칸 보이기
@@ -110,7 +110,6 @@
                 });
             }
         })
-
 
     });
 </script>
