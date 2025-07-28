@@ -1,14 +1,8 @@
 package com.example.grouvy.schedule.vo;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.ibatis.type.Alias;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
 
 @Getter
 @Setter
@@ -21,10 +15,10 @@ public class SimpleSchedule {
     private String end;
 //    private int categoryId;
     private String color;
-    private Category category;
+    private ScheduleCategory category;
 
     public void setCategoryColor(int categoryId) {
-        Category category = new Category();
+        ScheduleCategory category = new ScheduleCategory();
         category.setCategoryId(categoryId);
         this.category = category;
     }
