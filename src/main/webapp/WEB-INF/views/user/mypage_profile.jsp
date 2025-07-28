@@ -36,12 +36,12 @@
                       </c:set>
                       <c:choose>
                         <c:when test="${empty profilePath or profilePath eq 'null'}">
-                          <img src="https://storage.googleapis.com/grouvy-profile-bucket/default-profile.jpeg"
+                          <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
                                alt="기본 프로필"
                                class="profile-photo"/>
                         </c:when>
                         <c:otherwise>
-                          <img src="https://storage.googleapis.com/grouvy-profile-bucket/${profilePath}" alt="사용자 프로필"
+                          <img src="https://storage.googleapis.com/grouvy-bucket/${profilePath}" alt="사용자 프로필"
                                class="profile-photo"/>
                         </c:otherwise>
                       </c:choose>
