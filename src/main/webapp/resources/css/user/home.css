@@ -1,0 +1,151 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    padding-top: 80px;
+}
+
+.navbar-brand {
+    color: #e6002d !important;
+    font-size: 1.5rem;
+}
+
+.nav-item {
+    padding-right: 1rem;
+}
+
+.navbar-nav .nav-link.active {
+    font-weight: bold;
+    color: #e6002d !important;
+}
+
+.logo-img {
+    width: 160px;
+    height: 50px;
+    object-fit: cover;
+    object-position: center;
+}
+
+.navbar .container-fluid {
+    padding-right: 2rem;
+}
+
+.icon-group {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 15px;
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.icon-group a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.icon-group span {
+    font-size: 1rem;
+    color: #555;
+}
+
+.custom-gap {
+    margin-left: 0.65rem; /* 원하는 px 값으로 조정 (ex: 4px, 6px, 8px) */
+}
+
+.calendar-table th, .calendar-table td {
+    font-size: 0.9rem;
+    padding: 0.3rem;
+}
+
+.calendar {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    min-height: 250px; /* 원하는 높이 추가 */
+}
+
+.card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.dashboard-chart {
+    margin: 0.5rem 0;
+}
+
+@media ( max-width: 991px) {
+    .col-lg-2, .col-lg-10 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* 카드 높이 균등 분배 */
+.col-lg-6 .row.g-3 {
+    height: 100%;
+    min-height: 1200px; /* 필요시 조정 */
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+.col-lg-6 .row.g-3 > .col-12 {
+    flex: 1 1 0;
+    display: flex;
+}
+
+.col-lg-6 .card {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column; /*세로 방향으로 쌓음*/
+    /* justify-content: center; */
+}
+
+.attendance-card {
+    border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    background: #fff;
+}
+
+.attendance-card .progress {
+    background: #eaeaea;
+    border-radius: 8px;
+    overflow: visible;
+    margin-bottom: 1.5rem;
+}
+
+.attendance-card .progress-bar {
+    border-radius: 8px;
+    min-width: 12px;
+}
+
+.attendance-card .progress-label {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.attendance-card .btn-outline-success {
+    border-width: 2px;
+    font-weight: 600;
+    color: #00c3aa;
+    border-color: #00c3aa;
+}
+
+.attendance-card .btn-outline-success:hover {
+    background: #00c3aa;
+    color: #fff;
+}
+
+footer {
+    text-align: center;
+    padding: 15px;
+    font-size: 12px;
+    color: #999;
+    margin-top: 30px; /* 푸터 위쪽 여백 */
+    margin-bottom: 20px;
+}

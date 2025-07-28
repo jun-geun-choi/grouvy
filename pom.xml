@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -8,6 +9,7 @@
         <version>3.3.13</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+
     <groupId>com.example</groupId>
     <artifactId>grouvy</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -29,9 +31,22 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <spring-cloud-gcp.version>5.12.3</spring-cloud-gcp.version>
     </properties>
-    <dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>spring-cloud-gcp-dependencies</artifactId>
+                <version>${spring-cloud-gcp.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
         <!-- 스프링 시큐리티: 인증‧인가(로그인, 권한 체크 등) 기본 기능 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -92,13 +107,13 @@
             <version>3.2.3</version>  <!-- 최신 안정판 -->
         </dependency>
 
-<!--    JSP를 지원하지 않는 내장형 Tomcat
-         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-tomcat</artifactId>
-            <scope>provided</scope>
-         </dependency>
--->
+        <!--    JSP를 지원하지 않는 내장형 Tomcat
+                 <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                    <scope>provided</scope>
+                 </dependency>
+        -->
 
         <!-- Spring 통합 테스트 전용 -->
         <dependency>
@@ -146,8 +161,36 @@
             <groupId>org.glassfish.web</groupId>
             <artifactId>jakarta.servlet.jsp.jstl</artifactId>
         </dependency>
-    </dependencies>
 
+        <!--시큐리티 태그를 사용하기 위한 의존성 -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-taglibs -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-taglibs</artifactId>
+            <version>6.3.10</version>
+        </dependency>
+
+        <!-- google cloud storage (유저 프로필 이미지 클라우드) -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>spring-cloud-gcp-starter-storage</artifactId>
+<!--            <version>5.12.3</version>-->
+        </dependency>
+
+        <!-- spring boot email (회원가입 이메일 인증 구현) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>13.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+
+    </dependencies>
     <build>
         <plugins>
             <plugin>
