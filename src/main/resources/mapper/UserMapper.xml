@@ -91,7 +91,7 @@
         FROM GROUVY_USERS U
                  LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
                  LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
-        WHERE EMAIL = #{email}
+        WHERE U.EMAIL = #{email}
     </select>
 
     <!--  User getUserByEmailWithRoleNames(String email);  -->
