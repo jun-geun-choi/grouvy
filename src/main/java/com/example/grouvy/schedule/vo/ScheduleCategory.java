@@ -6,8 +6,8 @@ import org.apache.ibatis.type.Alias;
 
 @Getter
 @Setter
-@Alias("category")
-public class Category {
+@Alias("scheduleCategory")
+public class ScheduleCategory {
 
     private int categoryId;
     private String categoryTitle;
