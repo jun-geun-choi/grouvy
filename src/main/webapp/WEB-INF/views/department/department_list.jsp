@@ -103,7 +103,6 @@
     </style>
 </head>
 <body>
-<jsp:include page="/WEB-INF/views/common/nav.jsp"/>
 <div class="main-container">
     <h2>조직도</h2>
 

@@ -246,8 +246,6 @@
     </style>
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/common/nav.jsp"/>
-
     <div class="container">
     <!-- 사이드바 -->
         <div class="sidebar">
