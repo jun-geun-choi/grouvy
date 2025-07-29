@@ -1,13 +1,3 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@include file="common/taglib.jsp" %>
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>GROUVY 메인 화면</title>
-    <%@include file="common/head.jsp" %>
-</head>
-<body>
 <%@include file="common/nav.jsp" %>
 <div class="container-fluid mt-3">
     <div class="row">
