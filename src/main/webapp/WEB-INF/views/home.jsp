@@ -53,7 +53,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item d-flex align-items-center" href="/mypage_profile.html">
-                                <i class="bi bi-person me-2"></i> 마이페이지
+                            <i class="bi bi-person me-2"></i> 마이페이지
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item d-flex align-items-center text-danger" href="/logout">

@@ -3,7 +3,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <title>AJAX 조직도</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>조직도</title>
     <style>
         body {
             font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
@@ -99,47 +103,7 @@
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="/">
-				<span class="logo-crop">
-					<img src="resources/image/grouvy_logo.png" alt="GROUVY 로고" class="logo-img">
-				</span>
-        </a>
-        <ul class="navbar-nav mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-            <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/dept/list">조직도</a></li>
-            <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/admin">관리자</a></li>
-        </ul>
-        <div class="d-flex align-items-center">
-            <c:choose>
-                <c:when test="${not empty pageContext.request.userPrincipal}">
-                    <div class="dropdown ms-3">
-                        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle"
-                           id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="ms-2 fw-semibold">
-                                    ${pageContext.request.userPrincipal.name}
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item d-flex align-items-center" href="/mypage_profile.html">
-                                <i class="bi bi-person me-2"></i> 마이페이지
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item d-flex align-items-center text-danger" href="/logout">
-                                <i class="bi bi-box-arrow-right me-2"></i> 로그아웃
-                            </a></li>
-                        </ul>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <a href="/login" class="btn btn-outline-secondary btn-sm ms-3">로그인</a>
-                </c:otherwise>
-            </c:choose>
-
-        </div>
-    </div>
-</nav>
+<jsp:include page="/WEB-INF/views/common/nav.jsp"/>
 <div class="main-container">
     <h2>조직도</h2>
 
@@ -285,5 +249,6 @@
         fetchAndRenderOrgChart();
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

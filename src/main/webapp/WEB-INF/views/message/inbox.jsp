@@ -14,51 +14,279 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <style>
-    .unread {
-      font-weight: bold;
-      color: #007bff;
+    body {
+      background-color: #f7f7f7;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      color: #333;
     }
-    .pagination-container {
+
+    .container {
       display: flex;
-      justify-content: center;
-      margin-top: 20px;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 20px auto;
     }
-    .table-hover tbody tr:hover {
+
+    /* 사이드바 통일 스타일 */
+    .sidebar {
+      width: 200px;
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-right: 20px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar h3 {
+      margin-top: 0;
+      font-size: 16px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      margin: 10px 0;
+    }
+
+    .sidebar ul li a {
+      color: #333;
+      text-decoration: none;
+    }
+
+    .sidebar ul li a.active,
+    .sidebar ul li a:hover {
+      color: #1abc9c;
+      font-weight: bold;
+    }
+
+    /* 메인 콘텐츠 영역 */
+    .main-content {
+      flex: 1;
+      background-color: white;
+      border-radius: 8px;
+      padding: 25px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-content h2 {
+      margin-top: 0;
+      margin-bottom: 30px;
+      color: #34495e;
+      font-size: 1.6em;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 18px;
+    }
+
+    /* 쪽지 작성 폼 스타일 */
+    form {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 0.25rem;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+    }
+
+    /* 발신자 정보 박스 */
+    .sender-info {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    /* 수신자 리스트 */
+    .recipient-list {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 38px;
+      border: 1px solid #ced4da;
+      border-radius: 0.25rem;
+      padding: 0.375rem 0.75rem;
+      align-items: center;
+      background-color: white;
+    }
+
+    .recipient-item {
+      background-color: #e9ecef;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      max-width: 150px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 0.9em;
+      padding: 3px 7px;
+    }
+
+    .recipient-item .remove-btn {
+      margin-left: 5px;
+      background: none;
+      border: none;
+      color: #dc3545;
       cursor: pointer;
-      background-color: #f5f5f5;
+      font-size: 0.8em;
+      flex-shrink: 0;
+    }
+
+    /* 버튼 스타일 통일 */
+    .btn {
+      display: inline-block;
+      font-weight: 400;
+      text-align: center;
+      vertical-align: middle;
+      user-select: none;
+      background-color: transparent;
+      border: 1px solid transparent;
+      padding: 0.375rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }
+
+    .btn-primary:hover {
+      background-color: #0b5ed7;
+      border-color: #0a58ca;
+    }
+
+    .btn-secondary {
+      color: #fff;
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+
+    .btn-secondary:hover {
+      background-color: #5c636a;
+      border-color: #565e64;
+    }
+
+    .btn-outline-secondary {
+      color: #6c757d;
+      border: 1px solid #ced4da;
+      background-color: #fff;
+    }
+
+    .btn-outline-secondary:hover {
+      background-color: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        padding: 15px;
+      }
+
+      .sidebar {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 20px;
+        padding: 15px;
+      }
+
+      .main-content {
+        padding: 20px;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .main-content h2 {
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+      }
+
+      .form-control {
+        font-size: 0.9em;
+      }
     }
   </style>
 </head>
 <body>
-<div class="container mt-5">
-  <h2><i class="fas fa-inbox mr-2"></i>받은 쪽지함</h2>
-
-  <c:if test="${not empty errorMessage}">
-    <div class="alert alert-warning mt-3">${errorMessage}</div>
-  </c:if>
-
-  <div class="table-responsive mt-4">
-    <table class="table table-hover table-sm">
-      <thead class="thead-light">
-      <tr>
-        <th>보낸 사람</th>
-        <th>제목</th>
-        <th>받은 날짜</th>
-        <th>상태</th>
-        <th>중요</th>
-      </tr>
-      </thead>
-      <tbody id="inboxTableBody">
-      <tr><td colspan="5" class="text-center">쪽지를 불러오는 중...</td></tr>
-      </tbody>
-    </table>
+<div class="container">
+  <!-- 사이드바 -->
+  <div class="sidebar">
+    <h3>쪽지 메뉴</h3>
+    <ul>
+      <li><a href="/message/send" class="${currentPage == 'send' ? 'active' : ''}">쪽지 쓰기</a></li>
+      <li><a href="/message/inbox" class="${currentPage == 'inbox' ? 'active' : ''}">받은 쪽지함</a></li>
+      <li><a href="/message/sentbox" class="${currentPage == 'sentbox' ? 'active' : ''}">보낸 쪽지함</a></li>
+      <li><a href="/message/important" class="${currentPage == 'important' ? 'active' : ''}">중요 쪽지함</a></li>
+    </ul>
   </div>
 
-  <!-- Pagination -->
-  <nav aria-label="Page navigation" class="pagination-container">
-    <ul class="pagination" id="pagination">
-    </ul>
-  </nav>
+  <!-- 본문 -->
+  <div class="main-content">
+    <h2><i class="fas fa-inbox mr-2"></i>받은 쪽지함</h2>
+
+    <c:if test="${not empty errorMessage}">
+      <div class="alert alert-warning mt-3">${errorMessage}</div>
+    </c:if>
+
+    <div class="table-responsive mt-4">
+      <table class="table table-hover table-sm">
+        <thead class="thead-light">
+        <tr>
+          <th>보낸 사람</th>
+          <th>제목</th>
+          <th>받은 날짜</th>
+          <th>상태</th>
+          <th>중요</th>
+        </tr>
+        </thead>
+        <tbody id="inboxTableBody">
+        <tr><td colspan="5" class="text-center">쪽지를 불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <nav aria-label="Page navigation" class="pagination-container mt-4">
+      <ul class="pagination justify-content-center" id="pagination"></ul>
+    </nav>
+  </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -124,7 +352,7 @@
       row.addEventListener('click', function() {
         const messageId = this.dataset.messageId;
         if (messageId) {
-          window.location.href = `/message/detail?messageId=\${messageId}`;
+          window.location.href = `/message/detail?messageId=\${messageId}&currentPage=inbox`;
         }
       });
     });

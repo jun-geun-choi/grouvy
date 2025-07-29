@@ -140,7 +140,7 @@
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center" href="/">
 				<span class="logo-crop">
-					<img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
+					<img src="/resources/image/grouvy_logo.png" alt="GROUVY 로고" class="logo-img" />
 				</span>
         </a>
         <h4>

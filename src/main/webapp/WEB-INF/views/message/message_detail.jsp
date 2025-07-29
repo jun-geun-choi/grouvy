@@ -14,6 +14,75 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
+        body {
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 20px auto;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-right: 20px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            font-size: 16px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            margin: 10px 0;
+        }
+
+        .sidebar ul li a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .sidebar ul li a.active,
+        .sidebar ul li a:hover {
+            color: #1abc9c;
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content h2 {
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: #34495e;
+            font-size: 1.6em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 18px;
+        }
+
         .message-header, .message-body, .message-footer {
             border: 1px solid #dee2e6;
             border-radius: 0.25rem;
@@ -21,20 +90,25 @@
             margin-bottom: 15px;
             background-color: #fff;
         }
+
         .message-header {
             background-color: #f8f9fa;
         }
+
         .message-content {
-            white-space: pre-wrap; /* 줄바꿈, 공백 유지 */
-            word-wrap: break-word; /* 긴 단어 줄바꿈 */
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
+
         .recalled-content {
             color: #6c757d;
             font-style: italic;
         }
+
         .action-button {
             margin-right: 10px;
         }
+
         .sender-box {
             background-color: #e9ecef;
             padding: 8px 12px;
@@ -42,6 +116,7 @@
             display: inline-block;
             font-size: 0.9em;
         }
+
         .recipient-box {
             background-color: #f0f0f0;
             padding: 5px 8px;
@@ -51,52 +126,106 @@
             display: inline-block;
             font-size: 0.85em;
         }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .sidebar {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+                padding: 15px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-content h2 {
+                font-size: 1.2em;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h2 id="messageSubjectDisplay"><i class="fas fa-envelope-open-text mr-2"></i> 쪽지 상세</h2>
+<div class="container">
+    <!-- 사이드바 -->
+    <div class="sidebar">
+        <h3>쪽지 메뉴</h3>
+        <ul>
+            <li><a href="/message/send" class="${currentPage == 'send' ? 'active' : ''}">쪽지 쓰기</a></li>
+            <li><a href="/message/inbox" class="${currentPage == 'inbox' ? 'active' : ''}">받은 쪽지함</a></li>
+            <li><a href="/message/sentbox" class="${currentPage == 'sentbox' ? 'active' : ''}">보낸 쪽지함</a></li>
+            <li><a href="/message/important" class="${currentPage == 'important' ? 'active' : ''}">중요 쪽지함</a></li>
+        </ul>
+    </div>
 
-    <c:if test="${not empty errorMessage}">
-        <div class="alert alert-warning mt-3">${errorMessage}</div>
-    </c:if>
+    <!-- 본문 -->
+    <div class="main-content">
+        <h2 id="messageSubjectDisplay"><i class="fas fa-envelope-open-text mr-2"></i> 쪽지 상세</h2>
 
-    <div class="message-header">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <c:if test="${not empty errorMessage}">
+            <div class="alert alert-warning mt-3">${errorMessage}</div>
+        </c:if>
+
+        <div class="message-header">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <strong>보낸 사람:</strong> <span id="senderNameDisplay" class="sender-box"></span>
+                </div>
+                <div>
+                    <strong>발송일:</strong> <span id="sendDateDisplay"></span>
+                </div>
+            </div>
+            <div class="mb-2">
+                <strong>받는 사람 (TO):</strong> <span id="toRecipientsDisplay"></span>
+            </div>
+            <div id="ccRow" class="mb-2" style="display: none;">
+                <strong>참조 (CC):</strong> <span id="ccRecipientsDisplay"></span>
+            </div>
+            <div id="bccRow" class="mb-2" style="display: none;">
+                <strong>숨은 참조 (BCC):</strong> <span id="bccRecipientsDisplay"></span>
+            </div>
+        </div>
+
+        <div class="message-body">
+            <p id="messageContentDisplay" class="message-content"></p>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
             <div>
-                <strong>보낸 사람:</strong> <span id="senderNameDisplay" class="sender-box"></span>
+                <button type="button" class="btn btn-info btn-sm mr-2" id="replyBtn">
+                    <i class="fas fa-reply mr-1"></i> 답장
+                </button>
+                <button type="button" class="btn btn-info btn-sm" id="forwardBtn">
+                    <i class="fas fa-share mr-1"></i> 전달
+                </button>
             </div>
             <div>
-                <strong>발송일:</strong> <span id="sendDateDisplay"></span>
+                <button type="button" class="btn btn-info btn-sm mr-2" id="importantToggleBtn" style="display: none;">
+                    <i class="far fa-star mr-1"></i> 중요 표시
+                </button>
+                <button type="button" class="btn btn-danger btn-sm mr-2" id="recallBtn" style="display: none;">
+                    <i class="fas fa-undo mr-1"></i> 회수
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="deleteBtn" style="display: none;">
+                    <i class="fas fa-trash-alt mr-1"></i> 삭제
+                </button>
             </div>
         </div>
-        <div class="mb-2">
-            <strong>받는 사람 (TO):</strong> <span id="toRecipientsDisplay"></span>
-        </div>
-        <div id="ccRow" class="mb-2" style="display: none;">
-            <strong>참조 (CC):</strong> <span id="ccRecipientsDisplay"></span>
-        </div>
-        <div id="bccRow" class="mb-2" style="display: none;">
-            <strong>숨은 참조 (BCC):</strong> <span id="bccRecipientsDisplay"></span>
-        </div>
+        <a href="javascript:history.back()" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left mr-1"></i> 목록으로</a>
     </div>
-
-    <div class="message-body">
-        <p id="messageContentDisplay" class="message-content"></p>
-    </div>
-
-    <div class="message-footer d-flex justify-content-between align-items-center">
-        <div>
-            <button type="button" class="btn btn-info btn-sm action-button" id="replyBtn"><i class="fas fa-reply mr-1"></i> 답장</button>
-            <button type="button" class="btn btn-info btn-sm action-button" id="forwardBtn"><i class="fas fa-share mr-1"></i> 전달</button>
-        </div>
-        <div>
-            <button type="button" class="btn btn-warning btn-sm action-button" id="importantToggleBtn" style="display: none;"><i class="far fa-star mr-1"></i> 중요</button>
-            <button type="button" class="btn btn-danger btn-sm action-button" id="recallBtn" style="display: none;"><i class="fas fa-undo mr-1"></i> 회수</button>
-            <button type="button" class="btn btn-danger btn-sm action-button" id="deleteBtn" style="display: none;"><i class="fas fa-trash-alt mr-1"></i> 삭제</button>
-        </div>
-    </div>
-    <a href="javascript:history.back()" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left mr-1"></i> 목록으로</a>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -220,7 +349,7 @@
             recallBtn.style.display = 'none';
         }
 
-        if (messageDetailData.receiveId && messageDetailData.inboxStatus !== 'RECALLED_BY_SENDER') {
+        if (messageDetailData.receiveId && messageDetailData.inboxStatus !== 'RECALLED') {
             deleteBtn.style.display = 'inline-block';
             importantToggleBtn.style.display = 'inline-block';
 
