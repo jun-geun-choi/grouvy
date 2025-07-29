@@ -1,10 +1,12 @@
 package com.example.grouvy.chat.controller;
 
 import com.example.grouvy.chat.dto.ApiResponse;
+import com.example.grouvy.chat.dto.ChatMessageDto;
 import com.example.grouvy.chat.dto.ChatMyList;
 import com.example.grouvy.chat.dto.ChatUserInfo;
 import com.example.grouvy.chat.dto.ResponseEntityUtils;
 import com.example.grouvy.chat.service.ChatService;
+import com.example.grouvy.chat.vo.ChatRoom;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +40,19 @@ public class ApiChatController {
     return ResponseEntityUtils.ok(chatUserInfo);
   }
 
-  // roomId를 비동기 통신으로 반환
+  //로그인한 사용자와 지정된 사용자를 이용하여, 이 둘의 roomId를 반환한다.
   @PostMapping
-  public ResponseEntity<ApiResponse<Integer>> getRoomId(@RequestBody Map<String, Object> userData) {
+  public ResponseEntity<ApiResponse<ChatRoom>> getRoomIdByUserData(@RequestBody Map<String, Object> userData) {
     int myUserId = Integer.parseInt(userData.get("userId").toString());
     int selectUserid =  Integer.parseInt(userData.get("selectUserId").toString());
-    int roomId = chatService.getRoomIdByUserId(myUserId,selectUserid);
+    ChatRoom chatRoom = chatService.getOrCreateChatRoomByUserId(myUserId,selectUserid);
 
-    return ResponseEntityUtils.ok(roomId);
+    return ResponseEntityUtils.ok(chatRoom);
+  }
+
+  @GetMapping("/loadMessage")
+  public ResponseEntity<ApiResponse<List<ChatMessageDto>>> loadMessage(@RequestParam("roomId") int roomId) {
+    List<ChatMessageDto> messages = chatService.getChatMessageByRoomId(roomId);
+    return  ResponseEntityUtils.ok(messages);
   }
 }
