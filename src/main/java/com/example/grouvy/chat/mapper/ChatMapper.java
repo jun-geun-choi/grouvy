@@ -1,8 +1,9 @@
 package com.example.grouvy.chat.mapper;
 
+import com.example.grouvy.chat.vo.ChatMessage;
+import com.example.grouvy.chat.vo.ChatRoom;
 import com.example.grouvy.user.vo.User;
 import java.util.List;
-import java.util.Optional;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -10,16 +11,17 @@ import org.apache.ibatis.annotations.Param;
 public interface ChatMapper {
 
   /**
-   * 로그인한 사용자와 같은 부서의 직원 리스트르 뿌린다.
-   * 단, 사용자는 뿌려지지 않는다.
+   * 로그인한 사용자와 같은 부서의 직원 리스트르 뿌린다. 단, 사용자는 뿌려지지 않는다.
+   *
    * @param departmentNo 사용자 부서 번호
-   * @param userId 사용자 아이디
+   * @param userId       사용자 아이디
    * @return 같은 부서 직원 리스트
    */
   public List<User> getMyListByDeptNo(int departmentNo, int userId);
 
   /**
    * 특정 사용자의 아이디로, 그 사용자의 정보를 조회
+   *
    * @param userId 사용자의 아이디
    * @return 사용자 이름, 직급명, 부서명, 연락처, 이메일, 사용자 이미지 파일 경로
    */
@@ -27,32 +29,61 @@ public interface ChatMapper {
 
 
   /**
-   * 두 사용자가 참여한 채팅방의 ID(ROOM_ID)를 조회한다.
-   * 채팅방이 없을 경우, NULL일 수도 있기 때문에 Optional 타입으로 반환한다.
-   * @param userId
-   * @param selectUserId
-   * @return
+   * 로그인한 사용자와 지정된 사용자의 ID를 사용하여, 두 사용자만 참여한 1:1 채팅방을 조회 후 반환.
+   *
+   * @param userId       현재 로그인한 사용자의 ID
+   * @param selectUserId 지정된 사용자의 ID
+   * @return 1:1 채팅방 반환
    */
-  public Optional<Integer> getChatRoomIdByUserId(int userId, int selectUserId);
+  public ChatRoom getRoomByUserId(@Param("userId") int userId,
+      @Param("selectUserId") int selectUserId);
 
   /**
-   * 새롭게 만드는 채팅룸의 ROOM_ID를 생성한다.
-   * @return
+   * 1:1 채팅방을 만든다.
+   *
+   * @param chatRoom 전달 받은 채팅방 정보
    */
-  public int getRoomId();
+  public void insertChatRoom(ChatRoom chatRoom);
 
   /**
-   * int getRoomId()에서 생성된 roomId와 지정한 상대방 사용자 이름으로 채팅방을 만든다.
-   * @param roomId
-   * @param roomName
-   */
-  public void insertRoom(@Param("roomId") int roomId, @Param("roomName") String roomName);
-
-  /**
-   * 그 채팅방에 사용자들을 추가한다.
+   * roomId에 속한 참가자들을 넣는다.
+   *
    * @param roomId 채팅방 ID
    * @param userId 위 채팅방에 참가하는 사용자.
    */
-  public void insertChatRoomUser(int roomId, int userId);
+  public void insertChatRoomUser(long roomId, int userId);
+
+
+  /**
+   * 메세지를 DB에 등록 시킨다.
+   *
+   * @param chatMessage
+   */
+  public void insertMessage(ChatMessage chatMessage);
+
+  /**
+   * roomId로 이 채팅방에 참여한 참여자 정보를 반환
+   *
+   * @param roomId 채팅방 번호
+   * @return 참여자 정보 : userId, name
+   */
+  public List<User> getChatRoomUserByRoomId(int roomId);
+
+  /**
+   * chatMessageId로 실시간으로 수신된 메세지 정보 1개를 반환.
+   *
+   * @param chatMessageId 메세지 ID
+   * @return 1개의 메세지 정보 => messageId, senderId, content, messageType, createdDate,roomId => name,
+   * profileImgPath
+   */
+  public ChatMessage getChatMessage(long chatMessageId);
+
+  /**
+   * roomId를 사용하여, 이 채팅방의 메세지 정보를 가져온다.
+   *
+   * @param roomId 채팅방 번호
+   * @return 메세지 리스트
+   */
+  public List<ChatMessage> getChatMessageByRoomId(int roomId);
 
 }

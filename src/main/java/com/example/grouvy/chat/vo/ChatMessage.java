@@ -12,6 +12,7 @@ import org.apache.ibatis.type.Alias;
 @NoArgsConstructor
 @Alias("ChatMessage")
 public class ChatMessage {
+
   private long chatMessageId;
   private long roomId;
   private int senderId;
@@ -19,6 +20,7 @@ public class ChatMessage {
   private Date createdDate;
   private String messageType;
 
-  private ChatRoom  chatRoom;
+  private ChatRoom chatRoom;
   private User user;
+
 }

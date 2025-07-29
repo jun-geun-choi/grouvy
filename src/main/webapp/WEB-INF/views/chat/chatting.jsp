@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -11,11 +12,16 @@
           rel="stylesheet">
     <link rel="stylesheet" href="<c:url value='/resources/css/chat/style.css' />"/>
 </head>
+
 <body>
 <div class="main_panel">
+    <%--채팅방 상단 헤더--%>
     <div class="main_header">
-        <div class="chat_title" id="chat-title">채팅방</div>
+        <div class="chat_title"
+             id="chat-title"
+             data-room-id="${roomId}">${roomName}</div>
         <div class="dropdown">
+            <%--채팅방 옵션 메뉴--%>
             <button class="btn btn-link p-0 ms-2" id="chat-menu-btn" data-bs-toggle="dropdown"
                     aria-expanded="false" style="font-size:1.5rem;"><i
                     class="bi bi-three-dots-vertical"></i></button>
@@ -30,143 +36,177 @@
         </div>
     </div>
 
+        <%--채팅 메세지가 랜더링되는 영역--%>
     <div class="chat_body" id="chat-body">
-        <!-- JS로 채팅 내용이 동적으로 들어감 -->
+        <%-- 메시지들은 JS에서 동적으로 이 안에 append됨 --%>
     </div>
 
+        <%--메세지 입력 영역--%>
     <form class="chat_input_area" id="chat-input-form" autocomplete="off">
+        <%--파일 첨부 버튼--%>
         <label for="chat-file-input" class="btn btn-light p-0 me-2"
                style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
             <i class="bi bi-paperclip" style="font-size:1.3rem;"></i>
         </label>
         <input type="file" id="chat-file-input" style="display:none" multiple>
+            <%--텍스트 입력창--%>
         <input type="text" id="chat-input" placeholder="대화내용을 입력해 주세요" autocomplete="off">
+            <%--전송 버튼--%>
         <button type="submit"><i class="bi bi-arrow-up"></i></button>
     </form>
+
 </div>
 
 <link rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
 <script>
-  /*  // 쿼리스트링에서 roomId 추출
-    function getRoomIdFromQuery() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const roomId = urlParams.get('roomId');
-      return roomId !== null ? parseInt(roomId, 10) : 0;
-    }*/
+  // 전역 변수 설정
+  let stompClient = null;                                  //STOMP 연결에 사용할 변수
+  const $chatTitle = $('#chat-title');                     // 제목 요소
+  const $chatBody = $('#chat-body');                       // 채팅 메시지 영역
+  const $chatInput = $('#chat-input');                     // 입력 필드
+  const $chatForm = $('#chat-input-form');                 // 폼
+  const $fileInput = $('#chat-file-input');                // 파일 첨부 input
+  const currentRoomId = $chatTitle.data('room-id');        // data-room-id 추출
 
-  /*let currentRoomId = getRoomIdFromQuery();
-  if (isNaN(currentRoomId) || currentRoomId < 0 || currentRoomId
-      >= chatRooms.length) currentRoomId = 0;*/
+  // 인증된 사용자 정보 가져오기
+  let userId;
+  <sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal.user" var="user"/>
+        userId = ${user.userId};
+  </sec:authorize>
 
-  const urlParam = new URLSearchParams(window.location.search); // roomId =\${값} 이 추출
-  const roomId = urlParam.get('roomId');                        // 그 값을 js 변수에 할당
+  //과거 메세지 이력 가져오기
+  function loadMessageThisRoom() {
+    $.getJSON(`/api/chat/loadMessage?roomId=\${currentRoomId}`, function (messages) {
+      let messageInfo = messages.data;
+      console.log("과거 메시지:", messageInfo);
 
-  const $chatTitle = $("#chat-title");              // 채팅방 제목
-  const $chatBody = $("#chat-body");                // 기존 메세지 내용 표시
-  const $chatInputForm = $("#chat-input-form");     // 첨부 파일 및 메세지 입력 폼
-  const chatInput = $("#chat-input")                // 메세지 입력 필드
-
-  // 1.
-  function renderChatRoom(roomId) {
-    const room = chatRooms[roomId];
-    chatTitle.textContent = room.name;
-    chatBody.innerHTML = '';
-    let lastDate = '';
-    room.messages.forEach(msg => {
-      if (msg.date && msg.date !== lastDate) {
-        chatBody.innerHTML += `<div class="chat_date">${msg.date}</div>`;
-        lastDate = msg.date;
-      }
-      chatBody.innerHTML += `<div class="chat_message${msg.me ? ' me' : ''}">${msg.text}</div>`;
-    });
-    chatBody.scrollTop = chatBody.scrollHeight;
-  }
-
-  chatInputForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const text = chatInput.value.trim();
-    if (!text) return;
-    chatRooms[currentRoomId].messages.push({date: '', sender: '나', text, me: true});
-    renderChatRoom(currentRoomId);
-    chatInput.value = '';
-  });
-
-  // 페이지 로드 시 채팅방 내용 보여주기
-  renderChatRoom(currentRoomId);
-
-  // 메뉴 기능 구현
-  $(function () {
-    // 대화 상대 추가
-    $('#add-participant').on('click', function (e) {
-      e.preventDefault();
-      const name = prompt('추가할 대화 상대 이름을 입력하세요:');
-      if (!name) return;
-      // 단순히 이름만 추가 (실제 서비스에서는 사용자 검색/선택 필요)
-      const room = chatRooms[currentRoomId];
-      if (room.name.includes(name)) {
-        alert('이미 추가된 사용자입니다.');
+      if (!messageInfo || messageInfo.length === 0) {
+        const htmlContent = `<div class="text-center text-muted">"새로운 채팅을 시작하세요."</div>`;
+        $chatBody.html(htmlContent);
         return;
       }
-      // 그룹채팅이면 이름 추가, 1:1이면 그룹채팅으로 변환
-      if (room.name.includes(',')) {
-        room.name += ', ' + name;
-      } else {
-        room.name = room.name + ', ' + name;
-      }
-      renderChatRoom(currentRoomId);
-    });
-    // 채팅방 이름 설정
-    $('#rename-room').on('click', function (e) {
-      e.preventDefault();
-      const newName = prompt('새 채팅방 이름을 입력하세요:', chatRooms[currentRoomId].name);
-      if (newName && newName.trim()) {
-        chatRooms[currentRoomId].name = newName.trim();
-        renderChatRoom(currentRoomId);
-      }
-    });
-    // 채팅방 나가기
-    $('#leave-room').on('click', function (e) {
-      e.preventDefault();
-      if (confirm('채팅방을 나가시겠습니까?')) {
-        // chatRooms에서 삭제
-        chatRooms.splice(currentRoomId, 1);
-        window.close();
-      }
-    });
-  }); // end 메뉴 기능 구현
 
-  // 파일 첨부 기능 (데모)
-  $('#chat-file-input').on('change', function (e) {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    files.forEach(file => {
-      let preview = '';
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function (ev) {
-          preview = `<img src="${ev.target.result}" alt="${file.name}" style="max-width:120px;max-height:80px;display:block;margin-bottom:4px;">`;
-          chatRooms[currentRoomId].messages.push({
-            date: '',
-            sender: '나',
-            text: preview + '<div style="font-size:0.95em;color:#888;">' + file.name + '</div>',
-            me: true
-          });
-          renderChatRoom(currentRoomId);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        preview = `<div style=\"font-size:0.95em;color:#888;\">${file.name}</div>`;
-        chatRooms[currentRoomId].messages.push({date: '', sender: '나', text: preview, me: true});
-        renderChatRoom(currentRoomId);
+      $chatBody.empty(); // 기존 메시지 지우기 (최초 로딩 시만)
+
+      for (let message of messageInfo) {
+        const isMe = message.senderId === userId;
+        const $wrapper = $('<div class="chat_message_wrapper"></div>');
+
+        if (isMe) {
+          $wrapper.addClass('me');
+        }
+
+        if (!isMe) {
+          const $senderInfo = $('<div class="chat_sender_info"></div>');
+          const $profile = $(`<div class="chat_avatar"></div>`).text(message.profileImgPath || "🧑");
+          const $name = $('<span class="chat_name"></span>').text(message.name);
+          $senderInfo.append($profile).append($name);
+          $wrapper.append($senderInfo);
+        }
+
+        const $message = $('<div class="chat_message"></div>').text(message.content);
+        if (isMe) $message.addClass('me');
+
+        const $timestamp = $('<div class="chat_timestamp"></div>').text(message.formattedTime);
+        $wrapper.append($message).append($timestamp);
+
+        $chatBody.append($wrapper);
       }
+
+      // 메시지 모두 append 후 스크롤 맨 아래로
+      $chatBody.scrollTop($chatBody.prop('scrollHeight'));
     });
-    // 파일 선택 초기화
-    $(this).val('');
-  }); // end 파일 첨부 기능
+  }
+
+
+
+  //  웹소켓 연결 및 구독처리
+  function connectWebSocket() {
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+      console.log('STOMP 연결 성공:', frame);
+
+      //  채팅방 구독 (브로드캐스트)
+      stompClient.subscribe(`/topic/chatting?roomId=\${currentRoomId}`, function (message) {
+        const chatMessage = JSON.parse(message.body);
+        console.log("chatMessage: ",chatMessage);
+        renderIncomingMessage(chatMessage);
+      });
+
+      //  특정 사용자에게 온 메시지 수신
+      stompClient.subscribe('/user/queue/messages', function (message) {
+        const personalMessage = JSON.parse(message.body);
+        console.log('1:1 알림 메시지 수신:', personalMessage);
+        // 원하는 처리를 여기에...
+      });
+    });
+  } // end
+
+  // 실시간으로 등록된 메세지를 화면에 뿌리는 함수
+  function renderIncomingMessage(chatMessage) {
+    const isMe = chatMessage.senderId === userId;
+    const $wrapper = $('<div class="chat_message_wrapper"></div>');
+
+    if (isMe) {
+        $wrapper.addClass('me');
+    }
+
+    // 상대방 메시지일 경우 프로필 이미지 + 이름 표시
+    if (!isMe) {
+      const $senderInfo = $('<div class="chat_sender_info"></div>');
+      const $profile = $(`<div class="chat_avatar">\${chatMessage.profileImgPath}</div>`);
+      const $name = $(`<span class="chat_name"></span>`).text(chatMessage.name);
+      $senderInfo.append($profile).append($name);
+      $wrapper.append($senderInfo);
+    }
+
+    // 메시지 본문 출력
+    const $message = $('<div class="chat_message"></div>').text(chatMessage.content);
+    if (isMe) $message.addClass('me');
+
+    // 전송 시간 표시
+    const $timestamp = $('<div class="chat_timestamp"></div>').text((chatMessage.formattedTime));
+
+    // 메시지 렌더링 완료 후 append
+    $wrapper.append($message).append($timestamp);
+    $chatBody.append($wrapper);
+    $chatBody.scrollTop($chatBody.prop('scrollHeight'));
+  }
+
+  //  메시지 전송 이벤트 설정
+  $chatForm.on('submit', function (e) {
+    e.preventDefault();
+
+    const content = $chatInput.val().trim();
+    if (!content || !stompClient) return;
+
+    const chatMessage = {
+      content: content,
+      messageType: '대화',
+      roomId : currentRoomId
+    };
+
+    stompClient.send("/app/chatSend", {}, JSON.stringify(chatMessage));
+    console.log(JSON.stringify(chatMessage));
+    $chatInput.val('');
+  }); // end
+
+  // 파일 첨부 이벤트 노션에 있음.
+
+  // 연결 시작
+  $(function () {
+    loadMessageThisRoom();
+    connectWebSocket();
+  });
+  //$(function() {..}) 이 문장 자체가 이 jsp 페이지의 HTML 요소, 스크립트 문장을 전부 로딩이 된 후
+  // 이 문장을 실행하겠다!! 라는 의미이고..
 </script>
-</body>
-</html>

@@ -62,13 +62,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  /*// 채팅방 더미 데이터
-  const chatRooms = [
-    { id: 0, name: '김업무', last: '나 이거 지금 테스트 중인데 어떠신가요??', unread: 1 },
-    { id: 1, name: '송한국', last: '반갑습니다.', unread: 0 },
-    { id: 2, name: '그룹채팅', last: '인생은 뭐다?!', unread: 6 },
-    { id: 3, name: '박메카', last: 'ㅎㅎㅎㅎ', unread: 0 }
-  ];*/
 
     // 로그인된 사용자의 부서 아이디와, 사용자 아이디를 시큐리티에서 뽑음.
     let departmentId;
@@ -86,7 +79,7 @@
           *  위에 처럼 하면 경로가 chat/api/chat/friends?deptNo 이렇게 chat이 두번 호출하게 된다. */
           let htmlContent = "";
           let friends = data.data;
-          console.log(friends);
+          console.log("friends: ",friends);
           let deptName = friends[0].departmentName;
 
           if (friends.length != 0) {
@@ -114,7 +107,8 @@
 
                     <div class="accordion-body p-0">
                         <div class="chat_list_item"
-                             data-user-id ="\${friend.userId}">
+                             data-user-id ="\${friend.userId}"
+                             data-user-name="\${friend.name}">
                             <div class="chat_avatar">\${friend.profileImgpath}</div>
                             <div class="chat_info">
                                 <div class="chat_name">\${friend.name}</div>
@@ -140,6 +134,7 @@
 
   // 3.팝업 오픈 함수
   function openChatPopup(roomId) {
+
     window.open(
         `/chat/chatting?roomId=\${roomId}`,
         '_blank',
@@ -168,7 +163,10 @@
           contextMenuTarget = this;                                  // 방금 클릭한 요소 (chat_list_item)를 contextMenuTarget에 저장.
 
           let selectUserId = $(contextMenuTarget).data("user-id");   //그 직원의 userId를 selectUserId로 할당. data속성으로 빼야 int 값으로 나옴. - "프로필 상세보기"에서 사용.
-          console.log(selectUserId);
+          console.log("selectUserId:",selectUserId);
+
+          /*let selectUserName = $(contextMenuTarget).data("user-name");
+          console.log("selectUserName:",selectUserName);*/
 
           const name = $(this).find('.chat_name').text().trim();    // 선택한 상대방 사용자의 이름 뽑음.
 
@@ -210,10 +208,11 @@
               contentType: "application/json",
               dataType: 'json',
               success: function (result) {
-                console.log(result);
-                let roomId = result.data;
-                console.log(roomId);
-                openChatPopup(roomId);
+                /*console.log("전체 데이터: ",result);*/
+                let room = result.data;
+                console.log("room: ",room);
+                console.log("room.roomId: ", room.roomId);
+                openChatPopup(room.roomId);
               }
             }) //ajax
           });
