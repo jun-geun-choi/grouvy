@@ -10,9 +10,9 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-@NoArgsConstructor // 기본 생성자
-@Builder // 가독성 좋은 체인 방식 생성자
-@AllArgsConstructor // 전체 필드 초기화 생성자
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @Alias("User")
 public class User {
     private int userId;

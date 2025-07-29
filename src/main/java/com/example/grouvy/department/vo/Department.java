@@ -21,3 +21,4 @@ public class Department {
   private Integer level;
 
 }
+
