@@ -26,53 +26,6 @@ public class MessageQueryService {
     private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
-    public PaginationResponse<MessageReceiver> getReceivedMessages(int userId, int page, int size) {
-        int offset = (page - 1) * size;
-        List<MessageReceiver> messages = messageMapper.findReceivedMessagesByReceiverIdPaginated(userId, offset, size);
-        int totalElements = messageMapper.countTotalReceivedMessages(userId);
-        return new PaginationResponse<>(messages, page - 1, size, totalElements);
-    }
-
-    // **새롭게 추가:** 중요 쪽지함 목록 조회
-    @Transactional(readOnly = true)
-    public PaginationResponse<MessageReceiver> getImportantMessages(int userId, int page, int size) {
-        int offset = (page - 1) * size;
-        List<MessageReceiver> messages = messageMapper.findImportantMessagesByReceiverIdPaginated(userId, offset, size);
-        int totalElements = messageMapper.countImportantMessages(userId);
-        return new PaginationResponse<>(messages, page - 1, size, totalElements);
-    }
-
-    @Transactional(readOnly = true)
-    public PaginationResponse<MessageSentResponseDto> getSentMessages(int userId, int page, int size) {
-        int offset = (page - 1) * size;
-        List<Message> sentMessages = messageMapper.findSentMessagesBySenderIdPaginated(userId, offset, size);
-        int totalElements = messageMapper.countTotalSentMessages(userId);
-
-        List<MessageSentResponseDto> dtos = sentMessages.stream()
-                .map(msg -> {
-                    MessageSentResponseDto dto = new MessageSentResponseDto();
-                    dto.setMessageId(msg.getMessageId());
-                    dto.setSenderId(msg.getSenderId());
-                    dto.setSubject(msg.getSubject());
-                    dto.setMessageContent(msg.getMessageContent());
-                    dto.setSendDate(msg.getSendDate());
-                    dto.setRecallAble(msg.getRecallAble());
-                    dto.setSendId(msg.getSendId());
-
-                    if ("Y".equals(msg.getRecallAble())) {
-                        int unreadCount = messageMapper.countUnreadReceiversByMessageId(msg.getMessageId());
-                        int totalReceiverCount = messageMapper.countTotalReceiversByMessageId(msg.getMessageId());
-                        dto.setCurrentlyRecallable(unreadCount > 0 && unreadCount == totalReceiverCount);
-                    } else {
-                        dto.setCurrentlyRecallable(false);
-                    }
-                    return dto;
-                })
-                .collect(Collectors.toList());
-        return new PaginationResponse<>(dtos, page - 1, size, totalElements);
-    }
-
-    @Transactional(readOnly = true)
     public MessageDetailResponseDto getMessageDetail(Long messageId, int currentUserId) {
         Message message = messageMapper.findMessageDetailById(messageId);
         if (message == null) {
@@ -86,7 +39,7 @@ public class MessageQueryService {
                 .filter(r -> r.getReceiverId() == currentUserId && "N".equals(r.getIsDeleted()))
                 .findFirst().orElse(null);
 
-        if (!isSender && (currentUserReceiver == null || "RECALLED_BY_SENDER".equals(currentUserReceiver.getInboxStatus()))) {
+        if (!isSender && (currentUserReceiver == null || "RECALLED".equals(currentUserReceiver.getInboxStatus()))) {
             return null;
         }
 
@@ -132,8 +85,49 @@ public class MessageQueryService {
     }
 
     @Transactional(readOnly = true)
-    public int countUnreadReceivedMessages(int userId) {
-        return messageMapper.countUnreadReceivedMessages(userId);
+    public PaginationResponse<MessageSentResponseDto> getSentMessages(int userId, int page, int size) {
+        int offset = (page - 1) * size;
+        List<Message> sentMessages = messageMapper.findSentMessagesBySenderIdPaginated(userId, offset, size);
+        int totalElements = messageMapper.countTotalSentMessages(userId);
+
+        List<MessageSentResponseDto> dtos = sentMessages.stream()
+                .map(msg -> {
+                    MessageSentResponseDto dto = new MessageSentResponseDto();
+                    dto.setMessageId(msg.getMessageId());
+                    dto.setSenderId(msg.getSenderId());
+                    dto.setSubject(msg.getSubject());
+                    dto.setMessageContent(msg.getMessageContent());
+                    dto.setSendDate(msg.getSendDate());
+                    dto.setRecallAble(msg.getRecallAble());
+                    dto.setSendId(msg.getSendId());
+
+                    if ("Y".equals(msg.getRecallAble())) {
+                        int unreadCount = messageMapper.countUnreadReceiversByMessageId(msg.getMessageId());
+                        int totalReceiverCount = messageMapper.countTotalReceiversByMessageId(msg.getMessageId());
+                        dto.setCurrentlyRecallable(unreadCount > 0 && unreadCount == totalReceiverCount);
+                    } else {
+                        dto.setCurrentlyRecallable(false);
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        return new PaginationResponse<>(dtos, page - 1, size, totalElements);
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<MessageReceiver> getReceivedMessages(int userId, int page, int size) {
+        int offset = (page - 1) * size;
+        List<MessageReceiver> messages = messageMapper.findReceivedMessagesByReceiverIdPaginated(userId, offset, size);
+        int totalElements = messageMapper.countTotalReceivedMessages(userId);
+        return new PaginationResponse<>(messages, page - 1, size, totalElements);
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<MessageReceiver> getImportantMessages(int userId, int page, int size) {
+        int offset = (page - 1) * size;
+        List<MessageReceiver> messages = messageMapper.findImportantMessagesByReceiverIdPaginated(userId, offset, size);
+        int totalElements = messageMapper.countImportantMessages(userId);
+        return new PaginationResponse<>(messages, page - 1, size, totalElements);
     }
 
     public MessageSendRequestDto prepareReplyMessage(Long originalMessageId) {

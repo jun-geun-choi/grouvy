@@ -1,4 +1,4 @@
-<%-- **파일 경로:** src/main/resources/META-INF/resources/WEB-INF/views/message/message_detail.jsp --%>
+<%--src/main/resources/META-INF/resources/WEB-INF/views/message/message_detail.jsp --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -10,9 +10,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>쪽지 상세</title>
-    <!-- CSRF 토큰을 위한 메타 태그는 SecurityConfig에서 csrf.disable() 했으므로 제거합니다. -->
-    <%-- <meta name="_csrf" content="${_csrf.token}"/> --%>
-    <%-- <meta name="_csrf_header" content="${_csrf.headerName}"/> --%>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -193,11 +190,9 @@
         }
     }
 
-    // 액션 버튼 설정 함수 (로그인 사용자 권한에 따라 버튼 표시/숨김 및 이벤트 연결)
     async function setupActionButtons(messageDetailData) {
         let currentUserId = null;
         try {
-            // 현재 로그인 사용자 ID를 가져오는 임시 API를 활용
             const response = await fetch('/api/v1/messages/users/current/id');
             if (response.ok) {
                 currentUserId = await response.json();
@@ -219,14 +214,12 @@
         const replyBtn = document.getElementById('replyBtn');
         const forwardBtn = document.getElementById('forwardBtn');
 
-        // 회수 버튼 표시 여부: 발신자이고 현재 회수 가능할 때만 표시
         if (messageDetailData.senderId === currentUserId && messageDetailData.currentlyRecallable) {
             recallBtn.style.display = 'inline-block';
         } else {
             recallBtn.style.display = 'none';
         }
 
-        // 삭제 및 중요 표시 버튼 로직 (받은 쪽지함에서만 활성화)
         if (messageDetailData.receiveId && messageDetailData.inboxStatus !== 'RECALLED_BY_SENDER') {
             deleteBtn.style.display = 'inline-block';
             importantToggleBtn.style.display = 'inline-block';
@@ -240,12 +233,10 @@
                 toggleImportant(messageDetailData.receiveId, messageDetailData.importantYn === 'Y' ? 'N' : 'Y');
             };
         } else {
-            // 수신자가 아니거나, 회수된 쪽지인 경우 삭제/중요 버튼 숨김
             deleteBtn.style.display = 'none';
             importantToggleBtn.style.display = 'none';
         }
 
-        // 답장/전달 버튼 (모든 쪽지에 대해 활성화)
         replyBtn.onclick = function() {
             window.location.href = `/message/send-prepared?originalMessageId=\${messageId}&type=reply`;
         };
@@ -253,7 +244,6 @@
             window.location.href = `/message/send-prepared?originalMessageId=\${messageId}&type=forward`;
         };
 
-        // 회수 버튼 클릭 리스너
         recallBtn.addEventListener('click', function() {
             if (confirm('정말로 쪽지를 회수하시겠습니까? (수신자가 읽지 않았을 경우에만 가능합니다)')) {
                 recallMessage(messageId);
@@ -261,7 +251,6 @@
         });
     }
 
-    // ---------- AJAX 호출 함수들 (CSRF 토큰 로직 제거됨) ----------
 
     function recallMessage(messageId) {
         fetch(`/api/v1/messages/recall/\${messageId}`, {
@@ -344,7 +333,6 @@
             });
     }
 
-    // 날짜 포맷 함수
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);

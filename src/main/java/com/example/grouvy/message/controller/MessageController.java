@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/message")
 public class MessageController {
 
-    private final MessageSendService messageSendService;
     private final MessageQueryService messageQueryService;
 
+    //메세지 쓰기.
     @GetMapping("/send")
     public String sendMessageForm(@RequestParam(value = "receiverId", required = false) Integer receiverId, Model model,
                                   @AuthenticationPrincipal SecurityUser securityUser) {
@@ -42,45 +42,14 @@ public class MessageController {
         return "message/message_send";
     }
 
-    @GetMapping("/inbox")
-    public String inbox(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
-            return "redirect:/login";
-        }
-        model.addAttribute("currentPage", "inbox");
-        return "message/inbox";
-    }
-
-    @GetMapping("/sentbox")
-    public String sentbox(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
-            return "redirect:/login";
-        }
-        model.addAttribute("currentPage", "sentbox");
-        return "message/sentbox";
-    }
-
-    @GetMapping("/detail")
-    public String messageDetail(@RequestParam("messageId") Long messageId, Model model, @AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
-            model.addAttribute("errorMessage", "로그인이 필요합니다.");
-            return "redirect:/login";
-        }
-        model.addAttribute("messageId", messageId);
-        model.addAttribute("currentPage", "messageDetail");
-        return "message/message_detail";
-    }
-
     @GetMapping("/send-prepared")
     public String sendPreparedMessageForm(
             @RequestParam("originalMessageId") Long originalMessageId,
             @RequestParam("type") String type,
             Model model, @AuthenticationPrincipal SecurityUser securityUser) {
 
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
-            model.addAttribute("errorMessage", "쪽지 작성을 위해 로그인 정보가 필요합니다.");
+        if (securityUser == null) {
+            model.addAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/login";
         }
 
@@ -145,10 +114,41 @@ public class MessageController {
         return "message/message_send_prepared";
     }
 
-    // **새롭게 추가:** 중요 쪽지함 페이지
+    //메세지 조회
+    @GetMapping("/inbox")
+    public String inbox(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+        if (securityUser == null) {
+            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+        model.addAttribute("currentPage", "inbox");
+        return "message/inbox";
+    }
+
+    @GetMapping("/sentbox")
+    public String sentbox(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+        if (securityUser == null) {
+            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+        model.addAttribute("currentPage", "sentbox");
+        return "message/sentbox";
+    }
+
+    @GetMapping("/detail")
+    public String messageDetail(@RequestParam("messageId") Long messageId, Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+        if (securityUser == null) {
+            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+        model.addAttribute("messageId", messageId);
+        model.addAttribute("currentPage", "messageDetail");
+        return "message/message_detail";
+    }
+
     @GetMapping("/important")
     public String importantInbox(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+        if (securityUser == null) {
             model.addAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/login";
         }

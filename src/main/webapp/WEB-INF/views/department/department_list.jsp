@@ -112,7 +112,6 @@
             <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/admin">관리자</a></li>
         </ul>
         <div class="d-flex align-items-center">
-            <!-- 로그인 사용자 드롭다운 -->
             <c:choose>
                 <c:when test="${not empty pageContext.request.userPrincipal}">
                     <div class="dropdown ms-3">
@@ -134,7 +133,6 @@
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <!-- 로그인 안 한 경우 -->
                     <a href="/login" class="btn btn-outline-secondary btn-sm ms-3">로그인</a>
                 </c:otherwise>
             </c:choose>
@@ -169,7 +167,7 @@
                 const departmentTreeData = await response.json();
                 console.log('조직도 데이터 로드 완료:', departmentTreeData);
 
-                orgChartTree.innerHTML = ''; // 로딩 메시지 제거
+                orgChartTree.innerHTML = '';
 
                 renderDepartmentTree(departmentTreeData, orgChartTree);
                 setupEventListeners();

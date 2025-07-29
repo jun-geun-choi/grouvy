@@ -59,16 +59,13 @@
             </tr>
             </thead>
             <tbody id="sentboxTableBody">
-            <!-- 쪽지 목록이 여기에 동적으로 로드됩니다. -->
             <tr><td colspan="4" class="text-center">쪽지를 불러오는 중...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <!-- Pagination -->
     <nav aria-label="Page navigation" class="pagination-container">
         <ul class="pagination" id="pagination">
-            <!-- 페이지네이션 버튼이 여기에 동적으로 로드됩니다. -->
         </ul>
     </nav>
 </div>
@@ -77,7 +74,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let currentPage = 1;
-    const pageSize = 10; // 한 페이지에 보여줄 쪽지 수
+    const pageSize = 10;
 
     document.addEventListener('DOMContentLoaded', function() {
         fetchSentboxMessages(currentPage);
@@ -85,11 +82,11 @@
 
     function fetchSentboxMessages(page) {
         const sentboxTableBody = document.getElementById('sentboxTableBody');
-        sentboxTableBody.innerHTML = '<tr><td colspan="4" class="text-center">쪽지를 불러오는 중...</td></tr>'; // 로딩 메시지
+        sentboxTableBody.innerHTML = '<tr><td colspan="4" class="text-center">쪽지를 불러오는 중...</td></tr>';
 
         fetch(`/api/v1/messages/sentbox?page=\${page}&size=\${pageSize}`)
             .then(response => {
-                if (response.status === 401) { // UNAUTHORIZED
+                if (response.status === 401) {
                     sentboxTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">로그인이 필요합니다.</td></tr>';
                     return Promise.reject('Unauthorized');
                 }
@@ -101,26 +98,25 @@
                 return response.json();
             })
             .then(data => {
-                sentboxTableBody.innerHTML = ''; // 기존 내용 초기화
+                sentboxTableBody.innerHTML = '';
                 if (data.content && data.content.length > 0) {
                     data.content.forEach(message => {
                         const isRecallable = message.currentlyRecallable;
-                        const isRecalled = message.recallAble === 'RECALLED'; // 회수된 쪽지인지 판단 기준
+                        const isRecalled = message.recallAble === 'RECALLED';
 
                         let recallStatusHtml = '';
                         if (isRecalled) {
                             recallStatusHtml = '<span class="text-danger"><i class="fas fa-history mr-1"></i>회수됨</span>';
-                        } else if (message.recallAble === 'Y') { // 회수 가능한 쪽지
+                        } else if (message.recallAble === 'Y') {
                             if (isRecallable) {
                                 recallStatusHtml = '<span class="text-success"><i class="fas fa-check-circle mr-1"></i>회수 가능</span>';
                             } else {
                                 recallStatusHtml = '<span class="text-muted"><i class="fas fa-times-circle mr-1"></i>읽음 확인됨</span>';
                             }
-                            // 회수 가능 상태일 때만 '회수' 버튼 표시
                             if (isRecallable) {
                                 recallStatusHtml += ` <a href="#" class="recall-action-link ml-2" data-message-id="\${message.messageId}">[회수]</a>`;
                             }
-                        } else { // 회수 불가능한 쪽지
+                        } else {
                             recallStatusHtml = '<span class="text-danger"><i class="fas fa-ban mr-1"></i>회수 불가</span>';
                         }
 
@@ -134,12 +130,12 @@
                             `;
                         sentboxTableBody.insertAdjacentHTML('beforeend', row);
                     });
-                    setupRowClickListeners(); // 각 행에 클릭 이벤트 리스너 추가
-                    setupRecallActionListeners(); // 회수 버튼에 클릭 이벤트 리스너 추가
-                    renderPagination(data); // 페이지네이션 렌더링
+                    setupRowClickListeners();
+                    setupRecallActionListeners();
+                    renderPagination(data);
                 } else {
                     sentboxTableBody.innerHTML = '<tr><td colspan="4" class="text-center">보낸 쪽지가 없습니다.</td></tr>';
-                    renderPagination(data); // 빈 목록일 때도 페이지네이션 초기화
+                    renderPagination(data);
                 }
             })
             .catch(error => {
@@ -162,14 +158,12 @@
     function setupRowClickListeners() {
         document.querySelectorAll('#sentboxTableBody tr').forEach(row => {
             row.addEventListener('click', function(event) {
-                // 회수 버튼 클릭 시 이벤트 전파 방지
                 if (event.target.classList.contains('recall-action-link')) {
                     event.stopPropagation();
                     return;
                 }
                 const messageId = this.dataset.messageId;
                 if (messageId) {
-                    // 쪽지 상세 페이지로 이동 (아직 상세 페이지는 구현 전이므로 나중에 연결)
                     window.location.href = `/message/detail?messageId=\${messageId}`;
                 }
             });
@@ -179,7 +173,7 @@
     function setupRecallActionListeners() {
         document.querySelectorAll('.recall-action-link').forEach(link => {
             link.addEventListener('click', function(event) {
-                event.preventDefault(); // 기본 링크 동작 방지
+                event.preventDefault();
                 const messageId = this.dataset.messageId;
                 if (confirm('정말로 쪽지를 회수하시겠습니까? (수신자가 읽지 않았을 경우에만 가능합니다)')) {
                     recallMessage(messageId);
@@ -193,8 +187,6 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-                // CSRF 토큰은 Spring Security가 활성화되어 있다면 필수
-                // 'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content')
             }
         })
             .then(response => {
@@ -212,7 +204,7 @@
             .then(data => {
                 if (data.success) {
                     alert(data.message);
-                    fetchSentboxMessages(currentPage); // 목록 새로고침
+                    fetchSentboxMessages(currentPage);
                 } else {
                     alert('쪽지 회수 실패: ' + data.message);
                 }

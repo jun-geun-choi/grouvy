@@ -1,4 +1,4 @@
-<%-- **파일 경로:** src/main/resources/META-INF/resources/WEB-INF/views/message/message_send.jsp --%>
+<%--src/main/resources/META-INF/resources/WEB-INF/views/message/message_send.jsp --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
@@ -9,9 +9,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${formTitle}</title>
-    <!-- CSRF 토큰을 위한 메타 태그는 SecurityConfig에서 csrf.disable() 했으므로 제거합니다. -->
-    <%-- <meta name="_csrf" content="${_csrf.token}"/> --%>
-    <%-- <meta name="_csrf_header" content="${_csrf.headerName}"/> --%>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -83,7 +80,6 @@
                 <label for="toRecipients">받는 사람 (TO):</label>
                 <div class="input-group">
                     <ul id="toRecipients" class="form-control recipient-list">
-                        <!-- 선택된 수신자가 여기에 동적으로 추가됩니다. -->
                     </ul>
                     <div class="input-group-append">
                         <button type="button" class="btn btn-outline-secondary" onclick="openRecipientModal('to')"><i class="fas fa-plus"></i></button>
@@ -96,7 +92,6 @@
                 <label for="ccRecipients">참조 (CC):</label>
                 <div class="input-group">
                     <ul id="ccRecipients" class="form-control recipient-list">
-                        <!-- 선택된 수신자가 여기에 동적으로 추가됩니다. -->
                     </ul>
                     <div class="input-group-append">
                         <button type="button" class="btn btn-outline-secondary" onclick="openRecipientModal('cc')"><i class="fas fa-plus"></i></button>
@@ -109,7 +104,6 @@
                 <label for="bccRecipients">숨은 참조 (BCC):</label>
                 <div class="input-group">
                     <ul id="bccRecipients" class="form-control recipient-list">
-                        <!-- 선택된 수신자가 여기에 동적으로 추가됩니다. -->
                     </ul>
                     <div class="input-group-append">
                         <button type="button" class="btn btn-outline-secondary" onclick="openRecipientModal('bcc')"><i class="fas fa-plus"></i></button>
@@ -133,14 +127,11 @@
         </form>
     </div>
 
-    <!-- 조직도 모달 포함 -->
-    <%-- **include 경로:** application.properties 설정에 맞춥니다. --%>
     <%@ include file="/WEB-INF/views/department/department_list_modal.jsp" %>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // currentRecipientType 변수를 전역에 노출하여 department_list_modal.jsp에서 접근 가능하게 함
         window.currentRecipientType = ''; // 'to', 'cc', 'bcc' 중 현재 선택된 수신자 타입
 
         const selectedUsers = {

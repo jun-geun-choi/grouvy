@@ -26,8 +26,6 @@ public interface MessageMapper {
             @Param("senderId") int senderId,
             @Param("offset") int offset,
             @Param("limit") int limit);
-
-    // **새롭게 추가:** 중요 쪽지함 목록 조회 (페이지네이션)
     List<MessageReceiver> findImportantMessagesByReceiverIdPaginated(
             @Param("receiverId") int receiverId,
             @Param("offset") int offset,
@@ -53,6 +51,7 @@ public interface MessageMapper {
     Message findMessageDetailById(@Param("messageId") Long messageId);
     int updateInboxStatusToRecalled(@Param("messageId") Long messageId);
     List<MessageReceiver> findAllReceiversByMessageId(@Param("messageId") Long messageId);
+    int updateMessageRecallAbleToN(@Param("messageId") Long messageId);
 
     //쪽지 crud
     int updateMessageReceiverReadDate(@Param("receiveId") Long receiveId);

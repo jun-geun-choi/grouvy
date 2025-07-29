@@ -23,6 +23,7 @@ public class MessageSendService {
     private final MessageMapper messageMapper;
     private final UserMapper userMapper;
 
+    //메세지작성
     private void saveMessageReceiver(Long messageId, int receiverId, String receiverType) {
         MessageReceiver receiverRecord = new MessageReceiver();
         receiverRecord.setMessageId(messageId);
@@ -105,6 +106,7 @@ public class MessageSendService {
         return msgId;
     }
 
+    //메세지 회수
     @Transactional
     public boolean recallMessage(Long messageId, int currentUserId) {
         Message message = messageMapper.findMessageDetailById(messageId);
@@ -120,8 +122,9 @@ public class MessageSendService {
         }
 
         int updatedRows = messageMapper.updateInboxStatusToRecalled(messageId);
+        int updatedMessageRows = messageMapper.updateMessageRecallAbleToN(messageId);
 
-        if (updatedRows == totalReceiversCount) {
+        if (updatedRows == totalReceiversCount && updatedMessageRows > 0) {
             List<MessageReceiver> receivers = messageMapper.findAllReceiversByMessageId(messageId);
             User senderUser = userMapper.findByUserId(currentUserId);
             String senderName = (senderUser != null) ? senderUser.getName() : "알 수 없는 사용자";
@@ -135,34 +138,33 @@ public class MessageSendService {
         return false;
     }
 
-    // 새롭게 추가: 받은 쪽지 삭제 (수신자용)
+    //메세지 삭제
     @Transactional
     public boolean deleteReceivedMessage(Long receiveId, int currentUserId) {
-        MessageReceiver receiverRecord = messageMapper.findReceiverById(receiveId); // receiveId로 MessageReceiver 조회
+        MessageReceiver receiverRecord = messageMapper.findReceiverById(receiveId);
         if (receiverRecord == null || receiverRecord.getReceiverId() != currentUserId) {
-            return false; // 해당 receiveId가 존재하지 않거나, 현재 사용자의 쪽지가 아님
+            return false;
         }
         int updated = messageMapper.updateMessageReceiverIsDeleted(receiveId, "Y");
         return updated > 0;
     }
 
-    // 새롭게 추가: 보낸 쪽지 삭제 (발신자용)
     @Transactional
     public boolean deleteSentMessage(Long sendId, int currentUserId) {
-        MessageSender senderRecord = messageMapper.findSenderById(sendId); // sendId로 MessageSender 조회
+        MessageSender senderRecord = messageMapper.findSenderById(sendId);
         if (senderRecord == null || senderRecord.getSenderId() != currentUserId) {
-            return false; // 해당 sendId가 존재하지 않거나, 현재 사용자의 쪽지가 아님
+            return false;
         }
         int updated = messageMapper.updateMessageSenderIsDeleted(sendId, "Y");
         return updated > 0;
     }
 
-    // 새롭게 추가: 받은 쪽지 중요 표시/해제
+    //메세지즐겨찾기
     @Transactional
     public boolean toggleImportantReceivedMessage(Long receiveId, int currentUserId, String importantYn) {
         MessageReceiver receiverRecord = messageMapper.findReceiverById(receiveId); // receiveId로 MessageReceiver 조회
         if (receiverRecord == null || receiverRecord.getReceiverId() != currentUserId) {
-            return false; // 해당 receiveId가 존재하지 않거나, 현재 사용자의 쪽지가 아님
+            return false;
         }
         int updated = messageMapper.updateMessageReceiverImportantYn(receiveId, importantYn);
         return updated > 0;

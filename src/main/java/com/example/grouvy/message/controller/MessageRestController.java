@@ -35,11 +35,12 @@ public class MessageRestController {
     private final MessageQueryService messageQueryService;
     private final UserMapper userMapper;
 
+    //메세지 쓰기
     @PostMapping("/send")
     public ResponseEntity<Map<String, Object>> sendMessage(@RequestBody MessageSendRequestDto messageDto,
                                                            @AuthenticationPrincipal SecurityUser securityUser) {
 
-        if(securityUser == null || securityUser.getUser().getUserId() == 0) {
+        if(securityUser == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "로그인이 필요합니다");
@@ -68,6 +69,25 @@ public class MessageRestController {
         }
     }
 
+    @GetMapping("/prepare-message")
+    public ResponseEntity<MessageSendRequestDto> prepareMessage(
+            @RequestParam("originalMessageId") Long originalMessageId,
+            @RequestParam("type") String type) {
+
+        MessageSendRequestDto preparedDto = null;
+        if ("reply".equalsIgnoreCase(type)) {
+            preparedDto = messageQueryService.prepareReplyMessage(originalMessageId);
+        } else if ("forward".equalsIgnoreCase(type)) {
+            preparedDto = messageQueryService.prepareForwardMessage(originalMessageId);
+        }
+
+        if (preparedDto == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(preparedDto);
+    }
+
+    //메세지 조회
     @GetMapping("/inbox")
     public ResponseEntity<PaginationResponse<MessageReceiver>> getInboxMessages(
             @AuthenticationPrincipal SecurityUser securityUser,
@@ -83,7 +103,6 @@ public class MessageRestController {
         return ResponseEntity.ok(messages);
     }
 
-    // **새롭게 추가:** 중요 쪽지함 목록 조회 API
     @GetMapping("/important")
     public ResponseEntity<PaginationResponse<MessageReceiver>> getImportantMessages(
             @AuthenticationPrincipal SecurityUser securityUser,
@@ -114,12 +133,30 @@ public class MessageRestController {
         return ResponseEntity.ok(messages);
     }
 
+    @GetMapping("/detail/{messageId}")
+    public ResponseEntity<MessageDetailResponseDto> getMessageDetail(
+            @PathVariable("messageId") Long messageId,
+            @AuthenticationPrincipal SecurityUser securityUser) {
+
+        if (securityUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        int currentUserId = securityUser.getUser().getUserId();
+
+        MessageDetailResponseDto messageDetail = messageQueryService.getMessageDetail(messageId, currentUserId);
+        if (messageDetail == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(messageDetail);
+    }
+
+    //메세지 회수
     @PostMapping("/recall/{messageId}")
     public ResponseEntity<Map<String, Object>> recallMessage(
             @PathVariable("messageId") Long messageId,
             @AuthenticationPrincipal SecurityUser securityUser) {
 
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+        if (securityUser == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "로그인이 필요합니다.");
@@ -148,41 +185,6 @@ public class MessageRestController {
         }
     }
 
-    @GetMapping("/detail/{messageId}")
-    public ResponseEntity<MessageDetailResponseDto> getMessageDetail(
-            @PathVariable("messageId") Long messageId,
-            @AuthenticationPrincipal SecurityUser securityUser) {
-
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-        int currentUserId = securityUser.getUser().getUserId();
-
-        MessageDetailResponseDto messageDetail = messageQueryService.getMessageDetail(messageId, currentUserId);
-        if (messageDetail == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(messageDetail);
-    }
-
-    @GetMapping("/prepare-message")
-    public ResponseEntity<MessageSendRequestDto> prepareMessage(
-            @RequestParam("originalMessageId") Long originalMessageId,
-            @RequestParam("type") String type) {
-
-        MessageSendRequestDto preparedDto = null;
-        if ("reply".equalsIgnoreCase(type)) {
-            preparedDto = messageQueryService.prepareReplyMessage(originalMessageId);
-        } else if ("forward".equalsIgnoreCase(type)) {
-            preparedDto = messageQueryService.prepareForwardMessage(originalMessageId);
-        }
-
-        if (preparedDto == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(preparedDto);
-    }
-
     // 임시 User API (사용자 파트 API 부재로 인한 임시 조치) - /api/v1/messages/users/{userId}/name
     @GetMapping("/users/{userId}/name")
     public ResponseEntity<String> getUserNameForMessage(@PathVariable("userId") int userId) {
@@ -202,11 +204,12 @@ public class MessageRestController {
         return ResponseEntity.ok(securityUser.getUser().getUserId());
     }
 
+    //메세지삭제
     @PostMapping("/inbox/delete/{receiveId}")
     public ResponseEntity<Map<String, Object>> deleteInboxMessage(
             @PathVariable("receiveId") Long receiveId,
             @AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+        if (securityUser == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "로그인이 필요합니다.");
@@ -239,7 +242,7 @@ public class MessageRestController {
     public ResponseEntity<Map<String, Object>> deleteSentMessage(
             @PathVariable("sendId") Long sendId,
             @AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+        if (securityUser == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "로그인이 필요합니다.");
@@ -268,12 +271,13 @@ public class MessageRestController {
         }
     }
 
+    //메세지 important
     @PostMapping("/inbox/toggleImportant/{receiveId}")
     public ResponseEntity<Map<String, Object>> toggleImportant(
             @PathVariable("receiveId") Long receiveId,
             @RequestParam("importantYn") String importantYn,
             @AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+        if (securityUser == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "로그인이 필요합니다.");

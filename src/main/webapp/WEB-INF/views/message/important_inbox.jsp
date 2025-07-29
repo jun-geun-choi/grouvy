@@ -1,4 +1,4 @@
-<%-- **파일 경로:** src/main/resources/META-INF/resources/WEB-INF/views/message/important_inbox.jsp --%>
+<%--src/main/resources/META-INF/resources/WEB-INF/views/message/important_inbox.jsp --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -15,7 +15,7 @@
     <style>
         .unread {
             font-weight: bold;
-            color: #007bff; /* 파란색으로 미확인 쪽지 강조 */
+            color: #007bff;
         }
         .pagination-container {
             display: flex;
@@ -48,16 +48,13 @@
             </tr>
             </thead>
             <tbody id="importantInboxTableBody">
-            <!-- 쪽지 목록이 여기에 동적으로 로드됩니다. -->
             <tr><td colspan="5" class="text-center">쪽지를 불러오는 중...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <!-- Pagination -->
     <nav aria-label="Page navigation" class="pagination-container">
         <ul class="pagination" id="pagination">
-            <!-- 페이지네이션 버튼이 여기에 동적으로 로드됩니다. -->
         </ul>
     </nav>
 </div>
@@ -66,33 +63,31 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let currentPage = 1;
-    const pageSize = 10; // 한 페이지에 보여줄 쪽지 수
+    const pageSize = 10;
 
     document.addEventListener('DOMContentLoaded', function() {
         fetchImportantInboxMessages(currentPage);
     });
 
-    // 중요 쪽지함 목록을 가져오는 함수 (API 엔드포인트가 다름)
     function fetchImportantInboxMessages(page) {
         const importantInboxTableBody = document.getElementById('importantInboxTableBody');
         importantInboxTableBody.innerHTML = '<tr><td colspan="5" class="text-center">쪽지를 불러오는 중...</td></tr>'; // 로딩 메시지
 
-        // **API 엔드포인트만 변경**: /api/v1/messages/important
         fetch(`/api/v1/messages/important?page=\${page}&size=\${pageSize}`)
             .then(response => {
-                if (response.status === 401) { // Unauthorized 처리
+                if (response.status === 401) {
                     importantInboxTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">로그인이 필요합니다.</td></tr>';
                     return Promise.reject('Unauthorized');
                 }
-                if (!response.ok) { // 기타 HTTP 오류 처리
+                if (!response.ok) {
                     return response.json().then(errorData => {
                         throw new Error(errorData.message || '중요 쪽지 목록 불러오기 실패');
                     });
                 }
-                return response.json(); // 성공 응답 파싱
+                return response.json();
             })
             .then(data => {
-                importantInboxTableBody.innerHTML = ''; // 기존 내용 초기화
+                importantInboxTableBody.innerHTML = '';
                 if (data.content && data.content.length > 0) {
                     data.content.forEach(message => {
                         const row = `
@@ -106,11 +101,11 @@
                             `;
                         importantInboxTableBody.insertAdjacentHTML('beforeend', row);
                     });
-                    setupRowClickListeners(); // 각 행에 클릭 이벤트 리스너 추가
-                    renderPagination(data); // 페이지네이션 렌더링
+                    setupRowClickListeners();
+                    renderPagination(data);
                 } else {
                     importantInboxTableBody.innerHTML = '<tr><td colspan="5" class="text-center">중요 표시된 쪽지가 없습니다.</td></tr>';
-                    renderPagination(data); // 빈 목록일 때도 페이지네이션 초기화
+                    renderPagination(data);
                 }
             })
             .catch(error => {
@@ -118,11 +113,10 @@
                 if (error !== 'Unauthorized') {
                     importantInboxTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">쪽지 목록을 불러오는 중 오류 발생: \${error.message}</td></tr>`;
                 }
-                document.getElementById('pagination').innerHTML = ''; // 에러 발생 시 페이지네이션 제거
+                document.getElementById('pagination').innerHTML = '';
             });
     }
 
-    // 행 클릭 이벤트 리스너 설정 (쪽지 상세로 이동)
     function setupRowClickListeners() {
         document.querySelectorAll('#importantInboxTableBody tr').forEach(row => {
             row.addEventListener('click', function() {
@@ -134,7 +128,6 @@
         });
     }
 
-    // 날짜 포맷 함수 (inbox.jsp와 동일)
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -142,7 +135,6 @@
         return date.toLocaleDateString('ko-KR', options);
     }
 
-    // 페이지네이션 렌더링 함수 (inbox.jsp와 동일, fetch 함수만 변경)
     function renderPagination(paginationData) {
         const paginationUl = document.getElementById('pagination');
         paginationUl.innerHTML = '';
