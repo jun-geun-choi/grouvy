@@ -1,12 +1,21 @@
 <%-- src/main/webapp/WEB-INF/views/notification/notification_list.jsp --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <title>내 알림 목록</title>
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <c:url var="homeCss" value="/resources/css/user/home.css" />
+    <link href="${homeCss}" rel="stylesheet" />
     <%-- Bootstrap 및 공통 CSS 링크 --%>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -25,8 +34,9 @@
     </style>
 </head>
 <body>
-
-
+<div class="container">
+    <%@include file="../common/nav.jsp" %>
+</div>
 <div class="container mt-4">
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -52,7 +62,7 @@
         </div>
     </div>
 </div>
-
+<%@include file="../common/footer.jsp" %>
 <%-- Bootstrap JS 및 커스텀 스크립트 --%>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>

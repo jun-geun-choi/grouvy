@@ -14,9 +14,11 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationMapper notificationMapper;
+    private final UnreadCountService unreadCountService;
 
     public void createNotification(Notification notification) {
         notificationMapper.insertNotification(notification);
+        unreadCountService.updateAndSendUnreadCount(notification.getUserId());
     }
 
     public PaginationResponse<Notification> getNotificationsByUserId(int userId, int page, int size) {
@@ -30,7 +32,7 @@ public class NotificationService {
     public void updateNotificationContent(String targetUrl, int userId, String newContent) {
         int updatedCount = notificationMapper.updateNotificationContent(targetUrl, userId, newContent);
         if (updatedCount > 0) {
-            System.out.println("알림 내용 읽음처리완료:" +userId + targetUrl);
+            unreadCountService.updateAndSendUnreadCount(userId);
         }
     }
 
@@ -38,7 +40,7 @@ public class NotificationService {
     public void markNotificationsAsReadByTargetUrlAndUser(String targetUrl, int userId) {
         int updatedCount = notificationMapper.markNotificationsAsReadByTargetUrlAndUser(targetUrl, userId);
         if (updatedCount > 0) {
-            System.out.println("url기반 알림내용 읽음처리완료"+userId + targetUrl);
+            unreadCountService.updateAndSendUnreadCount(userId);
         }
     }
 
@@ -47,7 +49,7 @@ public class NotificationService {
         int updatedCount = notificationMapper.markAllAsReadByUserId(userId);
 
         if (updatedCount > 0) {
-            System.out.println(userId + " 사용자의 모든 알림 " + updatedCount + "건 읽음 처리 완료");
+            unreadCountService.updateAndSendUnreadCount(userId);
         }
         return updatedCount;
     }
