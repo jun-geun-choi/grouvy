@@ -6,12 +6,16 @@ import com.example.grouvy.message.mapper.MessageMapper;
 import com.example.grouvy.message.vo.Message;
 import com.example.grouvy.message.vo.MessageReceiver;
 import com.example.grouvy.message.vo.MessageSender;
+import com.example.grouvy.notification.mapper.NotificationMapper;
+import com.example.grouvy.notification.service.NotificationService;
+import com.example.grouvy.notification.vo.Notification;
 import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +26,7 @@ public class MessageSendService {
 
     private final MessageMapper messageMapper;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
     //메세지작성
     private void saveMessageReceiver(Long messageId, int receiverId, String receiverType) {
@@ -79,12 +84,26 @@ public class MessageSendService {
         messageMapper.insertMessageSender(senderRecord);
 
         Set<Integer> processedReceivers = new HashSet<>();
+        User senderUser = userMapper.findByUserId(senderId);
+        String senderName = (senderUser != null) ? senderUser.getName() : "알수없는 사용자.";
+
+        String targetUrlFormat = "/message/detail?messageId=%d";
 
         if (messageSendRequestDto.getReceiverIds() != null) {
             for (int receiverId : messageSendRequestDto.getReceiverIds()) {
                 if (receiverId == senderId || processedReceivers.contains(receiverId)) continue;
                 saveMessageReceiver(msgId, receiverId, "TO");
                 processedReceivers.add(receiverId);
+
+                //알림로직
+                Notification notification = Notification.builder()
+                        .userId(receiverId)
+                        .notificationType("MSG_RECV")
+                        .notificationContent(senderName + "님이 쪽지를 보냈습니다: " + messageSendRequestDto.getSubject())
+                        .targetUrl(String.format(targetUrlFormat, msgId))
+                        .isRead("N")
+                        .build();
+                notificationService.createNotification(notification);
             }
         }
 
@@ -93,6 +112,15 @@ public class MessageSendService {
                 if (ccId == senderId || processedReceivers.contains(ccId)) continue;
                 saveMessageReceiver(msgId, ccId, "CC");
                 processedReceivers.add(ccId);
+
+                Notification notification = Notification.builder()
+                        .userId(ccId)
+                        .notificationType("MSG_RECV_CC")
+                        .notificationContent(senderName + "님이 쪽지를 보냈습니다: " + messageSendRequestDto.getSubject())
+                        .targetUrl(String.format(targetUrlFormat, msgId))
+                        .isRead("N")
+                        .build();
+                notificationService.createNotification(notification);
             }
         }
 
@@ -101,6 +129,15 @@ public class MessageSendService {
                 if (bccId == senderId || processedReceivers.contains(bccId)) continue;
                 saveMessageReceiver(msgId, bccId, "BCC");
                 processedReceivers.add(bccId);
+
+                Notification notification = Notification.builder()
+                        .userId(bccId)
+                        .notificationType("MSG_RECV_BCC")
+                        .notificationContent(senderName + "님이 쪽지를 보냈습니다: " + messageSendRequestDto.getSubject())
+                        .targetUrl(String.format(targetUrlFormat, msgId))
+                        .isRead("N")
+                        .build();
+                notificationService.createNotification(notification);
             }
         }
         return msgId;
@@ -129,9 +166,10 @@ public class MessageSendService {
             User senderUser = userMapper.findByUserId(currentUserId);
             String senderName = (senderUser != null) ? senderUser.getName() : "알 수 없는 사용자";
             String recalledMessageContent = "[" + senderName + "님이 쪽지를 회수했습니다.]";
+            String targetUrl = String.format("/message/detail?messageId=%d", messageId);
 
             for (MessageReceiver receiver : receivers) {
-                // 알림 기능 제외
+                notificationService.updateNotificationContent(targetUrl, receiver.getReceiverId(), recalledMessageContent);
             }
             return true;
         }

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.notification.mapper.NotificationMapper">
+    <resultMap id="notificationResultMap" type="com.example.grouvy.notification.vo.Notification">
+        <id property="notificationId" column="NOTIFICATION_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="notificationType" column="NOTIFICATION_TYPE"/>
+        <result property="notificationContent" column="NOTIFICATION_CONTENT"/>
+        <result property="targetUrl" column="TARGET_URL"/>
+        <result property="createDate" column="CREATE_DATE"/>
+        <result property="isRead" column="IS_READ"/>
+    </resultMap>
+
+    <insert id="insertNotification" parameterType="com.example.grouvy.notification.vo.Notification" useGeneratedKeys="true" keyProperty="notificationId">
+        <selectKey keyProperty="notificationId" resultType="long" order="BEFORE">
+            SELECT NOTIFICATION_NOTIFICATION_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_NOTIFICATION (
+        NOTIFICATION_ID, USER_ID, NOTIFICATION_TYPE, NOTIFICATION_CONTENT, TARGET_URL, CREATE_DATE, IS_READ
+        ) VALUES (
+        #{notificationId}, #{userId}, #{notificationType}, #{notificationContent}, #{targetUrl}, SYSDATE, 'N'
+        )
+    </insert>
+
+    <select id="findNotificationsByUserIdPaginated" resultMap="notificationResultMap">
+        SELECT
+            NOTIFICATION_ID, USER_ID, NOTIFICATION_TYPE, NOTIFICATION_CONTENT, TARGET_URL, CREATE_DATE, IS_READ
+        FROM
+            GROUVY_NOTIFICATION
+        WHERE
+            USER_ID = #{userId}
+        AND IS_READ = 'N'
+        ORDER BY
+            CREATE_DATE DESC
+        OFFSET #{offset} ROWS
+        FETCH NEXT #{limit} ROWS ONLY
+    </select>
+
+    <select id="countTotalNotifications" parameterType="int" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            GROUVY_NOTIFICATION
+        WHERE
+            USER_ID = #{userId}
+        AND IS_READ = 'N'
+    </select>
+
+    <update id="updateNotificationContent">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            NOTIFICATION_CONTENT = #{newContent},
+            IS_READ = 'Y'
+        WHERE
+            TARGET_URL = #{targetUrl}
+        AND USER_ID = #{userId}
+        AND NOTIFICATION_TYPE LIKE 'MSG_%'
+        AND IS_READ = 'N'
+    </update>
+
+    <update id="markNotificationsAsReadByTargetUrlAndUser">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            IS_READ = 'Y'
+        WHERE
+            TARGET_URL = #{targetUrl}
+        AND USER_ID = #{userId}
+        AND IS_READ = 'N'
+    </update>
+
+    <update id="markAllAsReadByUserId">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            IS_READ = 'Y'
+        WHERE
+            USER_ID = #{userId}
+        AND IS_READ = 'N'
+    </update>
+
+</mapper>

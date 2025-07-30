@@ -18,6 +18,7 @@
       </li>
       <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/dept/list">조직도</a></li>
       <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
+      <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/notification/list">알림</a></li>
       <sec:authorize access="hasRole('ROLE_ADMIN')">
         <li class="nav-item"><a class="nav-link" href="/admin">관리자</a></li>
       </sec:authorize>
