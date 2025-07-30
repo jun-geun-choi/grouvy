@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <div class="modal fade" id="departmentListModal" tabindex="-1" role="dialog" aria-labelledby="departmentListModalLabel">
@@ -34,9 +34,11 @@
         padding: 0;
         margin: 0;
     }
+
     .dept-item {
         margin-bottom: 3px;
     }
+
     .department-name {
         font-weight: bold;
         color: #333;
@@ -44,9 +46,11 @@
         padding: 5px 0;
         display: block;
     }
+
     .department-name:hover {
         background-color: #f0f0f0;
     }
+
     .toggle-icon {
         display: inline-block;
         transition: transform 0.2s ease-in-out;
@@ -54,27 +58,33 @@
         color: #555;
         font-size: 0.8em;
     }
+
     .department-name.expanded .toggle-icon {
         transform: rotate(90deg);
     }
+
     .user-list {
         list-style: none;
         padding: 0;
         margin-left: 20px;
         display: none; /* 초기에는 숨김 */
     }
+
     .user-list.expanded-users {
         display: block;
     }
+
     .dept-list.child-dept-list {
         margin-left: 20px;
     }
+
     .user-item {
         font-size: 0.9em;
         color: #555;
         margin-bottom: 2px;
         padding: 3px 0;
     }
+
     .user-item a { /* 사용자 클릭 가능한 링크 스타일 */
         color: #007bff;
         text-decoration: none;
@@ -85,23 +95,38 @@
         text-overflow: ellipsis;
         vertical-align: middle; /* 텍스트와 아이콘 정렬 */
     }
+
     .user-item a:hover {
         text-decoration: underline;
     }
 
     /* 들여쓰기 레벨 (0부터 시작) */
-    .indent-level-0 { margin-left: 0px; }
-    .indent-level-1 { margin-left: 20px; }
-    .indent-level-2 { margin-left: 40px; }
-    .indent-level-3 { margin-left: 60px; }
-    .indent-level-4 { margin-left: 80px; }
+    .indent-level-0 {
+        margin-left: 0px;
+    }
+
+    .indent-level-1 {
+        margin-left: 20px;
+    }
+
+    .indent-level-2 {
+        margin-left: 40px;
+    }
+
+    .indent-level-3 {
+        margin-left: 60px;
+    }
+
+    .indent-level-4 {
+        margin-left: 80px;
+    }
 </style>
 
 <script>
     let modalOrgChartDataCache = null;
     let expandedDepartmentIds = new Set();
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         $('#departmentListModal').on('shown.bs.modal', function () {
             if (modalOrgChartDataCache) {
                 const orgChartTreeModal = document.getElementById('orgChartTreeModal');
@@ -255,7 +280,7 @@
 
         document.querySelectorAll('#departmentListModal .department-name').forEach(deptNameElement => {
             if (!deptNameElement.dataset.listenerAddedDept) {
-                deptNameElement.addEventListener('click', function(event) {
+                deptNameElement.addEventListener('click', function (event) {
                     const deptItem = deptNameElement.closest('.dept-item');
                     if (!deptItem) return;
 
@@ -292,7 +317,7 @@
 
         document.querySelectorAll('#departmentListModal .user-link-modal').forEach(link => {
             if (!link.dataset.listenerAddedUser) {
-                link.addEventListener('click', function(event) {
+                link.addEventListener('click', function (event) {
                     event.preventDefault();
                     const userId = parseInt(this.dataset.userId, 10);
                     const userName = this.dataset.userName;

@@ -15,7 +15,7 @@
   <a href="#">전자결재</a>
   <a href="#">업무관리</a>
   <a href="#">업무문서함</a>
-  <a href="#">조직도</a>
+  <a href="${pageContext.request.contextPath}/admin/dept/list">조직도</a>
 </nav>
 <div class="container">
   <div class="sidebar">
