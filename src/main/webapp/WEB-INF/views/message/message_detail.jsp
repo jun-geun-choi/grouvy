@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
@@ -10,13 +10,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${formTitle}</title>
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<c:url var="homeCss" value="/resources/css/user/home.css" />
-<link href="${homeCss}" rel="stylesheet" />
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <c:url var="homeCss" value="/resources/css/user/home.css"/>
+    <link href="${homeCss}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/message/message.css">
 </head>
@@ -87,7 +87,8 @@
                 </button>
             </div>
         </div>
-        <a href="javascript:history.back()" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left mr-1"></i> 목록으로</a>
+        <a href="javascript:history.back()" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left mr-1"></i>
+            목록으로</a>
     </div>
 </div>
 <%@include file="../common/footer.jsp" %>
@@ -97,7 +98,7 @@
     const messageId = ${messageId};
     const currentPage = new URLSearchParams(window.location.search).get('currentPage');
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         if (messageId) {
             fetchMessageDetail(messageId);
         } else {
@@ -253,7 +254,7 @@
     function recallMessage(messageId) {
         fetch(`/api/v1/messages/recall/\${messageId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json'}
         })
             .then(response => {
                 if (!response.ok) {
@@ -280,7 +281,7 @@
     function deleteReceivedMessage(receiveId) {
         fetch(`/api/v1/messages/inbox/delete/\${receiveId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json'}
         })
             .then(response => {
                 if (!response.ok) {
@@ -307,7 +308,7 @@
     function deleteSentMessage(sendId) {
         fetch(`/api/v1/messages/sentbox/delete/\${sendId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json'}
         })
             .then(response => {
                 if (!response.ok) {
@@ -334,7 +335,7 @@
     function toggleImportant(receiveId, newImportantYn) {
         fetch(`/api/v1/messages/inbox/toggleImportant/\${receiveId}?importantYn=\${newImportantYn}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json'}
         })
             .then(response => {
                 if (!response.ok) {
@@ -361,7 +362,7 @@
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
-        const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+        const options = {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'};
         return date.toLocaleDateString('ko-KR', options);
     }
 </script>

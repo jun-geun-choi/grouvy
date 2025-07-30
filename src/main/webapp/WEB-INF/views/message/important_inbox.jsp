@@ -11,13 +11,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${formTitle}</title>
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<c:url var="homeCss" value="/resources/css/user/home.css" />
-<link href="${homeCss}" rel="stylesheet" />
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <c:url var="homeCss" value="/resources/css/user/home.css"/>
+    <link href="${homeCss}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/message/message.css">
 </head>
@@ -57,7 +57,9 @@
                 </tr>
                 </thead>
                 <tbody id="importantInboxTableBody">
-                <tr><td colspan="5" class="text-center">쪽지를 불러오는 중...</td></tr>
+                <tr>
+                    <td colspan="5" class="text-center">쪽지를 불러오는 중...</td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -76,7 +78,7 @@
     let currentPage = 1;
     const pageSize = 10;
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         fetchImportantInboxMessages(currentPage);
     });
 
@@ -130,7 +132,7 @@
 
     function setupRowClickListeners() {
         document.querySelectorAll('#importantInboxTableBody tr').forEach(row => {
-            row.addEventListener('click', function() {
+            row.addEventListener('click', function () {
                 const messageId = this.dataset.messageId;
                 if (messageId) {
                     window.location.href = `/message/detail?messageId=\${messageId}&currentPage=important`;
@@ -142,7 +144,7 @@
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
-        const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+        const options = {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'};
         return date.toLocaleDateString('ko-KR', options);
     }
 

@@ -1,5 +1,5 @@
 <%-- src/main/resources/templates/message/sentbox.jsp --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
@@ -11,13 +11,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${formTitle}</title>
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<c:url var="homeCss" value="/resources/css/user/home.css" />
-<link href="${homeCss}" rel="stylesheet" />
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <c:url var="homeCss" value="/resources/css/user/home.css"/>
+    <link href="${homeCss}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/message/message.css">
 </head>
@@ -56,7 +56,9 @@
                 </tr>
                 </thead>
                 <tbody id="sentboxTableBody">
-                <tr><td colspan="4" class="text-center">쪽지를 불러오는 중...</td></tr>
+                <tr>
+                    <td colspan="4" class="text-center">쪽지를 불러오는 중...</td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -73,7 +75,7 @@
     let currentPage = 1;
     const pageSize = 10;
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         fetchSentboxMessages(currentPage);
     });
 
@@ -154,7 +156,7 @@
 
     function setupRowClickListeners() {
         document.querySelectorAll('#sentboxTableBody tr').forEach(row => {
-            row.addEventListener('click', function(event) {
+            row.addEventListener('click', function (event) {
                 if (event.target.classList.contains('recall-action-link')) {
                     event.stopPropagation();
                     return;
@@ -169,7 +171,7 @@
 
     function setupRecallActionListeners() {
         document.querySelectorAll('.recall-action-link').forEach(link => {
-            link.addEventListener('click', function(event) {
+            link.addEventListener('click', function (event) {
                 event.preventDefault();
                 const messageId = this.dataset.messageId;
                 if (confirm('정말로 쪽지를 회수하시겠습니까? (수신자가 읽지 않았을 경우에만 가능합니다)')) {
@@ -217,7 +219,7 @@
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
-        const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+        const options = {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'};
         return date.toLocaleDateString('ko-KR', options);
     }
 

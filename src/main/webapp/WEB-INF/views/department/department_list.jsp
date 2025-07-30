@@ -12,12 +12,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/department/department.css">
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<c:url var="homeCss" value="/resources/css/user/home.css" />
-<link href="${homeCss}" rel="stylesheet" />
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <c:url var="homeCss" value="/resources/css/user/home.css"/>
+    <link href="${homeCss}" rel="stylesheet"/>
 </head>
 <body>
 <%@include file="../common/nav.jsp" %>
@@ -30,7 +30,7 @@
 </div>
 <%@include file="../common/footer.jsp" %>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         console.log("AJAX 조직도 페이지 로드 완료!");
 
         const orgChartTree = document.getElementById('orgChartTree');
@@ -135,7 +135,7 @@
         function setupEventListeners() {
             console.log("이벤트 리스너 설정 시작...");
             document.querySelectorAll('.department-name').forEach(deptNameElement => {
-                deptNameElement.addEventListener('click', function(event) {
+                deptNameElement.addEventListener('click', function (event) {
                     const deptItem = deptNameElement.closest('.dept-item');
                     if (!deptItem) {
                         console.warn("deptItem을 찾을 수 없습니다.");
