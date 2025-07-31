@@ -65,7 +65,7 @@ public class ApiChatController {
     return ResponseEntityUtils.ok(list);
   }
 
-  // 현재 채팅방의 사용자와, 선택된 사용자의 정보를 서버에 보내 이들이 참가한 채팅방을 반환
+  // 현재 채팅방의 사용자와, 선택된 사용자의 정보를 서버에 보내, 이들이 참가한 채팅방을 반환
   @PostMapping("/groups")
   public ResponseEntity<ApiResponse<ChatRoom>> getGroupRoomByUserData(@RequestBody Map<String, Object> groupData) {
     String roomName =  groupData.get("name").toString();
