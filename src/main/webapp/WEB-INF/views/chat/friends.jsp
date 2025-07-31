@@ -133,10 +133,10 @@
   // 2.내가 즐겨찾기한 직원들 리스트 뿌리기
 
   // 3.팝업 오픈 함수
-  function openChatPopup(roomId) {
+  function openChatPopup(roomId,selectUserId) {
 
     window.open(
-        `/chat/chatting?roomId=\${roomId}`,
+        `/chat/chatting?roomId=\${roomId}&selectUserId=\${selectUserId}`,
         '_blank',
         'width=420,height=650,resizable=no,scrollbars=no'
     );
@@ -182,7 +182,7 @@
           }
           else {
            menuHtml = `<button id='start-chat-btn'>대화 시작</button>
-                          <button id='view-profile-btn'>프로필 상세 보기</button>
+                          <button id='view-profile-btn'>프로필 상 보기</button>
                           <button id='delete-friend-btn'>삭제</button>`;
           }
 
@@ -212,7 +212,7 @@
                 let room = result.data;
                 console.log("room: ",room);
                 console.log("room.roomId: ", room.roomId);
-                openChatPopup(room.roomId);
+                openChatPopup(room.roomId,selectUserId);
               }
             }) //ajax
           });
@@ -254,16 +254,6 @@
           });
         });
   }
-
-/*  // 7.채팅방 이름으로 팝업 오픈 - 삭제 해도됨.
-  function openChatPopupByName(name) {
-    let idx = chatRooms.findIndex(r => r.name === name);
-    if (idx === -1) {
-      chatRooms.push({id: chatRooms.length, name, last: '-', unread: 0});
-      idx = chatRooms.length - 1;
-    }
-    openChatPopup(idx);
-  }*/
 
   // 8.페이지 로드 시 내 부서 + 친구 리스트 렌더링
   $(document).ready(function () {

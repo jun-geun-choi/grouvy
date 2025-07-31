@@ -54,6 +54,7 @@
     WHERE
         R.ROOM_ID = U.ROOM_ID
         AND R.IS_GROUP = 'N'
+        AND R.IS_DELETED = 'N'
         AND U.USER_ID IN(#{userId},#{selectUserId})
     GROUP BY
         R.ROOM_ID, R.IS_GROUP
@@ -70,9 +71,9 @@
                 DUAL
         </selectKey>
     INSERT INTO GROUVY_CHAT_ROOMS
-    (ROOM_ID,IS_GROUP)
+    (ROOM_ID,IS_GROUP, ROOM_NAME)
     VALUES
-    (#{roomId},#{isGroup})
+    (#{roomId},#{isGroup},#{roomName})
     </insert>
 
 
@@ -156,5 +157,49 @@
             AND M.ROOM_ID = #{roomId}
         ORDER BY
             M.CREATED_DATE ASC
+    </select>
+
+    <!--public List<User> getAllDeptAndUser();-->
+    <select id="getAllDeptAndUser" resultType="User">
+    SELECT
+         D.DEPARTMENT_NAME                   AS "department.departmentName"
+        ,P.POSITION_NAME                     AS "position.positionName"
+        ,U.USER_ID                           AS userId
+        ,U.NAME                              AS name
+    FROM
+        GROUVY_DEPARTMENTS D, GROUVY_USERS U, GROUVY_POSITIONS P
+    WHERE
+        D.DEPARTMENT_ID = U.DEPARTMENT_ID
+        AND U.POSITION_NO = P.POSITION_NO
+        AND U.IS_DELETED = 'N'
+        AND D.DEPARTMENT_NAME != '대표이사'
+    </select>
+
+    <!--public ChatRoom getGroupRoomsByUserId(List<Integer> userIds, int listSize);-->
+    <select id="getGroupRoomsByUserId" resultType="ChatRoom">
+        SELECT
+             R.ROOM_ID                               AS roomId
+            ,R.ROOM_NAME                             AS roomName
+            ,R.IS_GROUP                              AS isGroup
+        FROM
+            GROUVY_CHAT_ROOMS R, GROUVY_CHAT_ROOM_USERS U
+        WHERE
+            R.ROOM_ID = U.ROOM_ID
+            AND R.IS_GROUP = 'Y'
+            AND IS_DELETED = 'N'
+            AND U.USER_ID IN
+            <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+                #{userId}
+            </foreach>
+        GROUP BY
+            R.ROOM_ID, R.ROOM_NAME, R.IS_GROUP
+        HAVING
+            COUNT(*) = #{listSize}
+            AND COUNT(DISTINCT U.USER_ID) = #{listSize}
+            AND MAX(CASE WHEN U.USER_ID NOT IN
+                <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+                    #{userId}
+                </foreach>
+         THEN 1 ELSE 0 END) = 0
     </select>
 </mapper>
