@@ -3,12 +3,16 @@ package com.example.grouvy.chat.service;
 import com.example.grouvy.chat.dto.ChatMessageDto;
 import com.example.grouvy.chat.dto.ChatMyList;
 import com.example.grouvy.chat.dto.ChatUserInfo;
+import com.example.grouvy.chat.dto.DeptAndUserDto;
+import com.example.grouvy.chat.dto.UserDto;
 import com.example.grouvy.chat.mapper.ChatMapper;
 import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
 import com.example.grouvy.user.vo.User;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +61,7 @@ public class ChatService {
 
     ChatRoom newRoom = new ChatRoom();
     newRoom.setIsGroup("N");
+    newRoom.setRoomName("");
 
     // 채팅방과 채팅방 참여자들을 DB에 할당한다.
     chatMapper.insertChatRoom(newRoom);
@@ -97,5 +102,49 @@ public class ChatService {
     return list;
   }
 
+  // 부서별로 가져온 직원 리스트를 DTO 객체에 담는다.
+  public List<DeptAndUserDto> getDeptAndUser() {
+    List<User> users = chatMapper.getAllDeptAndUser();                            // 리스트 형식의 User 객체를 일단 받고,
+    Map<String,List<UserDto>> map = new LinkedHashMap<String, List<UserDto>>();   // 부서별 직원들을 저장하기 위해, LinkedMap 형식을 만든 다음
+
+    for (User user : users) {                                                     //user 데이터들을 한 명씩 꺼내서,
+      String deptName = user.getDepartment().getDepartmentName();
+      UserDto userDto = new UserDto(user);
+      map.computeIfAbsent(deptName,k -> new ArrayList<>()).add(userDto);   //부서명(키 값)이 map 안에 없으면, 이 키값으로한 리스트를 만들고,
+                                                                                 //이 키 값으로한 리스트가 있다면 그 리스트 안에 userDto를 넣는다.
+    }
+
+    List<DeptAndUserDto> list = new ArrayList<>();
+    for(Map.Entry<String, List<UserDto>> entry : map.entrySet()) {
+      list.add(new  DeptAndUserDto(entry.getKey(),entry.getValue()));
+    }
+    return list;
+  }
+
+  public ChatRoom getOrCreateGroupChatRoomByUserIds(List<Integer> userIds, String roomName) {
+    int listSize = userIds.size();                // 선택된 유저가 몇 명인지 계산.
+
+    for(Integer userId : userIds) {
+      if (userId == null) {
+        throw new IllegalStateException("선택된 리스트에 null 값이 포함되어 있습니다.");
+      }
+    }
+
+    ChatRoom existsRoom = chatMapper.getGroupRoomsByUserId(userIds, listSize);
+    if (existsRoom != null) {
+      return existsRoom;
+    }
+    ChatRoom newRoom = new ChatRoom();
+    newRoom.setIsGroup("Y");
+    newRoom.setRoomName(roomName);
+
+    chatMapper.insertChatRoom(newRoom);                             // 채팅방 생성
+
+    for (Integer userId1 : userIds) {
+      chatMapper.insertChatRoomUser(newRoom.getRoomId(), userId1);  // 채팅방 참가자 생성
+    }
+
+    return newRoom;
+  }
 
 }

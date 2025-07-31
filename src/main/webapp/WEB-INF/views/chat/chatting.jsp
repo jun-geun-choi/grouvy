@@ -27,7 +27,7 @@
                     class="bi bi-three-dots-vertical"></i></button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="chat-menu-btn">
                 <li><a class="dropdown-item" href="#" id="add-participant">대화 상대 추가</a></li>
-                <li><a class="dropdown-item" href="#" id="rename-room">채팅방 이름 설정</a></li>
+                <%--<li><a class="dropdown-item" href="#" id="rename-room">채팅방 이름 설정</a></li>--%>
                 <li>
                     <hr class="dropdown-divider">
                 </li>
@@ -54,8 +54,37 @@
             <%--전송 버튼--%>
         <button type="submit"><i class="bi bi-arrow-up"></i></button>
     </form>
-
 </div>
+<!-- 대화 상대 추가 모달 -->
+<div class="modal fade" id="add-participant-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">대화 상대 선택</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- 채팅방 이름 입력 -->
+                <div class="mb-4">
+                    <label for="group-room-name" class="form-label fw-semibold">채팅방 이름</label>
+                    <input type="text" id="group-room-name" class="form-control" placeholder="채팅방 이름을 입력하세요">
+                </div>
+
+                <!-- 부서별 직원 리스트 렌더링 영역 -->
+                <div id="user-list-container">
+                    <!-- JS로 채워짐 -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="submit-group-room" class="btn btn-primary">채팅방 만들기</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <link rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -81,6 +110,30 @@
         userId = ${user.userId};
   </sec:authorize>
 
+  //  웹소켓 연결 및 구독처리
+  function connectWebSocket() {
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+      console.log('STOMP 연결 성공:', frame);
+
+      //  채팅방 구독 (브로드캐스트)
+      stompClient.subscribe(`/topic/chatting?roomId=\${currentRoomId}`, function (message) {
+        const chatMessage = JSON.parse(message.body);
+        console.log("chatMessage: ",chatMessage);
+        renderIncomingMessage(chatMessage);
+      });
+
+      //  특정 사용자에게 온 메시지 수신
+      stompClient.subscribe('/user/queue/messages', function (message) {
+        const personalMessage = JSON.parse(message.body);
+        console.log('1:1 알림 메시지 수신:', personalMessage);
+        // 원하는 처리를 여기에...
+      });
+    });
+  } // end
+
   //과거 메세지 이력 가져오기
   function loadMessageThisRoom() {
     $.getJSON(`/api/chat/loadMessage?roomId=\${currentRoomId}`, function (messages) {
@@ -88,7 +141,7 @@
       console.log("과거 메시지:", messageInfo);
 
       if (!messageInfo || messageInfo.length === 0) {
-        const htmlContent = `<div class="text-center text-muted">"새로운 채팅을 시작하세요."</div>`;
+        const htmlContent = `<div id="no-message" class="text-center text-muted">"새로운 채팅을 시작하세요."</div>`;
         $chatBody.html(htmlContent);
         return;
       }
@@ -125,34 +178,9 @@
     });
   }
 
-
-
-  //  웹소켓 연결 및 구독처리
-  function connectWebSocket() {
-    const socket = new SockJS('/ws');
-    stompClient = Stomp.over(socket);
-
-    stompClient.connect({}, function (frame) {
-      console.log('STOMP 연결 성공:', frame);
-
-      //  채팅방 구독 (브로드캐스트)
-      stompClient.subscribe(`/topic/chatting?roomId=\${currentRoomId}`, function (message) {
-        const chatMessage = JSON.parse(message.body);
-        console.log("chatMessage: ",chatMessage);
-        renderIncomingMessage(chatMessage);
-      });
-
-      //  특정 사용자에게 온 메시지 수신
-      stompClient.subscribe('/user/queue/messages', function (message) {
-        const personalMessage = JSON.parse(message.body);
-        console.log('1:1 알림 메시지 수신:', personalMessage);
-        // 원하는 처리를 여기에...
-      });
-    });
-  } // end
-
   // 실시간으로 등록된 메세지를 화면에 뿌리는 함수
   function renderIncomingMessage(chatMessage) {
+    $("#no-message").addClass('d-none');
     const isMe = chatMessage.senderId === userId;
     const $wrapper = $('<div class="chat_message_wrapper"></div>');
 
@@ -160,7 +188,6 @@
         $wrapper.addClass('me');
     }
 
-    // 상대방 메시지일 경우 프로필 이미지 + 이름 표시
     if (!isMe) {
       const $senderInfo = $('<div class="chat_sender_info"></div>');
       const $profile = $(`<div class="chat_avatar">\${chatMessage.profileImgPath}</div>`);
@@ -169,11 +196,9 @@
       $wrapper.append($senderInfo);
     }
 
-    // 메시지 본문 출력
     const $message = $('<div class="chat_message"></div>').text(chatMessage.content);
     if (isMe) $message.addClass('me');
 
-    // 전송 시간 표시
     const $timestamp = $('<div class="chat_timestamp"></div>').text((chatMessage.formattedTime));
 
     // 메시지 렌더링 완료 후 append
@@ -198,7 +223,100 @@
     stompClient.send("/app/chatSend", {}, JSON.stringify(chatMessage));
     console.log(JSON.stringify(chatMessage));
     $chatInput.val('');
-  }); // end
+  });
+
+  // 팝업 오픈 함수
+  function openChatPopup(groupChatRoomId,groupChatRoomName) {
+    window.open(
+        `/chat/groupChatting?roomId=\${groupChatRoomId}&roomName=\${groupChatRoomName}`,
+        '_blank',
+        'width=420,height=650,resizable=no,scrollbars=no'
+    );
+  }
+
+  // "대화 상대 추가" 버튼 클릭 시, 모달창 열기
+  $("#add-participant").click(function (e) {
+    e.preventDefault();
+    let htmlContent = "";
+
+    $("#user-list-container").empty();
+
+    $.getJSON(`/api/chat/allUser`, function (data) {
+      let allDeptAndUsers = data.data;
+      console.log("allDeptAndUsers:",allDeptAndUsers);
+
+      for(let deptAndUser of allDeptAndUsers){
+        htmlContent += `
+        <div class="accordion_item card mb-3">
+          <div class="card-header accordion-header fw-bold">
+            \${deptAndUser.departmentName}
+          </div>
+          <ul class="list-group list-group-flush">
+          `;
+
+        for(let userInfo of deptAndUser.members){
+          htmlContent += `
+          <li class="list-group-item d-flex align-items-center">
+            <input type="checkbox"
+                   class="form-check-input user-checkbox me-2"
+                   name="userId"
+                  value="\${userInfo.id}">
+            <span>\${userInfo.userName} <small class="text-muted">(\${userInfo.positionName})</small></span>
+          </li>
+          `;
+        }
+          htmlContent += `</ul></div>`;
+        $("#user-list-container").html(htmlContent);
+      }
+
+    $("#add-participant-modal").modal('show');
+    });
+  });
+
+  // 채팅방 이름 입력 및 직원 선택 후 제출 버튼 눌렀을 때 이벤트
+  $("#submit-group-room").click(function (e) {
+    e.preventDefault();
+    const thisRoomUserIds = JSON.parse('${userIds}')            // 배열 형태로 왔다! [10001,10002]
+    let groupUserId =[];                                        // 위 데이터를 이 변수에 넣으려면, 반복문으로 하나씩 넣어야 한다.!
+
+    for(let thisRoomId of  thisRoomUserIds) {
+      groupUserId.push(thisRoomId);
+    }
+    console.log("groupUserId:",groupUserId);                    // 하나씩 들어온 것을 알 수 있다.
+
+    $("input[name='userId']:checked").each(function () {
+      groupUserId.push(parseInt($(this).val()));
+    });
+    console.log("groupUserId:",groupUserId);                    // 다 들어온 것도 확인할 수 있다.!!
+
+    let groupRoomName = $("#group-room-name").val().trim();
+
+    if(!groupRoomName || groupUserId.length === 0) {
+      alert("채팅방 이름을 설정하거나, 직원 1명 이상 선택하세요");
+      return;
+    }
+
+    let groupData = {
+      id: groupUserId,
+      name: groupRoomName,
+    }
+
+    $.ajax({
+      type: "POST",
+      url: "/api/chat/groups",
+      contentType: "application/json",
+      data: JSON.stringify(groupData),
+      dataType: "json",
+      success: function (data) {
+        let groupChatRoom = data.data;
+        console.log("groupChatRoom:", groupChatRoom);
+        let groupChatRoomId = groupChatRoom.roomId;
+        let groupChatRoomName = groupChatRoom.roomName;
+        openChatPopup(groupChatRoomId,groupChatRoomName);
+      }
+    });
+
+  });
 
   // 파일 첨부 이벤트 노션에 있음.
 
@@ -207,6 +325,7 @@
     loadMessageThisRoom();
     connectWebSocket();
   });
-  //$(function() {..}) 이 문장 자체가 이 jsp 페이지의 HTML 요소, 스크립트 문장을 전부 로딩이 된 후
-  // 이 문장을 실행하겠다!! 라는 의미이고..
+  //$(function() {..}) 이 문장 자체가 이 jsp 페이지의 HTML 요소, 스크립트 문장을 전부 로딩이 된 후, 실행 하겠다는 뜻!
 </script>
+</body>
+</html>

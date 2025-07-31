@@ -4,6 +4,7 @@ import com.example.grouvy.chat.dto.ApiResponse;
 import com.example.grouvy.chat.dto.ChatMessageDto;
 import com.example.grouvy.chat.dto.ChatMyList;
 import com.example.grouvy.chat.dto.ChatUserInfo;
+import com.example.grouvy.chat.dto.DeptAndUserDto;
 import com.example.grouvy.chat.dto.ResponseEntityUtils;
 import com.example.grouvy.chat.service.ChatService;
 import com.example.grouvy.chat.vo.ChatRoom;
@@ -40,7 +41,7 @@ public class ApiChatController {
     return ResponseEntityUtils.ok(chatUserInfo);
   }
 
-  //로그인한 사용자와 지정된 사용자를 이용하여, 이 둘의 roomId를 반환한다.
+  //로그인한 사용자와 지정된 사용자를 이용하여, 이 둘의 채팅방을 반환한다.
   @PostMapping
   public ResponseEntity<ApiResponse<ChatRoom>> getRoomIdByUserData(@RequestBody Map<String, Object> userData) {
     int myUserId = Integer.parseInt(userData.get("userId").toString());
@@ -50,9 +51,27 @@ public class ApiChatController {
     return ResponseEntityUtils.ok(chatRoom);
   }
 
+  // roomId로 그 채팅방의 메세지들을 조회한다.
   @GetMapping("/loadMessage")
   public ResponseEntity<ApiResponse<List<ChatMessageDto>>> loadMessage(@RequestParam("roomId") int roomId) {
     List<ChatMessageDto> messages = chatService.getChatMessageByRoomId(roomId);
     return  ResponseEntityUtils.ok(messages);
   }
+
+  // 대표 이사 부서를 제외한, 부서별 직원 리스트를 호출한다.
+  @GetMapping("/allUser")
+  public ResponseEntity<ApiResponse<List<DeptAndUserDto>>> loadDeptAndUserData() {
+    List<DeptAndUserDto> list = chatService.getDeptAndUser();
+    return ResponseEntityUtils.ok(list);
+  }
+
+  // 현재 채팅방의 사용자와, 선택된 사용자의 정보를 서버에 보내 이들이 참가한 채팅방을 반환
+  @PostMapping("/groups")
+  public ResponseEntity<ApiResponse<ChatRoom>> getGroupRoomByUserData(@RequestBody Map<String, Object> groupData) {
+    String roomName =  groupData.get("name").toString();
+    List<Integer> userIds = (List<Integer>) groupData.get("id");
+    ChatRoom chatRoom = chatService.getOrCreateGroupChatRoomByUserIds(userIds, roomName);
+    return  ResponseEntityUtils.ok(chatRoom);
+  }
+
 }

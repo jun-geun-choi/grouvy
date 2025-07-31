@@ -86,4 +86,19 @@ public interface ChatMapper {
    */
   public List<ChatMessage> getChatMessageByRoomId(int roomId);
 
+  /**
+   * 대표이사를 제외한 부서별 직원 리스트를 가져온다.
+   * @return 직원 리스트
+   */
+  public List<User> getAllDeptAndUser();
+
+  /**
+   *  채팅방에서 선택된 유저 아이디들과, 선택된 유저가 몇 명인지에 대한 정보를 기반으로,
+   *  이 유저들만 존재하는 채팅방이 있는지 조회한다.
+    * @param userIds 선택된 유저 id
+   * @param listSize 선택된 유저가 몇 명인지
+   * @return 이 유저들만 포함된 단일의 채팅방 (ChatRoom)
+   */
+  public ChatRoom getGroupRoomsByUserId(List<Integer> userIds, int listSize);
+
 }
