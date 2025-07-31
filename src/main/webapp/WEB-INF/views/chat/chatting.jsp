@@ -315,7 +315,7 @@
         openChatPopup(groupChatRoomId,groupChatRoomName);
       }
     });
-
+    $("#add-participant-modal").modal('hide');
   });
 
   // 파일 첨부 이벤트 노션에 있음.

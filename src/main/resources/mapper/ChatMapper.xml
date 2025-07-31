@@ -186,20 +186,16 @@
         WHERE
             R.ROOM_ID = U.ROOM_ID
             AND R.IS_GROUP = 'Y'
-            AND IS_DELETED = 'N'
-            AND U.USER_ID IN
-            <foreach item="userId" collection="userIds" open="(" separator="," close=")">
-                #{userId}
-            </foreach>
+            AND R.IS_DELETED = 'N'
         GROUP BY
             R.ROOM_ID, R.ROOM_NAME, R.IS_GROUP
         HAVING
             COUNT(*) = #{listSize}
             AND COUNT(DISTINCT U.USER_ID) = #{listSize}
-            AND MAX(CASE WHEN U.USER_ID NOT IN
+            AND SUM(CASE WHEN U.USER_ID IN
                 <foreach item="userId" collection="userIds" open="(" separator="," close=")">
                     #{userId}
                 </foreach>
-         THEN 1 ELSE 0 END) = 0
+                    THEN 1 ELSE 0 END) = #{listSize}
     </select>
 </mapper>
