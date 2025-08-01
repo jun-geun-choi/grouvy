@@ -3,6 +3,7 @@ package com.example.grouvy.chat.controller;
 import com.example.grouvy.chat.dto.ChatMessageDto;
 import com.example.grouvy.chat.service.ChatService;
 import com.example.grouvy.chat.vo.ChatMessage;
+import com.example.grouvy.chat.vo.ChatRoomUser;
 import com.example.grouvy.security.SecurityUser;
 import com.example.grouvy.user.vo.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,23 +53,23 @@ public class ChatController {
     //roomId로 이 채팅방의 사용자 정보를 조회 하여, 내가 아닌 다른 사람의 채팅방의 이름으로 하기 위한 설계(1:1 채팅에만 적용)
     SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
     int myUserId = securityUser.getUser().getUserId();
-    List<User> users = chatService.getChatRoomUserByRoomId(roomId);
-    User otherUser = null;
+    List<ChatRoomUser> users = chatService.getChatRoomUserByRoomId(roomId);
+    ChatRoomUser otherUser = null;
 
     // 1:1 채팅을 이름 설정
-    for (User user : users) {
+    for (ChatRoomUser user : users) {
       if (user.getUserId() != myUserId) {
         otherUser = user;
         break;
       }
     }
     if (otherUser != null) {
-      model.addAttribute("roomName", otherUser.getName());
+      model.addAttribute("roomName", otherUser.getUser().getName());
     }
 
     //이 유저 리스트를 userId만 뽑아서, model에 담아서 보내기
     List<Integer> userIds = new ArrayList<>();
-    for(User  user : users) {
+    for(ChatRoomUser  user : users) {
       userIds.add(user.getUserId());
     }
     ObjectMapper mapper = new ObjectMapper();
@@ -85,9 +86,9 @@ public class ChatController {
                                   @RequestParam("roomName") String roomName ,
                                   Model model) throws Exception{
     // 이 채팅방에 참여 중인 유저들의 아이디를 model에 감싸서 보내기
-    List<User> users = chatService.getChatRoomUserByRoomId(roomId);
+    List<ChatRoomUser> users = chatService.getChatRoomUserByRoomId(roomId);
     List<Integer> userIds = new ArrayList<>();
-    for(User  user : users) {
+    for(ChatRoomUser  user : users) {
       userIds.add(user.getUserId());
     }
     ObjectMapper mapper = new ObjectMapper();

@@ -74,4 +74,13 @@ public class ApiChatController {
     return  ResponseEntityUtils.ok(chatRoom);
   }
 
+  // 사용자가 나가기 버튼을 눌렀을 경우, 그 사용자를 채팅방 참여자 테이블에서 is_active 컬럼의 상태를 N으로 변경.
+  @PostMapping("/leftRoom")
+  public ResponseEntity<ApiResponse<Void>> getLeftRoomByUserData(@RequestBody Map<String, Object> data) {
+    int userId = Integer.parseInt(data.get("userId").toString());
+    int roomId = Integer.parseInt(data.get("roomId").toString());
+    chatService.deleteChatRoomUser(roomId,userId);
+    return ResponseEntityUtils.ok("삭제되었습니다.");
+  }
+
 }

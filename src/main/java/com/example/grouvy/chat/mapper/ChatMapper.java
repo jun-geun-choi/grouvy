@@ -2,6 +2,7 @@ package com.example.grouvy.chat.mapper;
 
 import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
+import com.example.grouvy.chat.vo.ChatRoomUser;
 import com.example.grouvy.user.vo.User;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
@@ -65,9 +66,9 @@ public interface ChatMapper {
    * roomId로 이 채팅방에 참여한 참여자 정보를 반환
    *
    * @param roomId 채팅방 번호
-   * @return 참여자 정보 : userId, name
+   * @return 참여자 정보 : userId, name, isActive, roomId
    */
-  public List<User> getChatRoomUserByRoomId(int roomId);
+  public List<ChatRoomUser> getChatRoomUserByRoomId(int roomId);
 
   /**
    * chatMessageId로 실시간으로 수신된 메세지 정보 1개를 반환.
@@ -100,5 +101,11 @@ public interface ChatMapper {
    * @return 이 유저들만 포함된 단일의 채팅방 (ChatRoom)
    */
   public ChatRoom getGroupRoomsByUserId(List<Integer> userIds, int listSize);
+
+  /**
+   * ChatRoomUser의 상태를 변경한다.
+   * @param chatRoomUser
+   */
+  public void updateChatRoomUser(ChatRoomUser chatRoomUser);
 
 }

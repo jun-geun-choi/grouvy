@@ -8,7 +8,9 @@ import com.example.grouvy.chat.dto.UserDto;
 import com.example.grouvy.chat.mapper.ChatMapper;
 import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
+import com.example.grouvy.chat.vo.ChatRoomUser;
 import com.example.grouvy.user.vo.User;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,8 +79,8 @@ public class ChatService {
     chatMapper.insertMessage(chatMessage);
   }
 
-  // roomId로 이 채팅방에 존재하는 유저들의 userId와 name을 가진 User 객체를 리스트로 반환.
-  public List<User> getChatRoomUserByRoomId(int roomId) {
+  // roomId로 이 채팅방에 존재하는 유저들의 userId와 name을 가진 ChatRoomUser 객체를 리스트로 반환.
+  public List<ChatRoomUser> getChatRoomUserByRoomId(int roomId) {
     return chatMapper.getChatRoomUserByRoomId(roomId);
   }
 
@@ -145,6 +147,18 @@ public class ChatService {
     }
 
     return newRoom;
+  }
+
+  public void deleteChatRoomUser(int roomId,int userId) {
+    List<ChatRoomUser> chatRoomUsers = chatMapper.getChatRoomUserByRoomId(roomId);
+
+    for(ChatRoomUser chatRoomUser : chatRoomUsers) {
+      if(chatRoomUser.getUserId() == userId) {
+        chatRoomUser.setIsActive("N");
+        chatRoomUser.setLeftDate(LocalDateTime.now());
+        chatMapper.updateChatRoomUser(chatRoomUser);
+      }
+    }
   }
 
 }
