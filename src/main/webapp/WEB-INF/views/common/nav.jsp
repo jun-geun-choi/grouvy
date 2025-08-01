@@ -18,6 +18,8 @@
       </li>
       <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/dept/list">조직도</a></li>
       <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
+      <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/notification/list">알림
+      <span id="navUnreadNotificationBadge" class="badge bg-danger ms-1" style="display: none;"></span></a></li>
       <sec:authorize access="hasRole('ROLE_ADMIN')">
         <li class="nav-item"><a class="nav-link" href="/admin">관리자</a></li>
       </sec:authorize>
@@ -62,3 +64,74 @@
     </sec:authorize>
   </div>
 </nav>
+
+<!-- sse알림 스크립트 -->
+<sec:authorize access="isAuthenticated()">
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        function connectSse() {
+            const eventSource = new EventSource('/api/v1/notifications/connect');
+
+            eventSource.addEventListener('connect', (event) => {
+                console.log('SSE connected:', event.data);
+            });
+
+            eventSource.addEventListener('unreadCounts', (event) => {
+                try {
+                    const counts = JSON.parse(event.data);
+                    updateUnreadCounts(counts.unreadMessages, counts.unreadNotifications);
+                } catch (error) {
+                    console.error('Error parsing unreadCounts data:', error);
+                }
+            });
+
+            eventSource.onerror = (error) => {
+                console.error('EventSource failed. Closing connection.', error);
+                eventSource.close();
+            };
+        }
+
+        // 카운트를 업데이트하는 함수 (간소화됨)
+        function updateUnreadCounts(messageCount, notificationCount) {
+            // 쪽지 카운트 업데이트
+            const messageLink = document.querySelector('.sidebar a[href$="/message/inbox"]'); // id 사용을 권장
+            updateCountBadge(messageLink, messageCount, 'sidebarUnreadMessageBadge');
+
+            // 알림 카운트 업데이트
+            const notificationBadge = document.getElementById('navUnreadNotificationBadge');
+            if (notificationBadge) {
+                if (notificationCount > 0) {
+                    notificationBadge.textContent = notificationCount;
+                    notificationBadge.style.display = 'inline-block';
+                } else {
+                    notificationBadge.style.display = 'none';
+                }
+            }
+        }
+
+        // 특정 링크 요소 옆에 카운트 배지를 동적으로 관리하는 헬퍼 함수
+        function updateCountBadge(linkElement, count, badgeId) {
+            if (!linkElement) return;
+
+            let badge = document.getElementById(badgeId);
+
+            if (count > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.id = badgeId;
+                    badge.className = 'badge bg-danger ms-2';
+                    linkElement.appendChild(badge);
+                }
+                badge.textContent = count;
+            } else {
+                if (badge) {
+                    badge.remove();
+                }
+            }
+        }
+
+        connectSse();
+    });
+</script>
+</sec:authorize>

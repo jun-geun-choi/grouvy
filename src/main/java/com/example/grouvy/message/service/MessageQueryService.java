@@ -8,6 +8,8 @@ import com.example.grouvy.message.dto.PaginationResponse;
 import com.example.grouvy.message.mapper.MessageMapper;
 import com.example.grouvy.message.vo.Message;
 import com.example.grouvy.message.vo.MessageReceiver;
+import com.example.grouvy.notification.service.NotificationService;
+import com.example.grouvy.notification.service.UnreadCountService;
 import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.User;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +26,10 @@ public class MessageQueryService {
 
     private final MessageMapper messageMapper;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
+    private final UnreadCountService unreadCountService;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public MessageDetailResponseDto getMessageDetail(Long messageId, int currentUserId) {
         Message message = messageMapper.findMessageDetailById(messageId);
         if (message == null) {
@@ -72,6 +76,11 @@ public class MessageQueryService {
 
         if (currentUserReceiver != null && "UNREAD".equals(currentUserReceiver.getInboxStatus())) {
             messageMapper.updateMessageReceiverReadDate(currentUserReceiver.getReceiveId());
+
+            //관련 알림 읽음처리
+            String targetUrl = String.format("/message/detail?messageId=%d", message.getMessageId());
+            notificationService.markNotificationsAsReadByTargetUrlAndUser(targetUrl, currentUserId);
+            unreadCountService.updateAndSendUnreadCount(currentUserId);
         }
 
         if ("Y".equals(message.getRecallAble()) && isSender) {
