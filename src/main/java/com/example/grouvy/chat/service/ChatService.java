@@ -107,26 +107,28 @@ public class ChatService {
   // 부서별로 가져온 직원 리스트를 DTO 객체에 담는다.
   public List<DeptAndUserDto> getDeptAndUser() {
     List<User> users = chatMapper.getAllDeptAndUser();                            // 리스트 형식의 User 객체를 일단 받고,
-    Map<String,List<UserDto>> map = new LinkedHashMap<String, List<UserDto>>();   // 부서별 직원들을 저장하기 위해, LinkedMap 형식을 만든 다음
+    Map<String, List<UserDto>> map = new LinkedHashMap<String, List<UserDto>>();   // 부서별 직원들을 저장하기 위해, LinkedMap 형식을 만든 다음
 
     for (User user : users) {                                                     //user 데이터들을 한 명씩 꺼내서,
       String deptName = user.getDepartment().getDepartmentName();
       UserDto userDto = new UserDto(user);
-      map.computeIfAbsent(deptName,k -> new ArrayList<>()).add(userDto);   //부서명(키 값)이 map 안에 없으면, 이 키값으로한 리스트를 만들고,
-                                                                                 //이 키 값으로한 리스트가 있다면 그 리스트 안에 userDto를 넣는다.
+      map.computeIfAbsent(deptName, k -> new ArrayList<>())
+          .add(userDto);   //부서명(키 값)이 map 안에 없으면, 이 키값으로한 리스트를 만들고,
+      //이 키 값으로한 리스트가 있다면 그 리스트 안에 userDto를 넣는다.
     }
 
     List<DeptAndUserDto> list = new ArrayList<>();
-    for(Map.Entry<String, List<UserDto>> entry : map.entrySet()) {
-      list.add(new  DeptAndUserDto(entry.getKey(),entry.getValue()));
+    for (Map.Entry<String, List<UserDto>> entry : map.entrySet()) {
+      list.add(new DeptAndUserDto(entry.getKey(), entry.getValue()));
     }
     return list;
   }
 
+  // 그룹 채팅방을 조회하거나, 없을 경우 새롭게 만드는 로직
   public ChatRoom getOrCreateGroupChatRoomByUserIds(List<Integer> userIds, String roomName) {
     int listSize = userIds.size();                // 선택된 유저가 몇 명인지 계산.
 
-    for(Integer userId : userIds) {
+    for (Integer userId : userIds) {
       if (userId == null) {
         throw new IllegalStateException("선택된 리스트에 null 값이 포함되어 있습니다.");
       }
@@ -149,11 +151,19 @@ public class ChatService {
     return newRoom;
   }
 
-  public void deleteChatRoomUser(int roomId,int userId) {
+  //채팅방 나갈 때 로직. : 마지막 남은 한 명이 나간다면, 메세지 지우고, 채팅방 참가자 지우고, 채팅방 자체를 지운다.
+  // 그 경우가 아니라면, 그냥 채팅방 참가자의 상태만 변경한다.
+  public void deleteChatRoomUser(int roomId, int userId) {
     List<ChatRoomUser> chatRoomUsers = chatMapper.getChatRoomUserByRoomId(roomId);
+    int size = chatRoomUsers.size();
+    if(size == 1) {
+      chatMapper.deleteMessage(roomId);
+      chatMapper.deleteChatRoomUser(roomId);
+      chatMapper.deleteChatRoom(roomId);
+    }
 
-    for(ChatRoomUser chatRoomUser : chatRoomUsers) {
-      if(chatRoomUser.getUserId() == userId) {
+    for (ChatRoomUser chatRoomUser : chatRoomUsers) {
+      if (chatRoomUser.getUserId() == userId) {
         chatRoomUser.setIsActive("N");
         chatRoomUser.setLeftDate(LocalDateTime.now());
         chatMapper.updateChatRoomUser(chatRoomUser);

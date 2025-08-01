@@ -121,6 +121,7 @@
             R.ROOM_ID = CU.ROOM_ID
             AND U.USER_ID = CU.USER_ID
             AND R.ROOM_ID = #{roomId}
+            AND CU.IS_ACTIVE = 'Y'
     </select>
 
     <!--public ChatMessage getChatMessage(long chatMessageId);-->
@@ -217,4 +218,21 @@
             AND ROOM_ID = #{roomId}
     </update>
 
+    <!--public void deleteMessage(int roomId);-->
+    <delete id="deleteMessage">
+        DELETE GROUVY_CHAT_MESSAGES
+        WHERE ROOM_ID = #{roomId}
+    </delete>
+
+    <!--public void deleteChatRoomUser(int roomId);-->
+    <delete id="deleteChatRoomUser">
+        DELETE GROUVY_CHAT_ROOM_USERS
+        WHERE ROOM_ID = #{roomId}
+    </delete>
+
+    <!--public void deleteChatRoom(int roomId);-->
+    <delete id="deleteChatRoom">
+        DELETE GROUVY_CHAT_ROOMS
+        WHERE ROOM_ID = #{roomId}
+    </delete>
 </mapper>
