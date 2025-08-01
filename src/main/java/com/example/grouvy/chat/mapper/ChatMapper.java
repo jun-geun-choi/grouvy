@@ -108,4 +108,9 @@ public interface ChatMapper {
    */
   public void updateChatRoomUser(ChatRoomUser chatRoomUser);
 
+  public void deleteMessage(int roomId);
+  public void deleteChatRoomUser(int roomId);
+  public void deleteChatRoom(int roomId);
+
+
 }
