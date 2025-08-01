@@ -56,6 +56,7 @@
         AND R.IS_GROUP = 'N'
         AND R.IS_DELETED = 'N'
         AND U.USER_ID IN(#{userId},#{selectUserId})
+        AND U.IS_ACTIVE = 'Y'
     GROUP BY
         R.ROOM_ID, R.IS_GROUP
     HAVING
@@ -75,7 +76,6 @@
     VALUES
     (#{roomId},#{isGroup},#{roomName})
     </insert>
-
 
   <!--public void insertChatRoomUser(int roomId, int userId);-->
   <insert id="insertChatRoomUser">
@@ -108,11 +108,13 @@
 
     </insert>
 
-    <!--public List<User> getChatRoomUserByRoomId(int roomId);-->
-    <select id="getChatRoomUserByRoomId" resultType="User">
+    <!--public List<ChatRoomUser> getChatRoomUserByRoomId(int roomId);-->
+    <select id="getChatRoomUserByRoomId" resultType="ChatRoomUser">
         SELECT
-            U.USER_ID           AS userId
-           ,U.NAME              AS name
+            CU.ROOM_ID          AS roomId
+           ,U.USER_ID           AS userId
+           ,U.NAME              AS "user.name"
+           ,CU.IS_ACTIVE        AS isActive
         FROM
             GROUVY_CHAT_ROOMS R, GROUVY_CHAT_ROOM_USERS CU, GROUVY_USERS U
         WHERE
@@ -198,4 +200,21 @@
                 </foreach>
                     THEN 1 ELSE 0 END) = #{listSize}
     </select>
+
+    <!--public void updateChatRoomUser(ChatRoomUser chatRoomUser);-->
+    <update id="updateChatRoomUser" parameterType="ChatRoomUser">
+        UPDATE GROUVY_CHAT_ROOM_USERS
+        SET
+            IS_ACTIVE = #{isActive}
+            <if test="leftDate != null">
+                ,LEFT_DATE = #{leftDate}
+            </if>
+            <if test="joinDate != null">
+                ,JOIN_DATE = #{joinDate}
+            </if>
+        WHERE
+            USER_ID = #{userId}
+            AND ROOM_ID = #{roomId}
+    </update>
+
 </mapper>

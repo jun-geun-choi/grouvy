@@ -276,13 +276,8 @@
   // 채팅방 이름 입력 및 직원 선택 후 제출 버튼 눌렀을 때 이벤트
   $("#submit-group-room").click(function (e) {
     e.preventDefault();
-    const thisRoomUserIds = JSON.parse('${userIds}')            // 배열 형태로 왔다! [10001,10002]
-    let groupUserId =[];                                        // 위 데이터를 이 변수에 넣으려면, 반복문으로 하나씩 넣어야 한다.!
-
-    for(let thisRoomId of  thisRoomUserIds) {
-      groupUserId.push(thisRoomId);
-    }
-    console.log("groupUserId:",groupUserId);                    // 하나씩 들어온 것을 알 수 있다.
+    let groupUserId = ${userIds};                                       // 위 데이터를 이 변수에 넣으려면, 반복문으로 하나씩 넣어야 한다.!
+    console.log("groupUserId:",groupUserId);                           // 하나씩 들어온 것을 알 수 있다.
 
     $("input[name='userId']:checked").each(function () {
       groupUserId.push(parseInt($(this).val()));
@@ -316,6 +311,31 @@
       }
     });
     $("#add-participant-modal").modal('hide');
+  });
+
+  //나가기 버튼 이벤트
+  $("#leave-room").click(function (e) {
+    e.preventDefault();
+    const result = confirm("채팅방을 나가시겠습니까?? 기존 데이터가 사라집니다.");
+
+    let data = {
+      userId : userId,
+      roomId : currentRoomId
+    }
+
+    if(result) {
+      $.ajax({
+        type: "POST",
+        url: "/api/chat/leftRoom",
+        data: JSON.stringify(data),
+        dataType: "json",
+        contentType:  "application/json",
+        success: function (data) {
+          window.close();
+        }
+      });
+    }
+    return;
   });
 
   // 파일 첨부 이벤트 노션에 있음.
