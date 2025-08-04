@@ -128,6 +128,10 @@ public class ChatController {
       return;
     }
 
+    //이 채팅방이 1:1 채팅방인지 확인하는 서비스 메소드 호출
+    int currentRoomId = message.getRoomId();
+    chatService.checkOneToOneChatRoom(currentRoomId);
+
     // 메세지 DB에 등록. - roomId,content, messageType은 이 메소드 호출하면서 자동 바인딩.
     int userId = securityUser.getUser().getUserId();
     User user = chatService.getUserByUserId(userId);

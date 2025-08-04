@@ -58,6 +58,15 @@ public class ChatService {
     // 존재하는 조회 및 확인.
     ChatRoom existsRoom = chatMapper.getRoomByUserId(myUserId, selectUserId);
     if (existsRoom != null) {
+      int thisRoomId =  existsRoom.getRoomId();
+      List<ChatRoomUser> users = chatMapper.getChatRoomUserDenineActiveByRoomId(thisRoomId);
+      for(ChatRoomUser user : users) {
+        if(user.getUserId() == myUserId && "N".equals(user.getIsActive())) {
+          user.setIsActive("Y");
+          user.setJoinDate(LocalDateTime.now());
+          chatMapper.updateChatRoomUser(user);
+        }
+      }
       return existsRoom;
     }
 
@@ -93,8 +102,8 @@ public class ChatService {
   }
 
   // roomId를 이용해서 이 채팅방에서 남겨진 메세지에 대한 정보들을 list 형태로 반환받는다.
-  public List<ChatMessageDto> getChatMessageByRoomId(int roomId) {
-    List<ChatMessage> messages = chatMapper.getChatMessageByRoomId(roomId);
+  public List<ChatMessageDto> getChatMessageByRoomId(int roomId,int userId) {
+    List<ChatMessage> messages = chatMapper.getChatMessageByRoomId(roomId,userId);
     List<ChatMessageDto> list = new ArrayList<>();
 
     for (ChatMessage message : messages) {
@@ -107,7 +116,7 @@ public class ChatService {
   // 부서별로 가져온 직원 리스트를 DTO 객체에 담는다.
   public List<DeptAndUserDto> getDeptAndUser() {
     List<User> users = chatMapper.getAllDeptAndUser();                            // 리스트 형식의 User 객체를 일단 받고,
-    Map<String, List<UserDto>> map = new LinkedHashMap<String, List<UserDto>>();   // 부서별 직원들을 저장하기 위해, LinkedMap 형식을 만든 다음
+    Map<String, List<UserDto>> map = new LinkedHashMap<String, List<UserDto>>();                      // 부서별 직원들을 저장하기 위해, LinkedMap 형식을 만든 다음
 
     for (User user : users) {                                                     //user 데이터들을 한 명씩 꺼내서,
       String deptName = user.getDepartment().getDepartmentName();
@@ -126,6 +135,7 @@ public class ChatService {
 
   // 그룹 채팅방을 조회하거나, 없을 경우 새롭게 만드는 로직
   public ChatRoom getOrCreateGroupChatRoomByUserIds(List<Integer> userIds, String roomName) {
+
     int listSize = userIds.size();                // 선택된 유저가 몇 명인지 계산.
 
     for (Integer userId : userIds) {
@@ -171,4 +181,23 @@ public class ChatService {
     }
   }
 
+  // roomId로 그 채팅방의 유저들을 조회해와서,
+  public void checkOneToOneChatRoom(int roomId) {
+    List<ChatRoomUser> users = chatMapper.getChatRoomUserDenineActiveByRoomId(roomId);
+
+    // 어차피 같은 채팅방이므로, 리스트 중 가장 선단에 있는 애를 가져와도 상관 없다.
+    String isGroup = users.get(0).getChatRoom().getIsGroup();
+
+    if("Y".equals(isGroup)) {
+      return;
+    }
+
+    for(ChatRoomUser user : users) {
+      if("N".equals(user.getIsActive())){
+        user.setIsActive("Y");
+        user.setJoinDate(LocalDateTime.now());
+        chatMapper.updateChatRoomUser(user);
+      }
+    }
+  }
 }
