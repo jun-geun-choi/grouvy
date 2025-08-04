@@ -52,7 +52,7 @@ public interface ChatMapper {
    * @param roomId 채팅방 ID
    * @param userId 위 채팅방에 참가하는 사용자.
    */
-  public void insertChatRoomUser(long roomId, int userId);
+  public void insertChatRoomUser(int roomId, int userId);
 
 
   /**
@@ -68,7 +68,9 @@ public interface ChatMapper {
    * @param roomId 채팅방 번호
    * @return 참여자 정보 : userId, name, isActive, roomId
    */
-  public List<ChatRoomUser> getChatRoomUserByRoomId(int roomId);
+  public List<ChatRoomUser> getChatRoomUserByRoomId(@Param("roomId") int roomId);
+
+  public List<ChatRoomUser> getChatRoomUserDenineActiveByRoomId(@Param("roomId") int roomId);
 
   /**
    * chatMessageId로 실시간으로 수신된 메세지 정보 1개를 반환.
@@ -80,12 +82,12 @@ public interface ChatMapper {
   public ChatMessage getChatMessage(long chatMessageId);
 
   /**
-   * roomId를 사용하여, 이 채팅방의 메세지 정보를 가져온다.
+   * roomId를 사용하여, 이 채팅방의 메세지 리스트를 가져온다.
    *
    * @param roomId 채팅방 번호
    * @return 메세지 리스트
    */
-  public List<ChatMessage> getChatMessageByRoomId(int roomId);
+  public List<ChatMessage> getChatMessageByRoomId(int roomId,int userId);
 
   /**
    * 대표이사를 제외한 부서별 직원 리스트를 가져온다.
@@ -111,6 +113,5 @@ public interface ChatMapper {
   public void deleteMessage(int roomId);
   public void deleteChatRoomUser(int roomId);
   public void deleteChatRoom(int roomId);
-
 
 }

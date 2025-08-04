@@ -12,7 +12,7 @@ import org.apache.ibatis.type.Alias;
 @Alias("ChatRoom")
 public class ChatRoom {
 
-  private long roomId;
+  private int roomId;
   private String roomName;
   private String isGroup;
   private Date createDate;
