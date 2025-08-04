@@ -61,7 +61,6 @@ public class MessageRestController {
             errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "유효하지 않은 수신자 정보");
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
-            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "쪽지 발송중 알수 없는 오류가 발생했습니다.");
@@ -177,31 +176,11 @@ public class MessageRestController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "쪽지 회수 중 오류 발생: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
-    }
-
-    // 임시 User API (사용자 파트 API 부재로 인한 임시 조치) - /api/v1/messages/users/{userId}/name
-    @GetMapping("/users/{userId}/name")
-    public ResponseEntity<String> getUserNameForMessage(@PathVariable("userId") int userId) {
-        User user = userMapper.findByUserId(userId);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(user.getName());
-    }
-
-    // 현재 로그인 사용자 ID를 반환하는 임시 API
-    @GetMapping("/users/current/id")
-    public ResponseEntity<Integer> getCurrentUserId(@AuthenticationPrincipal SecurityUser securityUser) {
-        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-        return ResponseEntity.ok(securityUser.getUser().getUserId());
     }
 
     //메세지삭제
@@ -230,7 +209,6 @@ public class MessageRestController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "쪽지 삭제 중 오류 발생: " + e.getMessage());
@@ -263,7 +241,6 @@ public class MessageRestController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "쪽지 삭제 중 오류 발생: " + e.getMessage());
@@ -298,11 +275,29 @@ public class MessageRestController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "쪽지 중요 표시 변경 중 오류 발생: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+
+    //현재 사용자 이름을 반환
+    @GetMapping("/users/{userId}/name")
+    public ResponseEntity<String> getUserNameForMessage(@PathVariable("userId") int userId) {
+        User user = userMapper.findByUserId(userId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(user.getName());
+    }
+
+    // 현재 로그인 사용자 ID를 반환
+    @GetMapping("/users/current/id")
+    public ResponseEntity<Integer> getCurrentUserId(@AuthenticationPrincipal SecurityUser securityUser) {
+        if (securityUser == null || securityUser.getUser().getUserId() == 0) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(securityUser.getUser().getUserId());
     }
 }

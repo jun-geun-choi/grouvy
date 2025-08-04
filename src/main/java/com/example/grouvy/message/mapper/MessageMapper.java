@@ -44,7 +44,7 @@ public interface MessageMapper {
     int countUnreadReceiversByMessageId(@Param("messageId") Long messageId);
     int countTotalReceiversByMessageId(@Param("messageId") Long messageId);
 
-    // **새롭게 추가:** 중요 쪽지 전체 개수 (페이지네이션을 위함)
+    //중요 쪽지 전체 개수 (페이지네이션을 위함)
     int countImportantMessages(@Param("receiverId") int receiverId);
 
     //메세지 회수

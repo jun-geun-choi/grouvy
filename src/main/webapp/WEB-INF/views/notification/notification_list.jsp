@@ -17,9 +17,7 @@
     <c:url var="homeCss" value="/resources/css/user/home.css" />
     <link href="${homeCss}" rel="stylesheet" />
     <%-- Bootstrap 및 공통 CSS 링크 --%>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 제공해주신 공통 스타일 */
         body { background-color: #f7f7f7; font-family: 'Noto Sans KR', sans-serif; }
         .container { max-width: 1200px; margin: 20px auto; }
         .main-content { background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
@@ -31,12 +29,11 @@
 
         /* 페이징 스타일 */
         .pagination { margin-top: 20px; }
+
     </style>
 </head>
 <body>
-<div class="container">
     <%@include file="../common/nav.jsp" %>
-</div>
 <div class="container mt-4">
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -64,7 +61,6 @@
 </div>
 <%@include file="../common/footer.jsp" %>
 <%-- Bootstrap JS 및 커스텀 스크립트 --%>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const notificationListArea = document.getElementById('notificationListArea');

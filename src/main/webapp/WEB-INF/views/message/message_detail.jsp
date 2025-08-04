@@ -107,6 +107,7 @@
         }
     });
 
+    //데이터 렌더링
     function fetchMessageDetail(msgId) {
         fetch(`/api/v1/messages/detail/\${msgId}`)
             .then(response => {
@@ -140,6 +141,7 @@
             });
     }
 
+    //쪽지데이터 html채워넣기
     function renderMessageDetail(data) {
         document.getElementById('messageSubjectDisplay').innerHTML = `<i class="fas fa-envelope-open-text mr-2"></i> \${data.subject}`;
         document.getElementById('senderNameDisplay').textContent = data.senderName;
@@ -182,6 +184,7 @@
         }
     }
 
+    //버튼 액션 설정
     async function setupActionButtons(messageDetailData) {
         let currentUserId = null;
         try {
@@ -251,6 +254,8 @@
         });
     }
 
+
+    //쪽지 회수
     function recallMessage(messageId) {
         fetch(`/api/v1/messages/recall/\${messageId}`, {
             method: 'POST',
@@ -278,6 +283,7 @@
             });
     }
 
+    //받은 쪽지 삭제
     function deleteReceivedMessage(receiveId) {
         fetch(`/api/v1/messages/inbox/delete/\${receiveId}`, {
             method: 'POST',
@@ -305,6 +311,7 @@
             });
     }
 
+    //보낸 쪽지 삭제
     function deleteSentMessage(sendId) {
         fetch(`/api/v1/messages/sentbox/delete/\${sendId}`, {
             method: 'POST',
@@ -332,6 +339,7 @@
             });
     }
 
+    //쪽지 important
     function toggleImportant(receiveId, newImportantYn) {
         fetch(`/api/v1/messages/inbox/toggleImportant/\${receiveId}?importantYn=\${newImportantYn}`, {
             method: 'POST',
@@ -359,6 +367,7 @@
             });
     }
 
+    //문자열 변환
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);

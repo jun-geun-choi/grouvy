@@ -35,6 +35,7 @@
 
         const orgChartTree = document.getElementById('orgChartTree');
 
+        //데이터 가져오기 및 초기 렌더링.
         async function fetchAndRenderOrgChart() {
             orgChartTree.innerHTML = '<p>조직도 데이터를 백엔드에서 불러오는 중...</p>';
 
@@ -59,6 +60,7 @@
             }
         }
 
+        //재귀적으로 부서트리 렌더링.
         function renderDepartmentTree(departments, parentElement) {
             if (!departments || departments.length === 0) {
                 return;
@@ -132,8 +134,8 @@
             parentElement.appendChild(ul);
         }
 
+        //토글기능.
         function setupEventListeners() {
-            console.log("이벤트 리스너 설정 시작...");
             document.querySelectorAll('.department-name').forEach(deptNameElement => {
                 deptNameElement.addEventListener('click', function (event) {
                     const deptItem = deptNameElement.closest('.dept-item');
@@ -160,7 +162,6 @@
                     }
                 });
             });
-            console.log("이벤트 리스너 설정 완료.");
         }
 
         fetchAndRenderOrgChart();

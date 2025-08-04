@@ -82,6 +82,7 @@
         fetchImportantInboxMessages(currentPage);
     });
 
+    // 중요쪽지 렌더링
     function fetchImportantInboxMessages(page) {
         const importantInboxTableBody = document.getElementById('importantInboxTableBody');
         importantInboxTableBody.innerHTML = '<tr><td colspan="5" class="text-center">쪽지를 불러오는 중...</td></tr>';
@@ -130,6 +131,7 @@
             });
     }
 
+    //디테일페이지 이동이벤트
     function setupRowClickListeners() {
         document.querySelectorAll('#importantInboxTableBody tr').forEach(row => {
             row.addEventListener('click', function () {
@@ -141,6 +143,7 @@
         });
     }
 
+    //문자열변환
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -148,6 +151,7 @@
         return date.toLocaleDateString('ko-KR', options);
     }
 
+    //페이지네이션 렌더
     function renderPagination(paginationData) {
         const paginationUl = document.getElementById('pagination');
         paginationUl.innerHTML = '';

@@ -29,6 +29,7 @@ public class MessageQueryService {
     private final NotificationService notificationService;
     private final UnreadCountService unreadCountService;
 
+    //메세지 디테일
     @Transactional
     public MessageDetailResponseDto getMessageDetail(Long messageId, int currentUserId) {
         Message message = messageMapper.findMessageDetailById(messageId);
@@ -43,6 +44,7 @@ public class MessageQueryService {
                 .filter(r -> r.getReceiverId() == currentUserId && "N".equals(r.getIsDeleted()))
                 .findFirst().orElse(null);
 
+        //접근권한및 회수여부검증.
         if (!isSender && (currentUserReceiver == null || "RECALLED".equals(currentUserReceiver.getInboxStatus()))) {
             return null;
         }
@@ -56,6 +58,7 @@ public class MessageQueryService {
         detailDto.setMessageContent(message.getMessageContent());
         detailDto.setSendDate(message.getSendDate());
         detailDto.setRecallAble(message.getRecallAble());
+
         detailDto.setReceiveId(currentUserReceiver != null ? currentUserReceiver.getReceiveId() : null);
         detailDto.setInboxStatus(currentUserReceiver != null ? currentUserReceiver.getInboxStatus() : null);
         detailDto.setImportantYn(currentUserReceiver != null ? currentUserReceiver.getImportantYn() : null);
@@ -63,6 +66,7 @@ public class MessageQueryService {
         detailDto.setToUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "TO"));
         detailDto.setCcUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "CC"));
 
+        //bcc처리
         if (isSender) {
             detailDto.setBccUserNames(messageMapper.findReceiverUserNamesByMessageIdAndType(messageId, "BCC"));
         } else {
@@ -74,15 +78,16 @@ public class MessageQueryService {
             }
         }
 
+        //읽음처리
         if (currentUserReceiver != null && "UNREAD".equals(currentUserReceiver.getInboxStatus())) {
             messageMapper.updateMessageReceiverReadDate(currentUserReceiver.getReceiveId());
 
-            //관련 알림 읽음처리
             String targetUrl = String.format("/message/detail?messageId=%d", message.getMessageId());
             notificationService.markNotificationsAsReadByTargetUrlAndUser(targetUrl, currentUserId);
             unreadCountService.updateAndSendUnreadCount(currentUserId);
         }
 
+        //발신자 회수가능여부 재확인.
         if ("Y".equals(message.getRecallAble()) && isSender) {
             int unreadCount = messageMapper.countUnreadReceiversByMessageId(messageId);
             int totalReceiverCount = messageMapper.countTotalReceiversByMessageId(messageId);
@@ -93,6 +98,7 @@ public class MessageQueryService {
         return detailDto;
     }
 
+//    보낸 쪽지함 조회.
     @Transactional(readOnly = true)
     public PaginationResponse<MessageSentResponseDto> getSentMessages(int userId, int page, int size) {
         int offset = (page - 1) * size;
@@ -110,6 +116,7 @@ public class MessageQueryService {
                     dto.setRecallAble(msg.getRecallAble());
                     dto.setSendId(msg.getSendId());
 
+                    //회수가능확인.
                     if ("Y".equals(msg.getRecallAble())) {
                         int unreadCount = messageMapper.countUnreadReceiversByMessageId(msg.getMessageId());
                         int totalReceiverCount = messageMapper.countTotalReceiversByMessageId(msg.getMessageId());
@@ -123,6 +130,7 @@ public class MessageQueryService {
         return new PaginationResponse<>(dtos, page - 1, size, totalElements);
     }
 
+    //받은 쪽지함조회
     @Transactional(readOnly = true)
     public PaginationResponse<MessageReceiver> getReceivedMessages(int userId, int page, int size) {
         int offset = (page - 1) * size;
@@ -131,6 +139,7 @@ public class MessageQueryService {
         return new PaginationResponse<>(messages, page - 1, size, totalElements);
     }
 
+    //중요 쪽지함 조회
     @Transactional(readOnly = true)
     public PaginationResponse<MessageReceiver> getImportantMessages(int userId, int page, int size) {
         int offset = (page - 1) * size;
@@ -139,6 +148,8 @@ public class MessageQueryService {
         return new PaginationResponse<>(messages, page - 1, size, totalElements);
     }
 
+    //쪽지답장
+    @Transactional(readOnly = true)
     public MessageSendRequestDto prepareReplyMessage(Long originalMessageId) {
         Message originalMessage = messageMapper.findMessageDetailById(originalMessageId);
         if (originalMessage == null) {
@@ -163,6 +174,8 @@ public class MessageQueryService {
         return replyDto;
     }
 
+    //쪽지 전달.
+    @Transactional(readOnly = true)
     public MessageSendRequestDto prepareForwardMessage(Long originalMessageId) {
         Message originalMessage = messageMapper.findMessageDetailById(originalMessageId);
         if (originalMessage == null) {

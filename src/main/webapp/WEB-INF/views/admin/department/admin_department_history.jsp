@@ -65,6 +65,7 @@
         const searchButton = document.getElementById('searchButton');
         const historyTableContainer = document.getElementById('historyTableContainer');
 
+        // 데이터가져오기 함수.
         async function fetchAndRenderHistories(departmentId) {
             const apiUrl = departmentId ? `/api/v1/dept/history/\${departmentId}` : '/api/v1/dept/history';
             historyTableContainer.innerHTML = '<p class="text-center text-muted">로딩 중...</p>';
@@ -83,6 +84,7 @@
             }
         }
 
+        // 드롭다운 채우기.
         async function setupDepartmentDropdown() {
             try {
                 const response = await fetch('/api/v1/dept/list');
@@ -104,6 +106,7 @@
             }
         }
 
+        // 렌더링 함수.
         function renderHistoryTable(histories) {
             if (!histories || histories.length === 0) {
                 historyTableContainer.innerHTML = '<p class="text-center text-muted">조회된 이력이 없습니다.</p>';
@@ -142,6 +145,7 @@
             historyTableContainer.innerHTML = tableHtml;
         }
 
+        // json문자열 가공.
         function formatHistoryValue(jsonString) {
             if (!jsonString || jsonString.trim() === '') return '-';
             try {
@@ -156,6 +160,7 @@
             }
         }
 
+        // 조회이벤트.
         searchButton.addEventListener('click', () => {
             const selectedId = departmentSelect.value ? parseInt(departmentSelect.value) : null;
             fetchAndRenderHistories(selectedId);

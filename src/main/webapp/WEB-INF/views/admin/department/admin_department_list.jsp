@@ -60,6 +60,7 @@
         const departmentListTable = document.getElementById('departmentListTable')
         const serverMessageArea = document.getElementById('serverMessageArea');
 
+        // 데이터가져오기.
         async function fetchAndRenderDepartments() {
             departmentListTable.innerHTML = '<p>로딩중...</p>';
             try {
@@ -68,7 +69,6 @@
                     throw new Error(`HTTP error! status: \${response.status}`);
                 }
                 const departments = await response.json();
-                console.log('부서 목록 데이터: ', departments);
 
                 renderDepartmentTable(departments);
                 attachTableEventListeners();
@@ -125,6 +125,7 @@
 
         }
 
+        // 삭제이벤트 함수.
         function attachTableEventListeners() {
             document.querySelectorAll('.delete-dept-btn').forEach(button => {
                 button.addEventListener('click', async function () {
@@ -153,6 +154,7 @@
             });
         }
 
+        // 작업메세지 표시.
         function displayClientMessage(message, type) {
             if (!serverMessageArea) {
                 console.error('serverMessageArea 엘리먼트를 찾을 수 없습니다.');
