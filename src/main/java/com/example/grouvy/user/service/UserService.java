@@ -28,7 +28,7 @@ public class UserService {
     private final HttpSession session;
     private final Storage storage;
 
-    public void registerUser(UserRegisterForm form) {
+    public int registerUser(UserRegisterForm form) {
 
 //        User foundUser = userMapper.getUserByEmail(form.getEmail());
 //        if (foundUser != null) {
@@ -45,12 +45,17 @@ public class UserService {
             throw new UserRegisterException("confirmCode", "이메일 인증이 완료되지 않았습니다.");
         }
 
-
         User user = modelMapper.map(form, User.class);
         user.setPassword(passwordEncoder.encode(form.getPassword()));
+//        System.out.println(user.getUserId());
 
         userMapper.insertUser(user);
 
+//        System.out.println(user.getUserId());
+        // <selectKey keyProperty="userId" resultType="int" order="BEFORE"> : insert 전에 userId가 객체에 미리 세팅된다는 뜻
+        // userId가 insert 전에 미리 채워지고, user 객체의 setUserId(...)가 내부적으로 호출됨.
+
+        return user.getUserId();
     }
 
     @Value("${spring.cloud.gcp.storage.bucket}")
@@ -74,6 +79,16 @@ public class UserService {
         );
 
         userMapper.updateUserProfile(foundUser.getUserId(), uuid);
+    }
+
+    public void recordLogin(String email, String ip) {
+        User foundUser = userMapper.findUserByEmail(email);
+        userMapper.insertLoginLog(foundUser.getUserId(), ip);
+    }
+
+    public void recordLogout(String email, String ip) {
+        User foundUser = userMapper.findUserByEmail(email);
+        userMapper.insertLogoutLog(foundUser.getUserId(), ip);
     }
 
 }

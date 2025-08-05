@@ -78,3 +78,6 @@
     margin-top: 0;
     font-size: 15px;
 }
+.main-content h2 {
+    margin-bottom: 24px;  /* 여백 넉넉히 */
+}

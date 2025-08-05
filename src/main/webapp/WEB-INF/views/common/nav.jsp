@@ -45,11 +45,11 @@
             </c:choose>
             <span class="ms-3 fw-semibold">
               <sec:authentication property="principal.user.name"/>
-              <span class="ms-1">사원님</span>
+              <span class="ms-1"><sec:authentication property="principal.user.position.positionName"  />님</span>
             </span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item d-flex align-items-center" href="/mypage-profile">
+            <li><a class="dropdown-item d-flex align-items-center" href="/mypage/profile">
               <i class="bi bi-person me-2"></i> 마이페이지
             </a></li>
             <li>

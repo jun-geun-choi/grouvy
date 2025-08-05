@@ -11,22 +11,9 @@
 </head>
 <body>
 <%@include file="../../common/nav.jsp" %>
-<nav class="navbarr">
-  <a href="#">전자결재</a>
-  <a href="#">업무관리</a>
-  <a href="#">업무문서함</a>
-  <a href="${pageContext.request.contextPath}/admin/dept/list">조직도</a>
-</nav>
+<%@include file="../admin_nav.jsp" %>
 <div class="container">
-  <div class="sidebar">
-    <h3>관리 기능</h3>
-    <ul>
-      <li><a href="/admin/user/approval">회원가입 승인</a> </li>
-      <li><a href="/admin/user/list">사용자 계정관리</a> </li>
-      <li><a href="/admin/user/login-history">로그인 기록</a> </li>
-      <li><a href="/admin/user/attendance-history" class="active">출퇴근 기록</a></li>
-    </ul>
-  </div>
+  <%@include file="admin_user_sidebar.jsp" %>
   <div class="main-content">
     <h2>사용자 목록 관리</h2>
     <form class="row g-2 mb-3">
@@ -73,28 +60,45 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
-          <td><input type="text" class="form-control form-control-sm"
-                     value="홍길순"></td>
-          <td>20250001</td>
-          <td>hongsoon@email.com</td>
-          <td><select class="form-select form-select-sm">
-            <option>영업팀</option>
-            <option>개발팀</option>
-          </select></td>
-          <td><select class="form-select form-select-sm">
-            <option>사원</option>
-            <option>대리</option>
-          </select></td>
-          <td><select class="form-select form-select-sm">
-            <option>재직</option>
-            <option>휴직</option>
-            <option>퇴사</option>
-          </select></td>
-          <td>
-            <button class="btn btn-success btn-sm">저장</button>
-          </td>
-        </tr>
+        <c:forEach var="user" items="${users }" varStatus="i">
+          <tr>
+            <td>${user.name}</td>
+            <td>${user.employeeNo}</td>
+            <td>${user.email}</td>
+            <td><select class="form-select form-select-sm">
+              <c:forEach var="department" items="${departments }">
+                <option value="${department.departmentName }"
+                        <c:if test="${user.department.departmentName eq department.departmentName }">
+                          selected
+                        </c:if>
+                >${department.departmentName }</option>
+              </c:forEach>
+            </select></td>
+            <td><select class="form-select form-select-sm">
+              <c:forEach var="position" items="${positions }">
+                <option value="${position.positionName }"
+                        <c:if test="${user.position.positionName eq position.positionName }">
+                          selected
+                        </c:if>
+                >${position.positionName}</option>
+              </c:forEach>
+            </select></td>
+            <td><select class="form-select form-select-sm">
+<%--            <option value="${position.positionName }"--%>
+<%--                        <c:if test="${user.position.positionName eq position.positionName }">--%>
+<%--                          selected--%>
+<%--                        </c:if>--%>
+<%--                >${position.positionName}</option>--%>
+              <option>재직</option>
+              <option>휴직</option>
+              <option>퇴사</option>
+            </select></td>
+            <td>
+              <button class="btn btn-success btn-sm">저장</button>
+            </td>
+          </tr>
+
+        </c:forEach>
         <!-- 추가 사원 행 반복 -->
         </tbody>
       </table>
