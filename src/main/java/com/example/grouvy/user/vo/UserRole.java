@@ -1,16 +1,17 @@
 package com.example.grouvy.user.vo;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.apache.ibatis.type.Alias;
 
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Alias("UserRole")
+@Builder
 public class UserRole {
     String roleName;
-    String userId;
+    Integer userId;
 
 }

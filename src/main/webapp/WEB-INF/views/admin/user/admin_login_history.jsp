@@ -8,25 +8,45 @@
   <%@include file="../../common/head.jsp" %>
   <c:url var="adminCss" value="/resources/css/user/admin_main.css"/>
   <link href="${adminCss}" rel="stylesheet"/>
+  <style>
+  .login-badge {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 30px;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+  min-width: 70px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.login-badge.login {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.login-badge.logout {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+.table th, .table td {
+  padding-left: 15px;
+}
+.status-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+</style>
 </head>
 <body>
 <%@include file="../../common/nav.jsp" %>
-<nav class="navbarr">
-  <a href="#">전자결재</a>
-  <a href="#">업무관리</a>
-  <a href="#">업무문서함</a>
-  <a href="#">조직도</a>
-</nav>
+<%@include file="../admin_nav.jsp" %>
 <div class="container">
-  <div class="sidebar">
-    <h3>관리 기능</h3>
-    <ul>
-      <li><a href="/admin/user/approval">회원가입 승인</a> </li>
-      <li><a href="/admin/user/list">사용자 계정관리</a> </li>
-      <li><a href="/admin/user/login-history">로그인 기록</a> </li>
-      <li><a href="/admin/user/attendance-history" class="active">출퇴근 기록</a></li>
-    </ul>
-  </div>
+  <%@include file="admin_user_sidebar.jsp" %>
   <div class="main-content">
     <h2>접속/로그인 기록 관리</h2>
     <table class="table table-bordered align-middle">
@@ -37,26 +57,29 @@
         <th>이메일</th>
         <th>최근 로그인 시각</th>
         <th>IP</th>
-        <th>비정상 로그인</th>
+        <th>로그인 상태</th>
       </tr>
       </thead>
       <tbody>
-      <tr>
-        <td>홍길순</td>
-        <td>20250001</td>
-        <td>hongsoon@email.com</td>
-        <td>2025-07-07 09:12:33</td>
-        <td>192.168.0.10</td>
-        <td><span class="badge bg-danger">탐지</span></td>
-      </tr>
-      <tr>
-        <td>김철수</td>
-        <td>20250002</td>
-        <td>kimcs@email.com</td>
-        <td>2025-07-07 08:55:10</td>
-        <td>192.168.0.11</td>
-        <td><span class="badge bg-success">정상</span></td>
-      </tr>
+      <c:forEach var="loginHistory" items="${loginHistorys }" varStatus="loop">
+        <tr>
+          <td>${loginHistory.user.name}</td>
+          <td>${loginHistory.user.employeeNo}</td>
+          <td>${loginHistory.user.email}</td>
+          <td><fmt:formatDate value="${loginHistory.loginTime}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+          <td>${loginHistory.ipAddress}</td>
+          <td class="status-cell">
+            <c:choose>
+              <c:when test="${loginHistory.loginStatus eq 'login'}">
+                <span class="login-badge login">로그인</span>
+              </c:when>
+              <c:otherwise>
+                <span class="login-badge logout">로그아웃</span>
+              </c:otherwise>
+            </c:choose>
+          </td>
+        </tr>
+      </c:forEach>
       <!-- 추가 행 -->
       </tbody>
     </table>

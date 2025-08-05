@@ -11,22 +11,9 @@
 </head>
 <body>
 <%@include file="../../common/nav.jsp" %>
-<nav class="navbarr">
-    <a href="#">전자결재</a>
-    <a href="#">업무관리</a>
-    <a href="#">업무문서함</a>
-    <a href="#">조직도</a>
-</nav>
+<%@include file="../admin_nav.jsp" %>
 <div class="container">
-    <div class="sidebar">
-        <h3>관리 기능</h3>
-        <ul>
-            <li><a href="/admin/user/approval">회원가입 승인</a> </li>
-            <li><a href="/admin/user/list">사용자 계정관리</a> </li>
-            <li><a href="/admin/user/login-history">로그인 기록</a> </li>
-            <li><a href="/admin/user/attendance-history" class="active">출퇴근 기록</a></li>
-        </ul>
-    </div>
+    <%@include file="admin_user_sidebar.jsp" %>
     <div class="main-content">
         <h2>출근/퇴근 기록 관리</h2>
         <table class="table table-bordered align-middle">

@@ -29,8 +29,8 @@
                     </c:otherwise>
                 </c:choose>
 
-                <h5 class="mt-2 mb-1"><sec:authentication property="principal.user.name"/> 사원</h5>
-                <small class="text-muted">사원</small>
+                <h5 class="mt-2 mb-1"><sec:authentication property="principal.user.name"/> <sec:authentication property="principal.user.position.positionName"  />님</h5>
+                <small class="text-muted"><sec:authentication property="principal.user.position.positionName"  /></small>
                 <div class="icon-group mt-3">
                     <a href="#" class="text-dark text-decoration-none"> <i
                             class="bi bi-envelope"></i> <span class="small custom-gap">0</span>
