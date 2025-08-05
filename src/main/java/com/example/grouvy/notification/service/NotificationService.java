@@ -53,4 +53,14 @@ public class NotificationService {
         }
         return updatedCount;
     }
+
+    @Transactional
+    public boolean markAsReadByIdAndUser(Long notificationId, int userId) {
+        int updatedCount = notificationMapper.markAsReadByIdAndUser(notificationId, userId);
+        if (updatedCount > 0) {
+            unreadCountService.updateAndSendUnreadCount(userId);
+            return true;
+        }
+        return false;
+    }
 }

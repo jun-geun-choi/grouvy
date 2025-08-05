@@ -441,33 +441,8 @@ footer {
 </style>
 </head>
 <body>
+<%@include file="../common/nav.jsp" %>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
-                <span class="logo-crop">
-                    <img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
-                </span>
-            </a>
-            <ul class="navbar-nav mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="#">전자결재</a></li>
-                <li class="nav-item"><a class="nav-link active" href="#">업무문서함</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-                <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-            </ul>
-            <div class="d-flex align-items-center">
-                <a href="mypage.html" >
-                    <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-                            alt="프로필" class="rounded-circle" width="36" height="36">
-                </a>
-                <a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
-            </div>
-        </div>
-    </nav>
 
     <main>
         <div class="container">

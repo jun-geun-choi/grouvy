@@ -43,6 +43,12 @@ public class MessageController {
         return "message/message_send";
     }
 
+    @GetMapping("/department-send")
+    public String departmentSendPage(Model model) {
+        model.addAttribute("currentPage", "department-send");
+        return "message/message_department_send";
+    }
+
     @GetMapping("/send-prepared")
     public String sendPreparedMessageForm(
             @RequestParam("originalMessageId") Long originalMessageId,

@@ -9,7 +9,10 @@ import com.example.grouvy.file.vo.Category;
 import com.example.grouvy.file.vo.FileVo;
 import com.example.grouvy.file.vo.FileShare;
 import com.example.grouvy.file.vo.Trash;
+import com.example.grouvy.notification.service.NotificationService;
+import com.example.grouvy.notification.vo.Notification;
 import com.example.grouvy.user.exception.AppException;
+import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.User;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,12 @@ public class FileService {
     @Autowired
     private FileMapper fileMapper;
 
+    //알림조회의존성
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    private UserMapper userMapper;
+
     @Transactional
     public void uploadFile(User user, FileForm fileUploadForm) {
         FileVo file = modelMapper.map(fileUploadForm, FileVo.class);
@@ -56,6 +65,10 @@ public class FileService {
         } catch (Exception e) {
             throw new RuntimeException("첨부파일저장오류", e);
         }
+
+        //알림링크
+        String uploaderName = user.getName();
+        String fileName = file.getOriginalName();
 
         if (file.getOwnerType().equals("personal")) {
             // 개인파일인 경우
@@ -78,6 +91,46 @@ public class FileService {
                 fileShare.setFileOwnerId(user.getUserId());
                 fileShare.setTargetUserId(targetUserId);
                 fileMapper.insertShare(fileShare);
+            }
+        }
+
+        // 알림 생성 로직
+        if (file.getOwnerType().equals("personal")) {
+            // 공유파일
+            if (targetUserIds != null && !targetUserIds.isEmpty()) {
+                String targetUrl = "/file/share";
+                for (Integer targetUserId : targetUserIds) {
+                    if (targetUserId.equals(user.getUserId())) continue;
+
+                    Notification notification = Notification.builder()
+                            .userId(targetUserId)
+                            .notificationType("FILE_SHARED")
+                            .notificationContent(uploaderName + "님이 '" + fileName + "' 파일을 공유했습니다.")
+                            .targetUrl(targetUrl)
+                            .isRead("N")
+                            .build();
+                    notificationService.createNotification(notification);
+                }
+            }
+        } else if (file.getOwnerType().equals("department")) {
+            // 부서 파일
+            Long departmentId = user.getDepartment().getDepartmentId();
+            List<User> departmentMembers = userMapper.findUsersByDeptId(departmentId);
+            String targetUrl = "/file/department";
+
+            if (departmentMembers != null) {
+                for (User member : departmentMembers) {
+                    if (member.getUserId() == user.getUserId()) continue;
+
+                    Notification notification = Notification.builder()
+                            .userId(member.getUserId())
+                            .notificationType("FILE_DEPT_UPLOAD")
+                            .notificationContent(uploaderName + "님이 부서 문서함에 '" + fileName + "' 파일을 업로드했습니다.")
+                            .targetUrl(targetUrl)
+                            .isRead("N")
+                            .build();
+                    notificationService.createNotification(notification);
+                }
             }
         }
     }

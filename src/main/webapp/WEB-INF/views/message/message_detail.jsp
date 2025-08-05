@@ -29,6 +29,7 @@
         <h3>쪽지 메뉴</h3>
         <ul>
             <li><a href="/message/send" class="${currentPage == 'send' ? 'active' : ''}">쪽지 쓰기</a></li>
+            <li><a href="/message/department-send" class="${currentPage == 'department-send' ? 'active' : ''}">부서 쪽지 쓰기</a></li>
             <li><a href="/message/inbox" class="${currentPage == 'inbox' ? 'active' : ''}">받은 쪽지함</a></li>
             <li><a href="/message/sentbox" class="${currentPage == 'sentbox' ? 'active' : ''}">보낸 쪽지함</a></li>
             <li><a href="/message/important" class="${currentPage == 'important' ? 'active' : ''}">중요 쪽지함</a></li>

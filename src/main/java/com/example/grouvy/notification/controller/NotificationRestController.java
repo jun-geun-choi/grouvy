@@ -55,6 +55,30 @@ public class NotificationRestController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/read/{notificationId}")
+    public ResponseEntity<Map<String, Object>> markNotificationAsRead(
+            @PathVariable("notificationId") Long notificationId,
+            @AuthenticationPrincipal SecurityUser securityUser) {
+
+        if (securityUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        int currentUserId = securityUser.getUser().getUserId();
+
+        boolean success = notificationService.markAsReadByIdAndUser(notificationId, currentUserId);
+
+        Map<String, Object> response = new HashMap<>();
+        if (success) {
+            response.put("success", true);
+            response.put("message", "알림을 읽음 처리했습니다.");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("message", "알림을 처리할 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
     /**
      * 클라이언트가 실시간 알림을 받기 위해 SSE 연결을 요청하는 엔드포인트입니다.
      * @param securityUser 현재 인증된 사용자 정보
