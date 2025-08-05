@@ -47,6 +47,23 @@ public class DepartmentRestController {
         return ResponseEntity.ok(memberIds);
     }
 
+    //특정 사용자 프로필 정보 조회
+    @GetMapping("/user-profile/{userId}")
+    public ResponseEntity<User> getUserProfile(@PathVariable int userId) {
+        User user = departmentService.findUserForOrgChart(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(user);
+    }
+
+    //사용자 검색
+    @GetMapping("/search-users")
+    public ResponseEntity<List<User>> searchUsers(@RequestParam String keyword) {
+        List<User> users = departmentService.searchUsersForOrgChart(keyword);
+        return ResponseEntity.ok(users);
+    }
+
     //admin 조직도 crud
     @GetMapping("/list")
     public List<Department> getDepartmentsForAdmin() {
