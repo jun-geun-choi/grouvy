@@ -6,7 +6,6 @@ import com.example.grouvy.message.mapper.MessageMapper;
 import com.example.grouvy.message.vo.Message;
 import com.example.grouvy.message.vo.MessageReceiver;
 import com.example.grouvy.message.vo.MessageSender;
-import com.example.grouvy.notification.mapper.NotificationMapper;
 import com.example.grouvy.notification.service.NotificationService;
 import com.example.grouvy.notification.vo.Notification;
 import com.example.grouvy.user.mapper.UserMapper;
@@ -15,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +26,7 @@ public class MessageSendService {
     private final UserMapper userMapper;
     private final NotificationService notificationService;
 
-    //메세지작성
+    //수신메세지작성
     private void saveMessageReceiver(Long messageId, int receiverId, String receiverType) {
         MessageReceiver receiverRecord = new MessageReceiver();
         receiverRecord.setMessageId(messageId);
@@ -41,6 +39,7 @@ public class MessageSendService {
         messageMapper.insertMessageReceiver(receiverRecord);
     }
 
+//    메세지 작성
     @Transactional
     public Long sendMessage(MessageSendRequestDto messageSendRequestDto, int senderId) {
         if (messageSendRequestDto.getReceiverIds() == null || messageSendRequestDto.getReceiverIds().isEmpty()) {
@@ -68,6 +67,7 @@ public class MessageSendService {
             }
         }
 
+        //쪽지 내용저장.
         Message message = new Message();
         message.setSenderId(senderId);
         message.setSubject(messageSendRequestDto.getSubject());
@@ -77,12 +77,14 @@ public class MessageSendService {
         messageMapper.insertMessage(message);
         Long msgId = message.getMessageId();
 
+        //발신정보저장.
         MessageSender senderRecord = new MessageSender();
         senderRecord.setMessageId(msgId);
         senderRecord.setSenderId(senderId);
         senderRecord.setIsDeleted("N");
         messageMapper.insertMessageSender(senderRecord);
 
+        //수신정보저장.
         Set<Integer> processedReceivers = new HashSet<>();
         User senderUser = userMapper.findByUserId(senderId);
         String senderName = (senderUser != null) ? senderUser.getName() : "알수없는 사용자.";
@@ -95,7 +97,6 @@ public class MessageSendService {
                 saveMessageReceiver(msgId, receiverId, "TO");
                 processedReceivers.add(receiverId);
 
-                //알림로직
                 Notification notification = Notification.builder()
                         .userId(receiverId)
                         .notificationType("MSG_RECV")

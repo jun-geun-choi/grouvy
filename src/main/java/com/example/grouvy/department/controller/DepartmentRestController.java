@@ -6,13 +6,17 @@ import com.example.grouvy.department.service.DepartmentService;
 import com.example.grouvy.department.service.DepartmentHistoryService;
 import com.example.grouvy.department.vo.Department;
 import com.example.grouvy.department.vo.DepartmentHistory;
+import com.example.grouvy.user.mapper.UserMapper;
+import com.example.grouvy.user.vo.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,11 +26,42 @@ public class DepartmentRestController {
     private final DepartmentService departmentService;
     private final AdminDepartmentService adminDepartmentService;
     private final DepartmentHistoryService departmentHistoryService;
+    private final UserMapper userMapper;
 
     //조직도리스트
     @GetMapping("/tree")
     public List<DepartmentTreeDto> getDepartmentTree() {
         return departmentService.getDepartmentTree();
+    }
+    //특정부서 유저리스트
+    @GetMapping("/{id}/members/ids")
+    public ResponseEntity<List<Integer>> getDepartmentMemberIds(@PathVariable("id") Long departmentId) {
+        List<User> members = userMapper.findUsersByDeptId(departmentId);
+        if (members == null || members.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        List<Integer> memberIds = members.stream()
+                .map(User::getUserId)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(memberIds);
+    }
+
+    //특정 사용자 프로필 정보 조회
+    @GetMapping("/user-profile/{userId}")
+    public ResponseEntity<User> getUserProfile(@PathVariable int userId) {
+        User user = departmentService.findUserForOrgChart(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(user);
+    }
+
+    //사용자 검색
+    @GetMapping("/search-users")
+    public ResponseEntity<List<User>> searchUsers(@RequestParam String keyword) {
+        List<User> users = departmentService.searchUsersForOrgChart(keyword);
+        return ResponseEntity.ok(users);
     }
 
     //admin 조직도 crud

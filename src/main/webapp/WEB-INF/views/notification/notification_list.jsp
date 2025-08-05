@@ -17,9 +17,7 @@
     <c:url var="homeCss" value="/resources/css/user/home.css" />
     <link href="${homeCss}" rel="stylesheet" />
     <%-- Bootstrap 및 공통 CSS 링크 --%>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 제공해주신 공통 스타일 */
         body { background-color: #f7f7f7; font-family: 'Noto Sans KR', sans-serif; }
         .container { max-width: 1200px; margin: 20px auto; }
         .main-content { background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
@@ -31,12 +29,11 @@
 
         /* 페이징 스타일 */
         .pagination { margin-top: 20px; }
+
     </style>
 </head>
 <body>
-<div class="container">
     <%@include file="../common/nav.jsp" %>
-</div>
 <div class="container mt-4">
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -64,7 +61,6 @@
 </div>
 <%@include file="../common/footer.jsp" %>
 <%-- Bootstrap JS 및 커스텀 스크립트 --%>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const notificationListArea = document.getElementById('notificationListArea');
@@ -73,7 +69,7 @@
         const readAllBtn = document.getElementById('readAllBtn');
 
         let currentPage = 1;
-        const pageSize = 10; // 한 페이지에 10개씩
+        const pageSize = 10;
 
         // 1. 알림 목록 데이터를 가져와서 렌더링하는 함수
         async function fetchAndRenderNotifications(page = 1) {
@@ -91,7 +87,7 @@
                     }
                     paginationControlArea.innerHTML = '';
                     unreadNotificationCountDisplay.textContent = '0';
-                    readAllBtn.disabled = true; // 버튼 비활성화
+                    readAllBtn.disabled = true;
                     return;
                 }
 
@@ -112,10 +108,10 @@
         function renderNotificationTable(notifications) {
             if (!notifications || notifications.length === 0) {
                 notificationListArea.innerHTML = '<p class="text-center text-muted p-5">표시할 알림이 없습니다.</p>';
-                readAllBtn.disabled = true; // 알림이 없으면 버튼 비활성화
+                readAllBtn.disabled = true;
                 return;
             }
-            readAllBtn.disabled = false; // 알림이 있으면 버튼 활성화
+            readAllBtn.disabled = false;
 
             let tableHtml = `
                 <table class="table table-hover notification-table">
@@ -131,22 +127,51 @@
 
             notifications.forEach(noti => {
                 const formattedDate = new Date(noti.createDate).toLocaleString('ko-KR');
-                const finalUrl = noti.targetUrl ? `\${noti.targetUrl}&currentPage=inbox` : '#';
+
+                let finalUrl = noti.targetUrl || '#';
+
+                // 알림 타입이 메시지 관련일 경우에만 currentPage 파라미터를 추가.
+                if (noti.notificationType && noti.notificationType.startsWith('MSG_')) {
+                    if (finalUrl.includes('?')) {
+                        finalUrl += '&currentPage=inbox';
+                    } else {
+                        finalUrl += '?currentPage=inbox';
+                    }
+                }
 
                 tableHtml += `
-                    <tr onclick="location.href='\${finalUrl}'">
-                        <td>\${noti.notificationType || '-'}</td>
-                        <td>\${noti.notificationContent}</td>
-                        <td>\${formattedDate}</td>
-                    </tr>
-                `;
+            <tr data-url="\${finalUrl}" data-id="\${noti.notificationId}" style="cursor: pointer;">
+                <td>\${noti.notificationType || '-'}</td>
+                <td>\${noti.notificationContent}</td>
+                <td>\${formattedDate}</td>
+            </tr>
+        `;
             });
 
             tableHtml += `</tbody></table>`;
             notificationListArea.innerHTML = tableHtml;
         }
 
-        // 3. 페이징 컨트롤을 렌더링하는 함수
+        async function handleNotificationClick(url, notificationId) {
+            try {
+                // 백엔드에 개별 알림 읽음 처리 API 호출
+                await fetch(`/api/v1/notifications/read/\${notificationId}`, {
+                    method: 'POST'
+                });
+            } catch (error) {
+                console.error('알림 읽음 처리 중 오류 발생:', error);
+            } finally {
+                if (url && url !== '#') {
+                    window.location.href = url;
+                } else {
+                    // targetUrl이 없는 알림이라면, 목록을 새로고침하여 읽음 처리된 것을 반영
+                    fetchAndRenderNotifications(currentPage);
+
+                }
+            }
+        }
+
+        //페이징 컨트롤을 렌더링하는 함수
         function renderPagination(pagination) {
             if (pagination.totalPages <= 1) {
                 paginationControlArea.innerHTML = '';
@@ -175,12 +200,11 @@
             paginationControlArea.innerHTML = paginationHtml;
         }
 
-        // 4. '모두 읽음 처리' 버튼 이벤트 리스너
+        //모두 읽음 처리버튼 이벤트 리스너
         readAllBtn.addEventListener('click', async function() {
             if (!confirm('모든 알림을 읽음 처리하시겠습니까? 목록에서 사라집니다.')) return;
 
             try {
-                // [수정] 우리 API 경로에 맞게 fetch URL 수정
                 const response = await fetch('/api/v1/notifications/readAll', {
                     method: 'POST'
                 });
@@ -209,6 +233,15 @@
             }
         });
 
+        //알림 목록 클릭 이벤트 위임.
+        notificationListArea.addEventListener('click', function(event) {
+            const row = event.target.closest('tr');
+            if (row && row.dataset.id) {
+                const url = row.dataset.url;
+                const notificationId = row.dataset.id;
+                handleNotificationClick(url, notificationId);
+            }
+        });
         // 페이지가 로드되면 최초로 알림 목록을 가져옵니다.
         fetchAndRenderNotifications(1);
     });

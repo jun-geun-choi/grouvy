@@ -77,4 +77,14 @@
         AND IS_READ = 'N'
     </update>
 
+    <update id="markAsReadByIdAndUser">
+        UPDATE GROUVY_NOTIFICATION
+        SET
+            IS_READ = 'Y'
+        WHERE
+            NOTIFICATION_ID = #{notificationId}
+          AND USER_ID = #{userId}
+          AND IS_READ = 'N'
+    </update>
+
 </mapper>

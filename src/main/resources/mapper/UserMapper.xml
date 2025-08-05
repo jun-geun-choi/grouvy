@@ -235,4 +235,21 @@
 
     </insert>
 
+
+    <!--List<User> searchUsers(@Param("keyword") String keyword); :키워드로 조직과 사용자를 검색합니다.-->
+    <select id="searchUsers" parameterType="string" resultMap="UserResultMapWithRoleNames">
+        SELECT
+            U.USER_ID, U.NAME, U.EMAIL, U.PROFILE_IMG_PATH, U.PHONE_NUMBER,
+            D.DEPARTMENT_ID, D.DEPARTMENT_NAME,
+            P.POSITION_NO, P.POSITION_NAME
+        FROM GROUVY_USERS U
+                 LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+                 LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+--         WHERE U.IS_DELETED = 'N'
+          AND (
+            U.NAME LIKE '%' || #{keyword} || '%'
+                OR D.DEPARTMENT_NAME LIKE '%' || #{keyword} || '%'
+            )
+        ORDER BY U.NAME ASC
+    </select>
 </mapper>

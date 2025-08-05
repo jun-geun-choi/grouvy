@@ -29,6 +29,7 @@
         <h3>쪽지 메뉴</h3>
         <ul>
             <li><a href="/message/send" class="${currentPage == 'send' ? 'active' : ''}">쪽지 쓰기</a></li>
+            <li><a href="/message/department-send" class="${currentPage == 'department-send' ? 'active' : ''}">부서 쪽지 쓰기</a></li>
             <li><a href="/message/inbox" class="${currentPage == 'inbox' ? 'active' : ''}">받은 쪽지함</a></li>
             <li><a href="/message/sentbox" class="${currentPage == 'sentbox' ? 'active' : ''}">보낸 쪽지함</a></li>
             <li><a href="/message/important" class="${currentPage == 'important' ? 'active' : ''}">중요 쪽지함</a></li>
@@ -107,6 +108,7 @@
         }
     });
 
+    //데이터 렌더링
     function fetchMessageDetail(msgId) {
         fetch(`/api/v1/messages/detail/\${msgId}`)
             .then(response => {
@@ -140,6 +142,7 @@
             });
     }
 
+    //쪽지데이터 html채워넣기
     function renderMessageDetail(data) {
         document.getElementById('messageSubjectDisplay').innerHTML = `<i class="fas fa-envelope-open-text mr-2"></i> \${data.subject}`;
         document.getElementById('senderNameDisplay').textContent = data.senderName;
@@ -182,6 +185,7 @@
         }
     }
 
+    //버튼 액션 설정
     async function setupActionButtons(messageDetailData) {
         let currentUserId = null;
         try {
@@ -251,6 +255,8 @@
         });
     }
 
+
+    //쪽지 회수
     function recallMessage(messageId) {
         fetch(`/api/v1/messages/recall/\${messageId}`, {
             method: 'POST',
@@ -278,6 +284,7 @@
             });
     }
 
+    //받은 쪽지 삭제
     function deleteReceivedMessage(receiveId) {
         fetch(`/api/v1/messages/inbox/delete/\${receiveId}`, {
             method: 'POST',
@@ -305,6 +312,7 @@
             });
     }
 
+    //보낸 쪽지 삭제
     function deleteSentMessage(sendId) {
         fetch(`/api/v1/messages/sentbox/delete/\${sendId}`, {
             method: 'POST',
@@ -332,6 +340,7 @@
             });
     }
 
+    //쪽지 important
     function toggleImportant(receiveId, newImportantYn) {
         fetch(`/api/v1/messages/inbox/toggleImportant/\${receiveId}?importantYn=\${newImportantYn}`, {
             method: 'POST',
@@ -359,6 +368,7 @@
             });
     }
 
+    //문자열 변환
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);

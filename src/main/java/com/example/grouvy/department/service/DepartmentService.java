@@ -22,6 +22,7 @@ public class DepartmentService {
     private final DepartmentMapper departmentMapper;
     private final UserMapper userMapper;
 
+    //조직도 트리가공
     @Transactional(readOnly = true)
     public List<DepartmentTreeDto> getDepartmentTree() {
         List<Department> allDepts = departmentMapper.findAllDeptsTree();
@@ -56,5 +57,17 @@ public class DepartmentService {
         });
         rootDepts.sort(Comparator.comparing(DepartmentTreeDto::getDepartmentOrder));
         return rootDepts;
+    }
+
+    //조직도 기능 내에서 특정 사용자 정보 조회를 위한 메서드
+    @Transactional(readOnly = true)
+    public User findUserForOrgChart(int userId) {
+        return userMapper.findByUserId(userId);
+    }
+
+    //조직도 기능 내에서 사용자 검색을 위한 메서드
+    @Transactional(readOnly = true)
+    public List<User> searchUsersForOrgChart(String keyword) {
+        return userMapper.searchUsers(keyword);
     }
 }

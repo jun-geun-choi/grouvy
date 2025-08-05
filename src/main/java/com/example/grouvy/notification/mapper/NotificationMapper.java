@@ -26,4 +26,6 @@ public interface NotificationMapper {
             @Param("userId") int userId);
 
     int markAllAsReadByUserId(@Param("userId") int userId);
+    int markAsReadByIdAndUser(@Param("notificationId") Long notificationId, @Param("userId") int userId);
+
 }

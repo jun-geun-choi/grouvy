@@ -89,6 +89,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 <script>
+<%--폼 요소 가져오기.--%>
     document.addEventListener('DOMContentLoaded', function () {
         const departmentForm = document.getElementById('departmentForm');
         const departmentIdField = document.getElementById('departmentId');
@@ -100,6 +101,7 @@
         const formMode = document.getElementById('formMode') ? document.getElementById('formMode').value : 'create';
         const currentDepartmentId = departmentIdField.value;
 
+        // 생성드롭다운함수.
         async function loadParentDepartments() {
             try {
                 const response = await fetch('/api/v1/dept/list');
@@ -120,7 +122,7 @@
                 displayClientMessage('상위 부서 목록을 불러올 수 없습니다.', 'danger');
             }
         }
-
+        // 업데이트 드롭다운함수.
         async function loadDepartmentDataForUpdate() {
             if (formMode === 'update' && currentDepartmentId) {
                 try {
@@ -135,7 +137,6 @@
                         throw new Error(`HTTP error! status: \${response.status}`);
                     }
                     const department = await response.json();
-                    console.log('로드된 부서 데이터:', department);
 
                     departmentNameField.value = department.departmentName;
                     departmentOrderField.value = department.departmentOrder;
@@ -150,12 +151,9 @@
                 }
             }
         }
-
+        // 이벤트 함수.
         departmentForm.addEventListener('submit', async function (event) {
             event.preventDefault();
-
-            console.log('Form Mode:', formMode);
-            console.log('Current Department ID:', currentDepartmentId);
 
             const departmentData = {
                 departmentName: departmentNameField.value.trim(),
@@ -181,8 +179,6 @@
                 departmentData.departmentId = parseInt(currentDepartmentId);
             }
 
-            console.log('API URL:', url);
-            console.log('HTTP Method:', method);
             try {
                 const response = await fetch(url, {
                     method: method,
@@ -193,7 +189,6 @@
 
                 if (response.ok) {
                     displayClientMessage(result.message, 'info');
-                    setTimeout(() => window.location.href = '/admin/dept/list', 1000);
                 } else {
                     displayClientMessage(result.message || (formMode === 'create' ? '부서 생성 실패!' : '부서 수정 실패!'), 'danger');
                 }
@@ -203,6 +198,7 @@
             }
         });
 
+        // 작업메세지.
         function displayClientMessage(message, type) {
             if (!serverMessageArea) {
                 console.error('serverMessageArea 엘리먼트를 찾을 수 없습니다.');

@@ -166,13 +166,20 @@
         WHERE MESSAGE_ID = #{messageId} AND IS_DELETED = 'N'
     </select>
 
+<!--메세지 회수-->
     <update id="updateInboxStatusToRecalled">
         UPDATE GROUVY_MESSAGE_RECEIVE
         SET INBOX_STATUS = 'RECALLED'
         WHERE MESSAGE_ID = #{messageId} AND INBOX_STATUS = 'UNREAD' AND IS_DELETED = 'N'
     </update>
 
-    <!-- **수정:** findReceiverUserNamesByMessageIdAndType 쿼리에서 mr.IS_DELETED = 'N' 조건 제거 -->
+    <update id="updateMessageRecallAbleToN">
+        UPDATE GROUVY_MESSAGES
+        SET RECALL_ABLE = 'N'
+        WHERE MESSAGE_ID = #{messageId}
+          AND RECALL_ABLE = 'Y'
+    </update>
+
     <select id="findReceiverUserNamesByMessageIdAndType" resultType="string">
         SELECT u.NAME
         FROM GROUVY_MESSAGE_RECEIVE mr
@@ -182,6 +189,7 @@
         ORDER BY u.NAME
     </select>
 
+<!--메세지읽음처리-->
     <update id="updateMessageReceiverReadDate">
         UPDATE GROUVY_MESSAGE_RECEIVE
         SET READ_DATE = SYSDATE, INBOX_STATUS = 'READ'
@@ -206,12 +214,6 @@
         WHERE RECEIVE_ID = #{receiveId}
     </update>
 
-    <update id="updateMessageRecallAbleToN">
-        UPDATE GROUVY_MESSAGES
-        SET RECALL_ABLE = 'N'
-        WHERE MESSAGE_ID = #{messageId}
-          AND RECALL_ABLE = 'Y'
-    </update>
 
     <select id="findImportantMessagesByReceiverIdPaginated" resultMap="messageReceiverResultMap">
         SELECT

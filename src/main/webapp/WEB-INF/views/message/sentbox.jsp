@@ -31,6 +31,7 @@
         <h3>쪽지 메뉴</h3>
         <ul>
             <li><a href="/message/send" class="${currentPage == 'send' ? 'active' : ''}">쪽지 쓰기</a></li>
+            <li><a href="/message/department-send" class="${currentPage == 'department-send' ? 'active' : ''}">부서 쪽지 쓰기</a></li>
             <li><a href="/message/inbox" class="${currentPage == 'inbox' ? 'active' : ''}">받은 쪽지함</a></li>
             <li><a href="/message/sentbox" class="${currentPage == 'sentbox' ? 'active' : ''}">보낸 쪽지함</a></li>
             <li><a href="/message/important" class="${currentPage == 'important' ? 'active' : ''}">중요 쪽지함</a></li>
@@ -79,6 +80,7 @@
         fetchSentboxMessages(currentPage);
     });
 
+    //보낸 쪽지 렌더링
     function fetchSentboxMessages(page) {
         const sentboxTableBody = document.getElementById('sentboxTableBody');
         sentboxTableBody.innerHTML = '<tr><td colspan="4" class="text-center">쪽지를 불러오는 중...</td></tr>';
@@ -146,6 +148,7 @@
             });
     }
 
+    //트렁크 함수
     function truncateContent(content, maxLength) {
         if (!content) return '';
         if (content.length <= maxLength) {
@@ -154,6 +157,7 @@
         return content.substring(0, maxLength) + '...';
     }
 
+    //디테일페이지 이동이벤트
     function setupRowClickListeners() {
         document.querySelectorAll('#sentboxTableBody tr').forEach(row => {
             row.addEventListener('click', function (event) {
@@ -169,6 +173,7 @@
         });
     }
 
+    // 회수 이벤트부착
     function setupRecallActionListeners() {
         document.querySelectorAll('.recall-action-link').forEach(link => {
             link.addEventListener('click', function (event) {
@@ -181,6 +186,7 @@
         });
     }
 
+    //쪽지회수
     function recallMessage(messageId) {
         fetch(`/api/v1/messages/recall/\${messageId}`, {
             method: 'POST',
@@ -216,6 +222,7 @@
             });
     }
 
+    //문자열 변환
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -223,6 +230,7 @@
         return date.toLocaleDateString('ko-KR', options);
     }
 
+    //페이지 네이션 렌더
     function renderPagination(paginationData) {
         const paginationUl = document.getElementById('pagination');
         paginationUl.innerHTML = '';
