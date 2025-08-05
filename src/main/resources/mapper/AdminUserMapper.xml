@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.user.mapper.AdminUserMapper">
+
+    <resultMap id="LoginHistoryMap" type="LoginHistory">
+        <id column="login_history_id" property="loginHistoryId" />
+        <result column="user_id" property="userId" />
+        <result column="ip_address" property="ipAddress" />
+        <result column="login_time" property="loginTime" />
+        <result column="login_status" property="loginStatus" />
+
+        <association property="user" javaType="User" >
+            <id column="user_id" property="userId" />
+            <result column="employee_no" property="employeeNo" />
+            <result column="name" property="name"/>
+            <result column="email" property="email"/>
+
+        </association>
+
+    </resultMap>
+
+    <!--  List<LoginHistory> getLoginHistories();  -->
+    <select id="getLoginHistories" resultMap="LoginHistoryMap">
+        SELECT L.LOGIN_HISTORY_ID
+             , L.USER_ID
+             , L.IP_ADDRESS
+             , L.LOGIN_TIME
+             , L.LOGIN_STATUS
+
+             , U.EMPLOYEE_NO
+             , U.NAME
+             , U.EMAIL
+        FROM GROUVY_LOGIN_HISTORY L
+                 LEFT JOIN GROUVY_USERS U ON U.USER_ID = L.USER_ID
+        ORDER BY L.LOGIN_HISTORY_ID DESC
+    </select>
+
+    <!--  List<User> getAllUsers();  -->
+    <select id="getAllUsers" resultMap="com.example.grouvy.user.mapper.UserMapper.UserResultMapWithRoleNames" >
+        SELECT U.USER_ID,
+               U.DEPARTMENT_ID,
+               U.EMPLOYEE_NO,
+               U.NAME,
+               U.EMAIL,
+               U.PASSWORD,
+               U.POSITION_NO,
+               U.LOGIN_PROVIDER,
+               U.SOCIAL_EMAIL,
+               U.PHONE_NUMBER,
+               U.ADDRESS,
+               U.PROFILE_IMG_PATH,
+               U.CREATED_DATE,
+               U.UPDATED_DATE,
+               U.EMAIL_VERIFIED,
+               U.RESIGN_DATE,
+               U.EMPLOYMENT_STATUS,
+               U.APPROVAL_STATUS,
+
+               D.DEPARTMENT_ID,
+               D.DEPARTMENT_NAME,
+
+               P.POSITION_NO,
+               P.POSITION_NAME
+
+        FROM GROUVY_USERS U
+                 LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+                 LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        ORDER BY
+            U.EMPLOYEE_NO DESC
+    </select>
+
+    <!-- List<Position> getAllPositions(); -->
+    <select id="getAllPositions" resultType="Position">
+        SELECT POSITION_NO positionNo
+             , POSITION_NAME positionName
+        FROM GROUVY_POSITIONS
+
+    </select>
+
+    <!-- List<Department> getAllDepartments(); -->
+    <select id="getAllDepartments" resultType="Department">
+        SELECT DEPARTMENT_ID departmentId
+             , DEPARTMENT_NAME departmentName
+        FROM GROUVY_DEPARTMENTS
+        WHERE IS_DELETED = 'N'
+        ORDER BY DEPARTMENT_ID
+    </select>
+
+    <!-- User getUserById(int userId); -->
+    <select id="getUserById" parameterType="int" resultMap="com.example.grouvy.user.mapper.UserMapper.UserResultMapWithRoleNames">
+        SELECT U.USER_ID,
+               U.DEPARTMENT_ID,
+               U.EMPLOYEE_NO,
+               U.NAME,
+               U.EMAIL,
+               U.PASSWORD,
+               U.POSITION_NO,
+               U.LOGIN_PROVIDER,
+               U.SOCIAL_EMAIL,
+               U.PHONE_NUMBER,
+               U.ADDRESS,
+               U.PROFILE_IMG_PATH,
+               U.CREATED_DATE,
+               U.UPDATED_DATE,
+               U.EMAIL_VERIFIED,
+               U.RESIGN_DATE,
+               U.EMPLOYMENT_STATUS,
+               U.APPROVAL_STATUS,
+
+               D.DEPARTMENT_ID,
+               D.DEPARTMENT_NAME,
+
+               P.POSITION_NO,
+               P.POSITION_NAME
+
+        FROM GROUVY_USERS U
+                 LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+                 LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        WHERE
+            U.USER_ID = #{userId}
+    </select>
+
+    <!-- void insertUser(int userId); -->
+    <insert id="insertPendingUser" parameterType="UserApproval" >
+        <selectKey keyProperty="approvalId"
+                   resultType="int"
+                   order="BEFORE">
+            SELECT USER_APPROVALS_APPROVAL_ID_SEQ.NEXTVAL
+            FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_USER_APPROVALS
+            (APPROVAL_ID, USER_ID)
+        VALUES
+            (#{approvalId}, #{userId})
+
+    </insert>
+
+    <resultMap id="UserApprovalWithUserResultMap" type="UserApproval">
+        <id property="approvalId" column="approval_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="updatedDate" column="updated_date"/>
+        <result property="status" column="status"/>
+
+        <association property="user" javaType="User">
+            <id property="userId" column="user_id"/>
+            <result property="name" column="name"/>
+            <result property="email" column="email"/>
+            <result property="employeeNo" column="employee_no"/>
+            <result property="departmentId" column="department_id"/>
+            <result property="positionNo" column="position_no"/>
+            <result property="loginProvider" column="login_provider" />
+
+            <association property="department" javaType="Department">
+                <id property="departmentId" column="department_id"/>
+                <result property="departmentName" column="department_name"/>
+            </association>
+
+            <association property="position" javaType="Position">
+                <id property="positionNo" column="position_no"/>
+                <result property="positionName" column="position_name"/>
+            </association>
+
+<!--            <collection property="roleNames"-->
+<!--                        column="user_id"-->
+<!--                        ofType="string"-->
+<!--                        select="com.example.grouvy.user.mapper.UserMapper.findRoleNamesByUserId"/>-->
+        </association>
+    </resultMap>
+
+    <!-- List<UserApproval> getAllPendingUsers(); -->
+    <select id="getAllPendingUsers" resultMap="UserApprovalWithUserResultMap">
+        SELECT A.APPROVAL_ID,
+               A.STATUS,
+
+               U.USER_ID,
+               U.NAME,
+               U.EMPLOYEE_NO,
+               U.EMAIL,
+               U.LOGIN_PROVIDER,
+
+               D.DEPARTMENT_ID,
+               D.DEPARTMENT_NAME,
+
+               P.POSITION_NO,
+               P.POSITION_NAME
+
+        FROM GROUVY_USER_APPROVALS A
+                 JOIN GROUVY_USERS U ON A.USER_ID = U.USER_ID
+                 LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+                 LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        WHERE A.STATUS = '대기'
+        ORDER BY A.APPROVAL_ID DESC
+
+    </select>
+
+    <!-- void updateUser(User user); -->
+    <update id="updateUser" parameterType="User">
+        UPDATE GROUVY_USERS
+        SET EMPLOYEE_NO   = #{employeeNo}
+          , DEPARTMENT_ID = #{departmentId}
+          , POSITION_NO   = #{positionNo}
+          , UPDATED_DATE  = SYSDATE
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!-- void updatePendingUser(@Param("userId") int userId, @Param("status") String status); -->
+    <update id="updatePendingUser">
+        UPDATE GROUVY_USER_APPROVALS
+        SET
+            STATUS = #{status}
+            , UPDATED_DATE = SYSDATE
+        WHERE
+            USER_ID = #{userId}
+    </update>
+
+    <!-- void updateUserRole(int userId); -->
+    <insert id="insertUserRole" parameterType="UserRole">
+        INSERT INTO GROUVY_USER_ROLES
+            (USER_ID, ROLE_NAME)
+        VALUES (#{userId}, 'ROLE_USER')
+
+    </insert>
+
+
+    <select id="getAllApprovedUsers" resultMap="UserApprovalWithUserResultMap">
+        SELECT A.APPROVAL_ID,
+               A.STATUS,
+
+               U.USER_ID,
+               U.NAME,
+               U.EMPLOYEE_NO,
+               U.EMAIL,
+               U.LOGIN_PROVIDER,
+
+               D.DEPARTMENT_ID,
+               D.DEPARTMENT_NAME,
+
+               P.POSITION_NO,
+               P.POSITION_NAME
+
+        FROM GROUVY_USER_APPROVALS A
+                 JOIN GROUVY_USERS U ON A.USER_ID = U.USER_ID
+                 LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+                 LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        WHERE A.STATUS != '대기'
+        ORDER BY A.APPROVAL_ID DESC
+
+    </select>
+
+    <!-- void deletePendingUser(int userId); -->
+    <delete id="deletePendingUser" parameterType="int" >
+        DELETE FROM GROUVY_USERS
+        WHERE USER_ID = #{userId}
+
+    </delete>
+
+</mapper>
