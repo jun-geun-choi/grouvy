@@ -435,8 +435,8 @@ footer {
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html"> 
-                <span class="logo-crop"> 
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <span class="logo-crop">
                     <img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
                 </span>
             </a>

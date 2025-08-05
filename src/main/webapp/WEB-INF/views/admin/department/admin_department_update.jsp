@@ -1,195 +1,47 @@
 <%-- src/main/webapp/WEB-INF/views/admin/department/department_form.jsp --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
     <title><c:out value="${formTitle}"/></title>
+    <meta charset="UTF-8">
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <c:url var="homeCss" value="/resources/css/user/home.css"/>
+    <link href="${homeCss}" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* 관리자 페이지 공통 스타일 */
-        body {
-            background-color: #f7f7f7;
-            font-family: Arial, sans-serif;
-            margin: 0;
-        }
 
-        /* 관리자 페이지 자체 상단 내비게이션 (.navbarr) - HTML에 추가되지 않았으므로 이 스타일은 적용되지 않습니다. */
-        .navbarr {
-            display: flex;
-            justify-content: flex-end; /* 우측 정렬 */
-            background-color: #34495e; /* 어두운 배경 */
-        }
+    <c:url var="adminCss" value="/resources/css/user/admin_main.css"/>
+    <link href="${adminCss}" rel="stylesheet"/>
 
-        .navbarr a {
-            padding: 10px 20px;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-        }
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/department/admin_department.css">
 
-        .navbarr a:hover, .navbarr a.active {
-            background-color: #1abc9c; /* 호버/활성 시 배경색 변경 */
-        }
-
-        /* 일반적인 navbar 스타일 (상단 로고/마이페이지 부분) - HTML에 추가되지 않았으므로 이 스타일은 적용되지 않습니다. */
-        .navbar-brand {
-            color: #e6002d !important; /* 로고 브랜드 색상 */
-            font-size: 1.5rem;
-        }
-
-        .navbar h4 {
-            margin: 0 auto; /* 중앙 정렬 */
-        }
-
-        .logo-img {
-            width: 160px;
-            height: 50px;
-            object-fit: contain; /* 이미지 비율 유지 */
-            object-position: center;
-        }
-
-        .navbar .container-fluid {
-            padding-right: 2rem;
-            padding-left: 2rem; /* 좌우 여백 */
-        }
-
-        /* 컨테이너, 사이드바, 메인 콘텐츠 */
-        .container {
-            display: flex;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 20px auto;
-        }
-
-        .sidebar {
-            width: 200px;
-            background-color: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-right: 20px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar h3 {
-            margin-top: 0;
-            font-size: 16px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar ul li {
-            margin: 10px 0;
-        }
-
-        .sidebar ul li a {
-            color: #333;
-            text-decoration: none;
-        }
-
-        .sidebar ul li a.active, .sidebar ul li a:hover {
-            color: #1abc9c;
-            font-weight: bold;
-        }
-
-        .main-content {
-            flex: 1; /* flex-grow: 1 */
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        /* 푸터 스타일 */
-        footer {
-            text-align: center;
-            padding: 10px;
-            font-size: 12px;
-            color: #999;
-            margin-top: 20px;
-        }
-
-        /* 관리자 대시보드 카드 스타일 (이 페이지에서는 사용되지 않음) */
-        .card {
-            background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .card h4 {
-            margin-top: 0;
-            font-size: 15px;
-        }
-
-        /* 부서 목록 테이블 스타일 (이 페이지에서는 사용되지 않음) */
-        table {
-            margin-top: 15px;
-        }
-
-        th, td {
-            vertical-align: middle;
-        }
-
-        /* 부서 폼 스타일 */
-        .department-form-container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding-top: 20px;
-        }
-
-        .department-form-container label {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .department-form-container .form-control {
-            margin-bottom: 15px;
-        }
-
-        .department-form-container .btn-group {
-            justify-content: center;
-            display: flex;
-        }
-
-        /* 이력 테이블 스타일 (이 페이지에서는 사용되지 않음) */
-        .json-pre {
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-family: monospace;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 0.85em;
-            margin-top: 5px;
-            border-radius: 4px;
-        }
-
-        .history-filter-form {
-            margin-bottom: 20px;
-        }
-    </style>
 </head>
 <body>
-
 <c:set var="currentPage" value="departmentList" scope="request"/>
-
+    <%@include file="../../common/nav.jsp" %>
+<nav class="navbarr">
+    <a href="/admin/user/list">인사관리</a>
+    <a href="#">전자결재</a>
+    <a href="#">업무관리</a>
+    <a href="#">업무문서함</a>
+    <a href="${pageContext.request.contextPath}/admin/dept/list">조직도</a>
+</nav>
 <div class="container">
     <div class="sidebar">
         <h3>관리 기능</h3>
         <ul>
             <li><a href="/admin" class="${currentPage == 'adminHome' ? 'active' : ''}">대시보드</a></li>
             <li><a href="/admin/dept/list" class="${currentPage == 'departmentList' ? 'active' : ''}">부서 관리</a></li>
-            <li><a href="/admin/dept/history" class="${currentPage == 'departmentHistory' ? 'active' : ''}">부서 이력</a></li>
+            <li><a href="/admin/dept/history" class="${currentPage == 'departmentHistory' ? 'active' : ''}">부서 이력</a>
+            </li>
         </ul>
     </div>
 
@@ -208,7 +60,8 @@
 
             <div class="mb-3">
                 <label for="departmentName" class="form-label">부서명:</label>
-                <input type="text" id="departmentName" name="departmentName" class="form-control" required placeholder="부서명을 입력하세요">
+                <input type="text" id="departmentName" name="departmentName" class="form-control" required
+                       placeholder="부서명을 입력하세요">
             </div>
             <div class="mb-3">
                 <label for="parentDepartmentId" class="form-label">상위 부서:</label>
@@ -218,7 +71,8 @@
             </div>
             <div class="mb-3">
                 <label for="departmentOrder" class="form-label">정렬 순서:</label>
-                <input type="number" id="departmentOrder" name="departmentOrder" class="form-control" value="0" required>
+                <input type="number" id="departmentOrder" name="departmentOrder" class="form-control" value="0"
+                       required>
             </div>
 
             <div class="btn-group" role="group">
@@ -231,14 +85,11 @@
         </form>
     </div>
 </div>
-
-<footer>
-    <p>© 2025 그룹웨어 Corp.</p>
-</footer>
+<%@include file="../../common/footer.jsp" %>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const departmentForm = document.getElementById('departmentForm');
         const departmentIdField = document.getElementById('departmentId');
         const departmentNameField = document.getElementById('departmentName');
@@ -300,7 +151,7 @@
             }
         }
 
-        departmentForm.addEventListener('submit', async function(event) {
+        departmentForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             console.log('Form Mode:', formMode);
@@ -335,7 +186,7 @@
             try {
                 const response = await fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(departmentData)
                 });
                 const result = await response.json();

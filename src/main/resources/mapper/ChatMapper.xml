@@ -40,36 +40,43 @@
     WHERE U.DEPARTMENT_ID = D.DEPARTMENT_ID
       AND U.POSITION_NO = P.POSITION_NO
       AND U.USER_ID = #{userId}
+      AND U.IS_DELETED = 'N'
 
   </select>
 
-  <!--public ChatRoom getChatRoomIdByUserId(int userId, int selectUserId);-->
-  <select id="getChatRoomIdByUserId" resultType="int">
-    SELECT
-        U.ROOM_ID
-    FROM
-      GROUVY_CHAT_ROOMS R,
-      GROUVY_CHAT_ROOM_USERS U
-    WHERE
-        R.ROOM_ID = U.ROOM_ID
-        AND U.USER_ID IN(#{userId},#{selectUserId})
-        AND R.IS_GROUP = 'N'
-    GROUP BY
-            U.ROOM_ID
-    HAVING COUNT(DISTINCT U.USER_ID) = 2
-  </select>
+  <!--public ChatRoom getRoomIdByUserId(int userId, int selectUserId);
+      두 사용자가 참여하고 있는 채팅방을 조회한다.-->
+    <select id="getRoomByUserId" resultType="ChatRoom">
+        SELECT
+            R.ROOM_ID  AS roomId,
+            R.IS_GROUP AS isGroup
+        FROM
+            GROUVY_CHAT_ROOMS R
+                JOIN GROUVY_CHAT_ROOM_USERS U ON R.ROOM_ID = U.ROOM_ID
+        WHERE
+            R.IS_GROUP = 'N'
+          AND R.IS_DELETED = 'N'
+          AND U.USER_ID IN (#{userId}, #{selectUserId})
+        GROUP BY
+            R.ROOM_ID, R.IS_GROUP
+        HAVING
+            COUNT(DISTINCT U.USER_ID) = 2
+    </select>
 
-  <select id="getRoomId" resultType="int">
-    select CHAT_ROOMS_ROOM_ID_SEQ.NEXTVAL from dual
-  </select>
 
-  <!--public void insertRoom(int roomId, String roomName);-->
-  <insert id="insertRoom">
+    <!--public void insertChatRoom(ChatRoom chatRoom);-->
+    <insert id="insertChatRoom" parameterType="ChatRoom">
+        <selectKey keyProperty="roomId" resultType="int" order="BEFORE">
+            SELECT
+                CHAT_ROOMS_ROOM_ID_SEQ.NEXTVAL
+            FROM
+                DUAL
+        </selectKey>
     INSERT INTO GROUVY_CHAT_ROOMS
-        (ROOM_ID,ROOM_NAME)
+    (ROOM_ID,IS_GROUP, ROOM_NAME)
     VALUES
-        (#{roomId}, #{roomName})
-  </insert>
+    (#{roomId},#{isGroup},#{roomName})
+    </insert>
 
   <!--public void insertChatRoomUser(int roomId, int userId);-->
   <insert id="insertChatRoomUser">
@@ -78,5 +85,180 @@
     VALUES
         (#{roomId}, #{userId})
   </insert>
+
+    <!--public void insertMessage(ChatMessage chatMessage);-->
+    <insert id="insertMessage" parameterType="ChatMessage">
+        <selectKey keyProperty="chatMessageId" resultType="int" order="BEFORE">
+            SELECT
+                CHAT_MESSAGES_CHAT_MESSAGE_ID_SEQ.NEXTVAL
+            FROM
+                DUAL
+        </selectKey>
+        INSERT INTO GROUVY_CHAT_MESSAGES
+            (CHAT_MESSAGE_ID
+             ,ROOM_ID
+             ,SENDER_ID
+             ,CHAT_MESSAGE_CONTENT
+             ,CHAT_MESSAGE_TYPE)
+        VALUES
+            (#{chatMessageId}
+             ,#{roomId}
+             ,#{senderId}
+             ,#{content}
+             ,#{messageType})
+
+    </insert>
+
+    <!--public List<ChatRoomUser> getChatRoomUserByRoomId(int roomId);-->
+    <select id="getChatRoomUserByRoomId" resultType="ChatRoomUser">
+        SELECT
+            CU.ROOM_ID          AS roomId
+           ,U.USER_ID           AS userId
+           ,U.NAME              AS "user.name"
+           ,CU.IS_ACTIVE        AS isActive
+        FROM
+            GROUVY_CHAT_ROOMS R, GROUVY_CHAT_ROOM_USERS CU, GROUVY_USERS U
+        WHERE
+            R.ROOM_ID = CU.ROOM_ID
+            AND U.USER_ID = CU.USER_ID
+            AND R.ROOM_ID = #{roomId}
+            AND CU.IS_ACTIVE = 'Y'
+    </select>
+
+    <!-- public List<ChatRoomUser> getChatRoomUserDenineActiveByRoomId(@Param("roomId") int roomId);-->
+    <select id="getChatRoomUserDenineActiveByRoomId" resultType="ChatRoomUser">
+        SELECT
+              CU.ROOM_ID          AS roomId
+             ,U.USER_ID           AS userId
+             ,U.NAME              AS "user.name"
+             ,CU.IS_ACTIVE        AS isActive
+             ,R.IS_GROUP           AS "chatRoom.isGroup"
+        FROM
+            GROUVY_CHAT_ROOMS R, GROUVY_CHAT_ROOM_USERS CU, GROUVY_USERS U
+        WHERE
+            R.ROOM_ID = CU.ROOM_ID
+          AND U.USER_ID = CU.USER_ID
+          AND R.ROOM_ID = #{roomId}
+    </select>
+
+    <!--public ChatMessage getChatMessage(long chatMessageId);-->
+    <select id="getChatMessage" resultType="ChatMessage">
+        SELECT
+             M.CHAT_MESSAGE_ID                       AS chatMessageId
+            ,M.ROOM_ID                               AS roomId
+            ,M.SENDER_ID                             AS senderId
+            ,M.CHAT_MESSAGE_CONTENT                  AS content
+            ,M.CHAT_MESSAGE_TYPE                     AS messageType
+            ,M.CREATED_DATE                          AS createdDate
+            ,U.NAME                                  AS "user.name"
+            ,U.PROFILE_IMG_PATH                      AS "user.profileImgPath"
+        FROM
+            GROUVY_CHAT_MESSAGES M , GROUVY_USERS U
+        WHERE
+            M.SENDER_ID = U.USER_ID
+            AND M.CHAT_MESSAGE_ID = #{chatMessageId}
+    </select>
+
+    <!-- public List<ChatMessage> getChatMessageByRoomId(int roomId,int userId); -->
+    <select id="getChatMessageByRoomId" resultType="ChatMessage">
+        SELECT
+            M.CHAT_MESSAGE_ID                       AS chatMessageId
+             ,M.ROOM_ID                               AS roomId
+             ,M.SENDER_ID                             AS senderId
+             ,M.CHAT_MESSAGE_CONTENT                  AS content
+             ,M.CHAT_MESSAGE_TYPE                     AS messageType
+             ,M.CREATED_DATE                          AS createdDate
+             ,U.NAME                                  AS "user.name"
+             ,U.PROFILE_IMG_PATH                      AS "user.profileImgPath"
+        FROM
+            GROUVY_CHAT_MESSAGES M,GROUVY_USERS U
+        WHERE
+            U.USER_ID = M.SENDER_ID
+            AND M.ROOM_ID = #{roomId}
+            AND M.CREATED_DATE >= (SELECT
+                                       JOIN_DATE
+                                   FROM GROUVY_CHAT_ROOM_USERS
+                                   WHERE
+                                       ROOM_ID = #{roomId}
+                                       AND USER_ID = #{userId})
+        ORDER BY
+            M.CREATED_DATE ASC
+    </select>
+
+    <!--public List<User> getAllDeptAndUser();-->
+    <select id="getAllDeptAndUser" resultType="User">
+    SELECT
+         D.DEPARTMENT_NAME                   AS "department.departmentName"
+        ,P.POSITION_NAME                     AS "position.positionName"
+        ,U.USER_ID                           AS userId
+        ,U.NAME                              AS name
+    FROM
+        GROUVY_DEPARTMENTS D, GROUVY_USERS U, GROUVY_POSITIONS P
+    WHERE
+        D.DEPARTMENT_ID = U.DEPARTMENT_ID
+        AND U.POSITION_NO = P.POSITION_NO
+        AND U.IS_DELETED = 'N'
+        AND D.DEPARTMENT_NAME != '대표이사'
+    </select>
+
+    <!--public ChatRoom getGroupRoomsByUserId(List<Integer> userIds, int listSize);-->
+    <select id="getGroupRoomsByUserId" resultType="ChatRoom">
+        SELECT
+             R.ROOM_ID                               AS roomId
+            ,R.ROOM_NAME                             AS roomName
+            ,R.IS_GROUP                              AS isGroup
+        FROM
+            GROUVY_CHAT_ROOMS R, GROUVY_CHAT_ROOM_USERS U
+        WHERE
+            R.ROOM_ID = U.ROOM_ID
+            AND R.IS_GROUP = 'Y'
+            AND R.IS_DELETED = 'N'
+            AND U.IS_ACTIVE = 'Y'
+        GROUP BY
+            R.ROOM_ID, R.ROOM_NAME, R.IS_GROUP
+        HAVING
+            COUNT(*) = #{listSize}
+            AND COUNT(DISTINCT U.USER_ID) = #{listSize}
+            AND SUM(CASE WHEN U.USER_ID IN
+                <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+                    #{userId}
+                </foreach>
+                    THEN 1 ELSE 0 END) = #{listSize}
+    </select>
+
+    <!--public void updateChatRoomUser(ChatRoomUser chatRoomUser);-->
+    <update id="updateChatRoomUser" parameterType="ChatRoomUser">
+        UPDATE GROUVY_CHAT_ROOM_USERS
+        SET
+            IS_ACTIVE = #{isActive}
+            <if test="leftDate != null">
+                ,LEFT_DATE = #{leftDate}
+            </if>
+            <if test="joinDate != null">
+                ,JOIN_DATE = #{joinDate}
+            </if>
+        WHERE
+            USER_ID = #{userId}
+            AND ROOM_ID = #{roomId}
+    </update>
+
+    <!--public void deleteMessage(int roomId);-->
+    <delete id="deleteMessage">
+        DELETE GROUVY_CHAT_MESSAGES
+        WHERE ROOM_ID = #{roomId}
+    </delete>
+
+    <!--public void deleteChatRoomUser(int roomId);-->
+    <delete id="deleteChatRoomUser">
+        DELETE GROUVY_CHAT_ROOM_USERS
+        WHERE ROOM_ID = #{roomId}
+    </delete>
+
+    <!--public void deleteChatRoom(int roomId);-->
+    <delete id="deleteChatRoom">
+        DELETE GROUVY_CHAT_ROOMS
+        WHERE ROOM_ID = #{roomId}
+    </delete>
+
 
 </mapper>

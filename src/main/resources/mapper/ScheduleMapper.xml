@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.schedule.mapper.ScheduleMapper">
+ <!-- 샘플 mapper 입니다. -->
+
+ <select id="getHolidayById" resultType="Holiday">
+    SELECT
+        HOLIDAY_TITLE       AS holidayTitle
+        ,HOLIDAY_ID
+        ,HOLIDAY_DATE
+        ,CREATED_DATE
+        ,UPDATED_DATE
+    FROM
+        GROUVY_HOLIDAYS
+    WHERE
+        HOLIDAY_ID = #{HolidayId}
+ </select>
+ <select id="getScheduleByUserNo" resultType="Schedule">
+    SELECT
+        SCHEDULE_ID     AS scheduleId
+        ,FILE_ID          AS fileId
+        ,USER_ID         AS userId
+        ,SCHEDULE_DATE   AS scheduleDate
+        ,SCHEDULE_STARTTIME  AS scheduleStarttime
+        ,SCHEDULE_ENDTIME     AS scheduleEndtime
+        ,SCHEDULE_TITLE      AS scheduleTitle
+        ,SCHEDULE_CONTENT     AS scheduleContent
+        ,CREATED_DATE        AS createdDate
+        ,UPDATED_DATE        AS updatedDate
+        ,DEPARTMENT_ID       AS departmentId
+        ,SCHEDULE_LOCATION   AS scheduleLocation
+    FROM
+        GROUVY_SCHEDULES
+    WHERE
+        USER_ID = #{no}
+ </select>
+
+    <select id="getSimpleSchedule" resultType="SimpleSchedule">
+        SELECT
+            S.SCHEDULE_TITLE      AS title
+             ,S.SCHEDULE_STARTTIME  AS "start"
+             ,S.SCHEDULE_ENDTIME    AS "end"
+             ,C.CATEGORY_COLOR    AS color
+        FROM
+            GROUVY_SCHEDULES S, GROUVY_SCHEDULES_CATEGORIES C
+        WHERE
+            S.CATEGORY_ID = C.CATEGORY_ID
+    </select>
+
+ <insert id="insertSchedule" parameterType="Schedule">
+     <selectKey keyProperty="scheduleId" resultType="int" order="BEFORE">
+         SELECT SCHEDULES_SCHEDULE_ID_SEQ.nextval FROM DUAL
+     </selectKey>
+     INSERT INTO GROUVY_SCHEDULES
+     (SCHEDULE_ID,
+     FILE_ID
+     ,USER_ID
+     ,SCHEDULE_DATE
+     ,SCHEDULE_STARTTIME
+     ,SCHEDULE_ENDTIME
+     ,SCHEDULE_TITLE
+     ,SCHEDULE_CONTENT
+     ,DEPARTMENT_ID
+     ,SCHEDULE_LOCATION
+     ,CATEGORY_ID)
+     values
+     (#{scheduleId},4,100001, '2025-07-01', #{scheduleStarttime},#{scheduleEndtime},
+      #{scheduleTitle},
+     #{scheduleContent},1,#{scheduleLocation},#{categoryId})
+
+
+
+ </insert>
+
+
+</mapper>

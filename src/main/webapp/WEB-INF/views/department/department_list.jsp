@@ -1,147 +1,26 @@
 <%-- src/main/webapp/WEB-INF/views/department/organization_chart.jsp --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <html>
 <head>
-    <title>AJAX 조직도</title>
-    <style>
-        body {
-            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-            margin: 0;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        * {
-            box-sizing: border-box;
-        }
-        .main-container {
-            padding: 20px;
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            min-height: 500px;
-        }
-        h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #2c3e50;
-            font-size: 1.5em;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        .org-chart-tree {
-            max-height: 550px;
-            overflow-y: auto;
-            padding-right: 15px;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${formTitle}</title>
 
-        /* 조직도 요소 스타일 */
-        .dept-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .dept-item {
-            margin-bottom: 3px;
-        }
-        .department-name {
-            font-weight: bold;
-            color: #333;
-            cursor: pointer; /* 부서명 클릭 가능하도록 */
-            padding: 5px 0;
-            display: block;
-        }
-        .department-name:hover {
-            background-color: #f0f0f0;
-        }
-        .toggle-icon {
-            display: inline-block;
-            transition: transform 0.2s ease-in-out;
-            margin-right: 5px;
-            color: #555;
-            font-size: 0.8em;
-        }
-        /* 펼쳐진 상태의 아이콘 */
-        .department-name.expanded .toggle-icon {
-            transform: rotate(90deg);
-        }
-        /* 사용자 리스트 스타일 */
-        .user-list {
-            list-style: none; /* 동그란 점 제거 */
-            padding: 0;      /* 기본 패딩 제거 */
-            margin-left: 20px;
-            display: none; /* 초기에는 숨김 */
-        }
-        /* 사용자 리스트가 펼쳐졌을 때 */
-        .user-list.expanded-users {
-            display: block;
-        }
-        /* 자식 부서 리스트는 항상 표시 */
-        .dept-list.child-dept-list { /* 자식 부서 ul에 붙는 클래스 */
-            margin-left: 20px;
-            /* display는 기본적으로 block이므로 명시하지 않아도 됨 */
-        }
-        .user-item { /* 사용자 개별 항목 스타일 */
-            font-size: 0.9em;
-            color: #555;
-            margin-bottom: 2px;
-            padding: 3px 0;
-        }
-
-        /* 들여쓰기 레벨 (0부터 시작) */
-        .indent-level-0 { margin-left: 0px; }
-        .indent-level-1 { margin-left: 20px; }
-        .indent-level-2 { margin-left: 40px; }
-        .indent-level-3 { margin-left: 60px; }
-        .indent-level-4 { margin-left: 80px; }
-    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/department/department.css">
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <c:url var="homeCss" value="/resources/css/user/home.css"/>
+    <link href="${homeCss}" rel="stylesheet"/>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="/">
-				<span class="logo-crop">
-					<img src="resources/image/grouvy_logo.png" alt="GROUVY 로고" class="logo-img">
-				</span>
-        </a>
-        <ul class="navbar-nav mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-            <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/dept/list">조직도</a></li>
-            <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/admin">관리자</a></li>
-        </ul>
-        <div class="d-flex align-items-center">
-            <!-- 로그인 사용자 드롭다운 -->
-            <c:choose>
-                <c:when test="${not empty pageContext.request.userPrincipal}">
-                    <div class="dropdown ms-3">
-                        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle"
-                           id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="ms-2 fw-semibold">
-                                    ${pageContext.request.userPrincipal.name}
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item d-flex align-items-center" href="/mypage_profile.html">
-                                <i class="bi bi-person me-2"></i> 마이페이지
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item d-flex align-items-center text-danger" href="/logout">
-                                <i class="bi bi-box-arrow-right me-2"></i> 로그아웃
-                            </a></li>
-                        </ul>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <!-- 로그인 안 한 경우 -->
-                    <a href="/login" class="btn btn-outline-secondary btn-sm ms-3">로그인</a>
-                </c:otherwise>
-            </c:choose>
-
-        </div>
-    </div>
-</nav>
+<%@include file="../common/nav.jsp" %>
 <div class="main-container">
     <h2>조직도</h2>
 
@@ -149,9 +28,9 @@
         <p>조직도 데이터를 불러오는 중...</p>
     </div>
 </div>
-
+<%@include file="../common/footer.jsp" %>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         console.log("AJAX 조직도 페이지 로드 완료!");
 
         const orgChartTree = document.getElementById('orgChartTree');
@@ -169,7 +48,7 @@
                 const departmentTreeData = await response.json();
                 console.log('조직도 데이터 로드 완료:', departmentTreeData);
 
-                orgChartTree.innerHTML = ''; // 로딩 메시지 제거
+                orgChartTree.innerHTML = '';
 
                 renderDepartmentTree(departmentTreeData, orgChartTree);
                 setupEventListeners();
@@ -256,7 +135,7 @@
         function setupEventListeners() {
             console.log("이벤트 리스너 설정 시작...");
             document.querySelectorAll('.department-name').forEach(deptNameElement => {
-                deptNameElement.addEventListener('click', function(event) {
+                deptNameElement.addEventListener('click', function (event) {
                     const deptItem = deptNameElement.closest('.dept-item');
                     if (!deptItem) {
                         console.warn("deptItem을 찾을 수 없습니다.");
