@@ -8,10 +8,12 @@ import com.example.grouvy.chat.dto.DeptAndUserDto;
 import com.example.grouvy.chat.dto.ResponseEntityUtils;
 import com.example.grouvy.chat.service.ChatService;
 import com.example.grouvy.chat.vo.ChatRoom;
+import com.example.grouvy.security.SecurityUser;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,8 +55,10 @@ public class ApiChatController {
 
   // roomId로 그 채팅방의 메세지들을 조회한다.
   @GetMapping("/loadMessage")
-  public ResponseEntity<ApiResponse<List<ChatMessageDto>>> loadMessage(@RequestParam("roomId") int roomId) {
-    List<ChatMessageDto> messages = chatService.getChatMessageByRoomId(roomId);
+  public ResponseEntity<ApiResponse<List<ChatMessageDto>>> loadMessage(@RequestParam("roomId") int roomId,
+                                                                       @AuthenticationPrincipal SecurityUser securityUser) {
+    int userId = securityUser.getUser().getUserId();
+    List<ChatMessageDto> messages = chatService.getChatMessageByRoomId(roomId,userId);
     return  ResponseEntityUtils.ok(messages);
   }
 
@@ -72,6 +76,15 @@ public class ApiChatController {
     List<Integer> userIds = (List<Integer>) groupData.get("id");
     ChatRoom chatRoom = chatService.getOrCreateGroupChatRoomByUserIds(userIds, roomName);
     return  ResponseEntityUtils.ok(chatRoom);
+  }
+
+  // 사용자가 나가기 버튼을 눌렀을 경우, 그 사용자를 채팅방 참여자 테이블에서 is_active 컬럼의 상태를 N으로 변경.
+  @PostMapping("/leftRoom")
+  public ResponseEntity<ApiResponse<Void>> getLeftRoomByUserData(@RequestBody Map<String, Object> data) {
+    int userId = Integer.parseInt(data.get("userId").toString());
+    int roomId = Integer.parseInt(data.get("roomId").toString());
+    chatService.deleteChatRoomUser(roomId,userId);
+    return ResponseEntityUtils.ok("삭제되었습니다.");
   }
 
 }

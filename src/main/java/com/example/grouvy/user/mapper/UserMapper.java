@@ -12,8 +12,8 @@ public interface UserMapper {
 
     void insertUser(User user);
     List<String> getRoleNamesByUserId(int userId);
-    User getUserByEmail(String email);
-    User getUserByEmailWithRoleNames(String email);
+    User findUserByEmail(String email);
+    User findUserByEmailWithRoleNames(String email);
 
     User findByUserId(@Param("userId") int userId);
     List<User> findUsersByDeptId(@Param("departmentId") Long departmentId);
@@ -23,5 +23,7 @@ public interface UserMapper {
 
     void updateUserProfile(@Param("userId") int userId, @Param("imageUrl")  String imageUrl);
 
-
+    // login/logout log
+    void insertLoginLog(@Param("userId") int userId, @Param("ip") String ip);
+    void insertLogoutLog(@Param("userId") int userId, @Param("ip") String ip);
 }

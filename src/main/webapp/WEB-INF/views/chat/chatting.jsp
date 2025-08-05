@@ -234,8 +234,11 @@
     );
   }
 
+  let groupUserId = ${userIds};                     // 본인 또는 지정된 사용자의 아이디를 model에 담은 것을 이 변수에 할당.
+                                                    // 이는 선택된 사용자의 아이디를 담거나, 본인 및 이미 지정된 사용자를 선택하지 못하도록 하기 위함이다.
   // "대화 상대 추가" 버튼 클릭 시, 모달창 열기
   $("#add-participant").click(function (e) {
+    console.log(groupUserId);
     e.preventDefault();
     let htmlContent = "";
 
@@ -255,13 +258,16 @@
           `;
 
         for(let userInfo of deptAndUser.members){
+          let isDisabled = groupUserId.includes(userInfo.id) ? "disabled" : "";
+          let muteClass = groupUserId.includes(userInfo.id) ? "text-muted" : "";
           htmlContent += `
           <li class="list-group-item d-flex align-items-center">
             <input type="checkbox"
                    class="form-check-input user-checkbox me-2"
                    name="userId"
-                  value="\${userInfo.id}">
-            <span>\${userInfo.userName} <small class="text-muted">(\${userInfo.positionName})</small></span>
+                  value="\${userInfo.id}"
+                  \${isDisabled}>
+            <span class="\${muteClass}">\${userInfo.userName} <small class="text-muted">(\${userInfo.positionName})</small></span>
           </li>
           `;
         }
@@ -276,15 +282,11 @@
   // 채팅방 이름 입력 및 직원 선택 후 제출 버튼 눌렀을 때 이벤트
   $("#submit-group-room").click(function (e) {
     e.preventDefault();
-    const thisRoomUserIds = JSON.parse('${userIds}')            // 배열 형태로 왔다! [10001,10002]
-    let groupUserId =[];                                        // 위 데이터를 이 변수에 넣으려면, 반복문으로 하나씩 넣어야 한다.!
-
-    for(let thisRoomId of  thisRoomUserIds) {
-      groupUserId.push(thisRoomId);
-    }
-    console.log("groupUserId:",groupUserId);                    // 하나씩 들어온 것을 알 수 있다.
+    console.log("groupUserId:",groupUserId);                           // 하나씩 들어온 것을 알 수 있다.
 
     $("input[name='userId']:checked").each(function () {
+
+      let selectedUserId = parseInt($(this).val());
       groupUserId.push(parseInt($(this).val()));
     });
     console.log("groupUserId:",groupUserId);                    // 다 들어온 것도 확인할 수 있다.!!
@@ -316,6 +318,31 @@
       }
     });
     $("#add-participant-modal").modal('hide');
+  });
+
+  //나가기 버튼 이벤트
+  $("#leave-room").click(function (e) {
+    e.preventDefault();
+    const result = confirm("채팅방을 나가시겠습니까?? 기존 데이터가 사라집니다.");
+
+    let data = {
+      userId : userId,
+      roomId : currentRoomId
+    }
+
+    if(result) {
+      $.ajax({
+        type: "POST",
+        url: "/api/chat/leftRoom",
+        data: JSON.stringify(data),
+        dataType: "json",
+        contentType:  "application/json",
+        success: function (data) {
+          window.close();
+        }
+      });
+    }
+    return;
   });
 
   // 파일 첨부 이벤트 노션에 있음.

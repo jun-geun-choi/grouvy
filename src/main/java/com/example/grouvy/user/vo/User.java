@@ -11,12 +11,12 @@ import java.util.List;
 @Setter
 @ToString
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @Alias("User")
 public class User {
     private int userId;
-    private int employeeNo;
+    private Integer employeeNo;
     private String name;
     private String loginProvider;
     private String email;
@@ -29,12 +29,13 @@ public class User {
     private Date createdDate;
     private Date updatedDate;
     private Date resignDate;
-    private String isDeleted;
+    private String employmentStatus;
+    private String approvalStatus;
 
     private Long departmentId;
     private Department department;
 
-    private int positionNo;
+    private Integer positionNo;
     private Position position;
 
     private List<String> roleNames;

@@ -5,6 +5,7 @@ import com.example.grouvy.user.dto.ProfileRequest;
 import com.example.grouvy.user.exception.UserRegisterException;
 import com.example.grouvy.user.form.UserRegisterForm;
 import com.example.grouvy.user.mapper.UserMapper;
+import com.example.grouvy.user.service.AdminUserService;
 import com.example.grouvy.user.service.MailService;
 import com.example.grouvy.user.service.UserService;
 import com.example.grouvy.user.vo.User;
@@ -30,7 +31,7 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final MailService mailService;
-
+    private final AdminUserService adminUserService;
 
     @GetMapping("/")
     public String home() {
@@ -57,7 +58,9 @@ public class UserController {
         }
 
         try {
-            userService.registerUser(userRegisterForm);
+            int userId = userService.registerUser(userRegisterForm);
+            adminUserService.registerPendingUser(userId);
+//            adminUserService.registerUser();
         } catch (UserRegisterException e) {
             String field = e.getField();
             String message = e.getMessage();
@@ -71,7 +74,7 @@ public class UserController {
     @PostMapping("/register/check-mail")
     @ResponseBody
     public boolean checkEmail(@RequestParam("email") String email) {
-        User foundUser = userMapper.getUserByEmail(email);
+        User foundUser = userMapper.findUserByEmail(email);
         return (foundUser == null);
     }
 
@@ -84,12 +87,38 @@ public class UserController {
         return code;
     }
 
-    @GetMapping("/mypage-profile")
-    public String userMypageProfile(){
+    @GetMapping("/mypage/profile")
+    public String userMypageProfile(Model model) {
+        User user = ((SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUser();
+        model.addAttribute("joinDate", user.getCreatedDate());
         return "user/mypage_profile";
     }
 
-    @PostMapping("/user/update/profile")
+    @PostMapping("/mypage/update/profile/info")
+    public String updateProfileInfo(){
+
+//        SecurityUser updatedSecurityUser = new SecurityUser(updatedUser);
+//        Authentication newAuth = new UsernamePasswordAuthenticationToken(updatedSecurityUser, updatedSecurityUser.getPassword(), updatedSecurityUser.getAuthorities());
+//        SecurityContextHolder.getContext().setAuthentication(newAuth);
+        return "redirect:/mypage/profile";
+    }
+
+    @GetMapping("/mypage/attendance")
+    public String userMypageAttendance(){
+        return "user/mypage_profile2";
+    }
+
+    @GetMapping("/mypage/login-history")
+    public String userMypageLoginHistory(){
+        return "user/mypage_profile2";
+    }
+
+    @GetMapping("/mypage/setting")
+    public String userMypageSetting(){
+        return "user/mypage_profile2";
+    }
+
+    @PostMapping("/mypage/update/profile/image")
     public String updateProfile(@ModelAttribute ProfileRequest dto) throws IOException {
         userService.updateProfileImg(dto);
         User updatedUser = userMapper.findByUserId(dto.getUserId());
@@ -97,7 +126,7 @@ public class UserController {
         SecurityUser updatedSecurityUser = new SecurityUser(updatedUser);
         Authentication newAuth = new UsernamePasswordAuthenticationToken(updatedSecurityUser, updatedSecurityUser.getPassword(), updatedSecurityUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(newAuth);
-        return "redirect:/mypage-profile";
+        return "redirect:/mypage/profile";
 
     }
 }

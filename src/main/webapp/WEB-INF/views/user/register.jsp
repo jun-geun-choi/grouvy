@@ -74,7 +74,7 @@
             alert("이메일을 입력해주세요.");
             return;
         }
-
+        // TODO : 이메일 형식 확인
         $.ajax({
             type: "POST",
             url: "/register/check-mail",

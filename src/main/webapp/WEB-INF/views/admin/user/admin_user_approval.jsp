@@ -1,72 +1,95 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@include file="../../common/taglib.jsp"%>
+<%@include file="../../common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>신규 사원번호 발급 및 회원가입 승인</title>
-  <%@include file="../../common/head.jsp" %>
-  <c:url var="adminCss" value="/resources/css/user/admin_main.css"/>
-  <link href="${adminCss}" rel="stylesheet"/>
+    <meta charset="UTF-8">
+    <title>신규 사원번호 발급 및 회원가입 승인</title>
+    <%@include file="../../common/head.jsp" %>
+    <c:url var="adminCss" value="/resources/css/user/admin_main.css"/>
+    <link href="${adminCss}" rel="stylesheet"/>
 </head>
 <body>
 <%@include file="../../common/nav.jsp" %>
-<nav class="navbarr">
-  <a href="#">전자결재</a>
-  <a href="#">업무관리</a>
-  <a href="#">업무문서함</a>
-  <a href="${pageContext.request.contextPath}/admin/dept/list">조직도</a>
-</nav>
+<%@include file="../admin_nav.jsp" %>
 <div class="container">
-  <div class="sidebar">
-    <h3>관리 기능</h3>
-    <ul>
-      <li><a href="/admin/user/approval">회원가입 승인</a> </li>
-      <li><a href="/admin/user/list">사용자 계정관리</a> </li>
-      <li><a href="/admin/user/login-history">로그인 기록</a> </li>
-      <li><a href="/admin/user/attendance-history" class="active">출퇴근 기록</a></li>
-    </ul>
-  </div>
-  <div class="main-content">
-    <h2>신규 사원번호 발급 및 회원가입 승인</h2>
-    <form class="row g-3">
-      <div class="col-md-4">
-        <label class="form-label">이름</label> <input type="text"
-                                                    class="form-control" value="홍길순" readonly>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">이메일</label> <input type="email"
-                                                     class="form-control" value="hongsoon@email.com" readonly>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">비밀번호</label> <input type="text"
-                                                      class="form-control" value="자동생성1234" readonly>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">사원번호</label> <input type="text"
-                                                      class="form-control" value="20250001">
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">부서</label> <select class="form-select">
-        <option>영업팀</option>
-        <option>개발팀</option>
-        <option>인사팀</option>
-      </select>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">직위</label> <select class="form-select">
-        <option>사원</option>
-        <option>대리</option>
-        <option>과장</option>
-        <option>차장</option>
-        <option>부장</option>
-      </select>
-      </div>
-      <div class="col-12 mt-3">
-        <button type="submit" class="btn btn-success">최종 승인</button>
-      </div>
-    </form>
-  </div>
+    <%@include file="admin_user_sidebar.jsp" %>
+    <div class="main-content">
+        <h2 class="mb-4">신규 사원 회원가입 승인</h2>
+
+        <table class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+            <tr>
+                <th>이름</th>
+                <th>이메일</th>
+                <th>사원번호</th>
+                <th>부서</th>
+                <th>직위</th>
+                <th>승인</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:forEach var="approval" items="${pendingUsers}">
+                <tr>
+                    <form action="/admin/handle-user-approval" method="post" class="align-middle">
+                        <td>${approval.user.name}</td>
+                        <td>${approval.user.email} (${approval.user.loginProvider})</td>
+                        <td>
+                            <input type="text" name="employeeNo" class="form-control form-control-sm"
+                                   placeholder="사번 입력">
+                        </td>
+                        <td>
+                            <select name="departmentId" class="form-select form-select-sm">
+                                <option value="">부서 선택</option>
+                                <c:forEach var="department" items="${departments}">
+                                    <option value="${department.departmentId}">${department.departmentName}</option>
+                                </c:forEach>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="positionNo" class="form-select form-select-sm">
+                                <option value="">직위 선택</option>
+                                <c:forEach var="position" items="${positions}">
+                                    <option value="${position.positionNo}">${position.positionName}</option>
+                                </c:forEach>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="hidden" name="userId" value="${approval.user.userId}"/>
+                            <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">승인</button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">거절</button>
+                        </td>
+                    </form>
+                </tr>
+            </c:forEach>
+            </tbody>
+        </table>
+        <table class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+            <tr>
+                <th>이름</th>
+                <th>이메일</th>
+                <th>사원번호</th>
+                <th>부서</th>
+                <th>직위</th>
+                <th>승인여부</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:forEach var="approvedUser" items="${approvedUsers}" varStatus="i">
+                <tr>
+
+                    <td>${approvedUser.user.name}</td>
+                    <td>${approvedUser.user.email} (${approvedUser.user.loginProvider})</td>
+                    <td>${approvedUser.user.employeeNo}</td>
+                    <td>${approvedUser.user.department.departmentName}</td>
+                    <td>${approvedUser.user.position.positionName}</td>
+                    <td>${approvedUser.status}</td>
+                </tr>
+            </c:forEach>
+            </tbody>
+        </table>
+    </div>
 </div>
 <%@include file="../../common/footer.jsp" %>
 </body>

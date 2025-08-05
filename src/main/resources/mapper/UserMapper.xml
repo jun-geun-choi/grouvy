@@ -235,6 +235,7 @@
 
     </insert>
 
+
     <!--List<User> searchUsers(@Param("keyword") String keyword); :키워드로 조직과 사용자를 검색합니다.-->
     <select id="searchUsers" parameterType="string" resultMap="UserResultMapWithRoleNames">
         SELECT
@@ -251,5 +252,4 @@
             )
         ORDER BY U.NAME ASC
     </select>
-
 </mapper>
