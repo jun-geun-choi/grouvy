@@ -143,7 +143,20 @@ public class ChatController {
 
     simpMessagingTemplate.convertAndSend("/topic/chatting?roomId=" + message.getRoomId(),
         chatMessage);       // 브로드 캐스트
-    simpMessagingTemplate.convertAndSendToUser(Integer.toString(userId), "/queue/messages",
-        chatMessage);    // 특정 유저에게만 이 메세지를 할당한다.
+
+    String userName = null;
+    List<ChatRoomUser> users = chatService.getChatRoomUserByRoomId(message.getRoomId());
+
+    for(ChatRoomUser user1: users) {
+      System.out.println(user1.getUser().getName());
+      if(user1.getUserId() != userId) {
+        userName = user1.getUser().getEmail();
+        simpMessagingTemplate.convertAndSendToUser(userName, "/queue/messages",
+            chatMessage);
+        //여기서 userName 스프링 시큐리티에서 username을 집어 넣어야 한다.
+      }
+    }
+
+
   }
 }

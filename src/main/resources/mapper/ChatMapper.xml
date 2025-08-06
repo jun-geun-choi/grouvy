@@ -116,6 +116,7 @@
            ,U.USER_ID           AS userId
            ,U.NAME              AS "user.name"
            ,CU.IS_ACTIVE        AS isActive
+           ,U.EMAIL             AS "user.email"
         FROM
             GROUVY_CHAT_ROOMS R, GROUVY_CHAT_ROOM_USERS CU, GROUVY_USERS U
         WHERE
@@ -152,10 +153,13 @@
             ,M.CREATED_DATE                          AS createdDate
             ,U.NAME                                  AS "user.name"
             ,U.PROFILE_IMG_PATH                      AS "user.profileImgPath"
+            ,R.ROOM_NAME                             AS "chatRoom.roomName"
+            ,R.IS_GROUP                              AS "chatRoom.isGroup"
         FROM
-            GROUVY_CHAT_MESSAGES M , GROUVY_USERS U
+            GROUVY_CHAT_MESSAGES M , GROUVY_USERS U, GROUVY_CHAT_ROOMS R
         WHERE
             M.SENDER_ID = U.USER_ID
+            AND M.ROOM_ID = R.ROOM_ID
             AND M.CHAT_MESSAGE_ID = #{chatMessageId}
     </select>
 
@@ -170,10 +174,13 @@
              ,M.CREATED_DATE                          AS createdDate
              ,U.NAME                                  AS "user.name"
              ,U.PROFILE_IMG_PATH                      AS "user.profileImgPath"
+             ,R.ROOM_NAME                             AS "chatRoom.roomName"
+             ,R.IS_GROUP                              AS "chatRoom.isGroup"
         FROM
-            GROUVY_CHAT_MESSAGES M,GROUVY_USERS U
+            GROUVY_CHAT_MESSAGES M,GROUVY_USERS U, GROUVY_CHAT_ROOMS R
         WHERE
             U.USER_ID = M.SENDER_ID
+            AND R.ROOM_ID = M.ROOM_ID
             AND M.ROOM_ID = #{roomId}
             AND M.CREATED_DATE >= (SELECT
                                        JOIN_DATE

@@ -55,11 +55,14 @@
     </div>
 </div>
 <%-- 프로필 상세 모달 종료 --%>
-
 <link rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+
 
 <script>
 
@@ -99,7 +102,8 @@
           </h2>`;
 
             for (let friend of friends) {
-              htmlContent += `
+              if(friend.profileImgpath == null) {
+                htmlContent += `
                 <div id="collapse-myDeptAccordion"
                     class="accordion-collapse collapse"
                     aria-labelledby="heading-myDeptAccordion"
@@ -109,12 +113,42 @@
                         <div class="chat_list_item"
                              data-user-id ="\${friend.userId}"
                              data-user-name="\${friend.name}">
-                            <div class="chat_avatar">\${friend.profileImgpath}</div>
+                            <div class="chat_avatar">
+                               <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
+                                    alt="기본 프로필"
+                                    class="rounded-circle profile-photo"
+                                    style="width: 40px; height: 40px; object-fit: cover;">
+                            </div>
                             <div class="chat_info">
                                 <div class="chat_name">\${friend.name}</div>
                             </div>
                         </div>
                 `;
+              }else {
+                htmlContent += `
+                <div id="collapse-myDeptAccordion"
+                    class="accordion-collapse collapse"
+                    aria-labelledby="heading-myDeptAccordion"
+                    data-bs-parent="#my-department-section">
+
+                    <div class="accordion-body p-0">
+                        <div class="chat_list_item"
+                             data-user-id ="\${friend.userId}"
+                             data-user-name="\${friend.name}">
+                            <div class="chat_avatar">
+                               <img src=""https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}""
+                                    alt="사용자 프로필 이미지"
+                                    class="rounded-circle profile-photo"
+                                    style="width: 40px; height: 40px; object-fit: cover;">
+                            </div>
+                            <div class="chat_info">
+                                <div class="chat_name">\${friend.name}</div>
+                            </div>
+                        </div>
+                `;
+              }
+
+
               /*<div class="chat_list_item"는 직원 한명 한명 어떻게 화면에 표시할지에 대한 div이다.*/
             } // for
             htmlContent += `</div></div></div>`;
@@ -258,6 +292,7 @@
   // 8.페이지 로드 시 내 부서 + 친구 리스트 렌더링
   $(document).ready(function () {
     loadMyList();
+   /* connectNoticeSocket();*/
     renderFriendsList();
   });
   /*  */

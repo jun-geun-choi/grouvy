@@ -33,7 +33,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     //메시지 브로커가 처리할 수신 경로(prefix) 설정
     // "/topic" : 여러 사용자에게 브로드캐스팅할 때 사용
     // "/queue" : 특정 사용자 1명에게 보내는 1:1 알림 등에 사용 (convertAndSendToUser)
-    brokerRegistry.enableSimpleBroker("/topic","queue");
+    brokerRegistry.enableSimpleBroker("/topic","/queue");
 
     //convertAndSendToUser() 사용 시 자동으로 "/user/{username}/queue" 형태의 경로로 라우팅
     //예: convertAndSendToUser("user123", "/queue/messages", ...) → /user/user123/queue/messages
