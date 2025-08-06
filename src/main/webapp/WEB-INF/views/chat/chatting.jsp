@@ -92,7 +92,6 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-
 <script>
   // 전역 변수 설정
   let stompClient = null;                                  //STOMP 연결에 사용할 변수
@@ -102,6 +101,7 @@
   const $chatForm = $('#chat-input-form');                 // 폼
   const $fileInput = $('#chat-file-input');                // 파일 첨부 input
   const currentRoomId = $chatTitle.data('room-id');        // data-room-id 추출
+  console.log('currentRoomId', currentRoomId);
 
   // 인증된 사용자 정보 가져오기
   let userId;
@@ -109,6 +109,7 @@
     <sec:authentication property="principal.user" var="user"/>
         userId = ${user.userId};
   </sec:authorize>
+
 
   //  웹소켓 연결 및 구독처리
   function connectWebSocket() {
@@ -125,11 +126,12 @@
         renderIncomingMessage(chatMessage);
       });
 
-      //  특정 사용자에게 온 메시지 수신
+      //이 문장 자체가, 유저 전용 큐 기능을 활용한 것이다. -> 그래서 Spring에서 로그인한 사용자를 자동 바인딩 해준다.
+      //@MassageMapping에서 username을 정확하게 작성해주면 자동으로 그 유저에게 메세지가 전달되도록 한다.
       stompClient.subscribe('/user/queue/messages', function (message) {
         const personalMessage = JSON.parse(message.body);
-        console.log('1:1 알림 메시지 수신:', personalMessage);
-        // 원하는 처리를 여기에...
+
+
       });
     });
   } // end
@@ -157,8 +159,25 @@
         }
 
         if (!isMe) {
+          let $profile = null;
+
           const $senderInfo = $('<div class="chat_sender_info"></div>');
-          const $profile = $(`<div class="chat_avatar"></div>`).text(message.profileImgPath || "🧑");
+          if(message.profileImgPath == null) {
+            $profile = $(`<div class="chat_avatar">
+                               <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
+                                    alt="기본 프로필"
+                                    class="rounded-circle profile-photo"
+                                    style="width: 40px; height: 40px; object-fit: cover;">
+                        </div>`);
+          }
+          else {
+            $profile = $(`<div class="chat_avatar">
+                               <img src=""https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}""
+                                    alt="사용자 프로필 이미지"
+                                    class="rounded-circle profile-photo"
+                                    style="width: 40px; height: 40px; object-fit: cover;">
+                        </div>`);
+          }
           const $name = $('<span class="chat_name"></span>').text(message.name);
           $senderInfo.append($profile).append($name);
           $wrapper.append($senderInfo);
@@ -189,8 +208,25 @@
     }
 
     if (!isMe) {
+      let $profile = null;
+
       const $senderInfo = $('<div class="chat_sender_info"></div>');
-      const $profile = $(`<div class="chat_avatar">\${chatMessage.profileImgPath}</div>`);
+      if(chatMessage.profileImgPath == null) {
+        $profile = $(`<div class="chat_avatar">
+                               <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
+                                    alt="기본 프로필"
+                                    class="rounded-circle profile-photo"
+                                    style="width: 40px; height: 40px; object-fit: cover;">
+                        </div>`);
+      }
+      else {
+        $profile = $(`<div class="chat_avatar">
+                               <img src="https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}"
+                                    alt="사용자 프로필 이미지"
+                                    class="rounded-circle profile-photo"
+                                    style="width: 40px; height: 40px; object-fit: cover;">
+                        </div>`);
+      }
       const $name = $(`<span class="chat_name"></span>`).text(chatMessage.name);
       $senderInfo.append($profile).append($name);
       $wrapper.append($senderInfo);
@@ -351,7 +387,13 @@
   $(function () {
     loadMessageThisRoom();
     connectWebSocket();
+
+    localStorage.setItem("currentRoomId",currentRoomId);      // 알림 기능을 위해서 localStorage에 현재 채팅방 ID를 넣는다.
+    window.onbeforeunload = function () {                     // 채팅 브라우저 창이 닫히면 현재 채팅창 번호를 null로 변경한다.
+      localStorage.removeItem("currentRoomId");
+    }
   });
+
   //$(function() {..}) 이 문장 자체가 이 jsp 페이지의 HTML 요소, 스크립트 문장을 전부 로딩이 된 후, 실행 하겠다는 뜻!
 </script>
 </body>

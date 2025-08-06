@@ -20,6 +20,10 @@ public class ChatMessageDto {
   private String name;
   private String profileImgPath;
 
+  //채팅방 정보도 같이 불러온다.
+  private String roomName;
+  private String isGroup;
+
   // 날짜 및 시간 데이터
   private String formattedDate;
   private String formattedTime;
@@ -33,6 +37,8 @@ public class ChatMessageDto {
     this.messgaeType = chatMessage.getMessageType();
     this.name = chatMessage.getUser().getName();
     this.profileImgPath = chatMessage.getUser().getProfileImgPath();
+    this.roomName = chatMessage.getChatRoom().getRoomName();
+    this.isGroup = chatMessage.getChatRoom().getIsGroup();
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월 dd일");
     SimpleDateFormat timeFormat = new SimpleDateFormat("a h시 mm분", Locale.KOREAN);

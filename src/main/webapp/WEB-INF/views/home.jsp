@@ -225,5 +225,15 @@
     </div>
 </div>
 <%@include file="common/footer.jsp" %>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
+<%@include file="chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+  // 최초 연결
+  connectNoticeSocket();
+</script>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>
 </html>
