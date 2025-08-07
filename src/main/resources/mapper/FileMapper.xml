@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.file.mapper.FileMapper">
+
+    <!-- void insertPersonalFile(FileVo file); -->
+    <insert id="insertPersonalFile" parameterType="FileVo">
+        <selectKey keyProperty="fileId"
+                   resultType="int"
+                   order="BEFORE">
+            select FILES_FILE_ID_SEQ.NEXTVAL
+            FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_FILES
+        (
+             FILE_ID
+            , OWNER_TYPE
+            , ORIGINAL_NAME
+            , STORED_NAME
+            , EXTENSION
+            , "SIZE"
+            , CATEGORY_ID
+            , UPLOADER_ID
+            , UPLOADER_DEPARTMENT_ID
+        <if test='shareStatus != null and shareStatus.equals("Y")'>
+                , SHARE_STATUS
+            </if>
+        )
+        values
+        (
+            #{fileId}
+            , #{ownerType}
+            , #{originalName}
+            , #{storedName}
+            , #{extension}
+            , #{size}
+            , #{fileCategoryId}
+            , #{uploader.userId}
+            , #{uploader.department.departmentId}
+            <if test='shareStatus != null and shareStatus.equals("Y")'>
+                , #{shareStatus}
+            </if>
+        )
+    </insert>
+
+    <!-- void insertDepartmentFile(FileVo file); -->
+    <insert id="insertDepartmentFile" parameterType="FileVo">
+        INSERT INTO GROUVY_FILES
+        (
+        FILE_ID
+        , OWNER_TYPE
+        , ORIGINAL_NAME
+        , STORED_NAME
+        , EXTENSION
+        , "SIZE"
+        , CATEGORY_ID
+        , UPLOADER_ID
+        , UPLOADER_DEPARTMENT_ID
+        )
+        values
+        (
+        FILES_FILE_ID_SEQ.NEXTVAL
+        , #{ownerType}
+        , #{originalName}
+        , #{storedName}
+        , #{extension}
+        , #{size}
+        , #{fileCategoryId}
+        , #{uploader.userId}
+        , #{uploader.department.departmentId}
+        )
+    </insert>
+
+    <!-- void insertShare(FileShare share); -->
+    <insert id="insertShare" parameterType="FileShare">
+        INSERT INTO GROUVY_FILE_SHARE
+        (
+            SHARE_ID
+            , FILE_ID
+            , FILE_OWNER_ID
+            , TARGET_USER_ID
+        )
+        VALUES
+        (
+            SHARE_SHARE_ID_SEQ.NEXTVAL
+            , #{fileId}
+            , #{fileOwnerId}
+            , #{targetUserId}
+        )
+    </insert>
+
+    <!-- List<File> getPersonalFilesByUserId(int userId); -->
+    <select id="getPersonalFilesByUserId" resultType="FileVo">
+        SELECT
+            F.FILE_ID AS fileId
+            , F.UPLOADER_ID AS "uploader.userId"
+            , U.NAME AS "uploader.name"
+            , P.POSITION_NAME AS "uploader.position.positionName"
+            , F.ORIGINAL_NAME AS originalName
+            , F.EXTENSION AS extension
+            , F."SIZE" AS "size"
+            , F.CREATED_DATE AS createdDate
+            , F.UPDATED_DATE AS updatedDate
+            , C.CATEGORY_ID AS fileCategoryId
+            , C.CATEGORY_NAME AS fileCategoryName
+            , F.SHARE_STATUS AS shareStatus
+        FROM
+            GROUVY_FILES F, GROUVY_FILE_CATEGORIES C, GROUVY_USERS U, GROUVY_POSITIONS P
+        WHERE
+            F.UPLOADER_ID = #{userId}
+            AND F.CATEGORY_ID = C.CATEGORY_ID
+            AND F.UPLOADER_ID = U.USER_ID
+            AND U.POSITION_NO = P.POSITION_NO
+            AND F.OWNER_TYPE = 'personal'
+            AND F.IS_DELETED = 'N'
+        ORDER BY
+            F.UPDATED_DATE DESC
+    </select>
+
+    <!-- List<FileVo> getDepartmentFilesByDepartmentId(int departmentId); -->
+    <select id="getDepartmentFilesByDepartmentId" resultType="FileVo">
+        SELECT
+            F.FILE_ID AS fileId
+             , F.UPLOADER_ID AS "uploader.userId"
+             , U.NAME AS "uploader.name"
+             , P.POSITION_NAME AS "uploader.position.positionName"
+             , F.ORIGINAL_NAME AS originalName
+             , F.EXTENSION AS extension
+             , F."SIZE" AS "size"
+             , F.CREATED_DATE AS createdDate
+             , F.UPDATED_DATE AS updatedDate
+             , C.CATEGORY_ID AS fileCategoryId
+             , C.CATEGORY_NAME AS fileCategoryName
+        FROM
+            GROUVY_FILES F, GROUVY_FILE_CATEGORIES C, GROUVY_USERS U, GROUVY_POSITIONS P
+        WHERE
+            F.UPLOADER_DEPARTMENT_ID = #{departmentId}
+            AND F.CATEGORY_ID = C.CATEGORY_ID
+            AND F.UPLOADER_ID = U.USER_ID
+            AND U.POSITION_NO = P.POSITION_NO
+            AND F.OWNER_TYPE = 'department'
+            AND F.IS_DELETED = 'N'
+        ORDER BY
+            F.UPDATED_DATE DESC
+    </select>
+
+
+    <!-- List<ModalUser> getModalUsers(); -->
+    <select id="getModalUsers" resultType="ModalUser">
+        SELECT
+            U.USER_ID AS userID
+            , U.EMPLOYEE_NO AS employeeNo
+            , U.NAME AS name
+            , U.PROFILE_IMG_PATH AS profileImgPath
+            , D.DEPARTMENT_ID AS departmentId
+            , D.DEPARTMENT_NAME AS departmentName
+            , P.POSITION_NO AS positionNo
+            , P.POSITION_NAME AS positionName
+        FROM
+            GROUVY_USERS U, GROUVY_DEPARTMENTS D, GROUVY_POSITIONS P
+        WHERE
+            U.DEPARTMENT_ID = D.DEPARTMENT_ID
+            and U.POSITION_NO = P.POSITION_NO
+            and U.IS_DELETED = 'N'
+        ORDER BY
+            U.DEPARTMENT_ID ASC
+            , U.POSITION_NO ASC
+
+    </select>
+    <!-- EditFileInfo getEditFileInfoWithTargetUsers(int fileId); -->
+    <resultMap id="EditFileFormMap" type="com.example.grouvy.file.dto.response.EditFileForm">
+        <id     property="fileId"           column="FILE_ID"/>
+        <result property="originalName"     column="ORIGINAL_NAME"/>
+        <result property="ownerType"        column="OWNER_TYPE"/>
+        <result property="uploaderId"        column="UPLOADER_ID"/>
+        <result property="fileCategoryId"   column="CATEGORY_ID"/>
+        <result property="shareStatus"      column="SHARE_STATUS"/>
+        <collection property="targetUserIds" ofType="java.lang.Integer">
+            <result column="TARGET_USER_ID"/>
+        </collection>
+    </resultMap>
+    <select id="getEditFileFormWithTargetUserIds" resultMap="EditFileFormMap">
+        SELECT
+        F.FILE_ID,
+        F.ORIGINAL_NAME,
+        F.OWNER_TYPE,
+        F.UPLOADER_ID,
+        F.CATEGORY_ID,
+        F.SHARE_STATUS,
+        S.TARGET_USER_ID  <!-- 항상 포함 -->
+        FROM GROUVY_FILES F
+        LEFT JOIN GROUVY_FILE_SHARE S
+        ON F.FILE_ID = S.FILE_ID
+        AND F.SHARE_STATUS = 'Y'  <!-- Y 일 때만 실제 매핑 -->
+        WHERE F.FILE_ID = #{fileId}
+    </select>
+
+    <!-- List<Category> getAllCategories(); -->
+    <select id="getAllCategories" resultType="Category">
+        SELECT
+            CATEGORY_ID AS categoryId
+            , CATEGORY_NAME AS categoryName
+        FROM
+            GROUVY_FILE_CATEGORIES
+        ORDER BY
+            CATEGORY_ID ASC
+    </select>
+
+    <!-- TargetUser getTargetUserByUserId(int userId); -->
+    <select id="getTargetUserByUserId" resultType="TargetUser">
+        SELECT
+            U.USER_ID AS userId
+            , U.NAME AS name
+            , D.DEPARTMENT_ID AS departmentId
+            , D.DEPARTMENT_NAME AS departmentName
+            , P.POSITION_NO AS positionNo
+            , P.POSITION_NAME AS positionName
+        FROM
+            GROUVY_USERS U, GROUVY_DEPARTMENTS D, GROUVY_POSITIONS P
+        WHERE
+            U.DEPARTMENT_ID = D.DEPARTMENT_ID
+            AND U.POSITION_NO = P.POSITION_NO
+            AND U.USER_ID = #{userId}
+            AND U.IS_DELETED = 'N'
+    </select>
+    <!-- List<Integer> getTargetUserIdsByFileId(int fileId); -->
+    <select id="getTargetUserIdsByFileId">
+        SELECT
+            U.USER_ID
+        FROM
+            GROUVY_USERS U, GROUVY_FILE_SHARE S
+        WHERE
+            S.FILE_ID = #{fileId}
+            AND U.USER_ID = S.TARGET_USER_ID
+
+    </select>
+
+    <!-- void deleteShareByFileIdAndTargetUserId(@Param("fileId") int fileId, @Param("targetId") int targetId); -->
+    <delete id="deleteShareByFileIdAndTargetUserId">
+        DELETE FROM GROUVY_FILE_SHARE
+        WHERE
+            TARGET_USER_ID = #{targetId}
+            AND FILE_ID = #{fileId}
+    </delete>
+
+    <!-- FileVo getFileByFileId(int fileId); -->
+    <select id="getFileByFileId" resultType="FileVo">
+        SELECT
+            FILE_ID AS fileId
+            , OWNER_TYPE AS ownerType
+            , ORIGINAL_NAME AS originalName
+            , STORED_NAME AS storedName
+            , EXTENSION AS extension
+            , "SIZE" AS "size"
+            , UPLOADER_ID AS "uploader.userId"
+            , UPLOADER_DEPARTMENT_ID AS "uploaderDepartment.departmentId"
+            , CATEGORY_ID AS fileCategoryId
+            , IS_DELETED AS isDeleted
+            , CREATED_DATE AS createdDate
+            , UPDATED_DATE AS updatedDate
+            , SHARE_STATUS AS shareStatus
+        FROM
+            GROUVY_FILES
+        WHERE
+            FILE_ID = #{fileId}
+    </select>
+
+    <!-- void updateFile(FileVo file); -->
+    <update id="updateFile" parameterType="FileVo">
+        UPDATE GROUVY_FILES
+        SET
+            OWNER_TYPE = #{ownerType}
+            , UPLOADER_DEPARTMENT_ID = #{uploaderDepartment.departmentId}
+            , CATEGORY_ID = #{fileCategoryId}
+            , IS_DELETED = #{isDeleted}
+            , UPDATED_DATE = SYSDATE
+            , SHARE_STATUS = #{shareStatus}
+        where
+            FILE_ID = #{fileId}
+    </update>
+    <!-- List<shareInFile> getSharedInFilesByTargetId(int userId); -->
+    <select id="getSharedInFilesByTargetId" resultType="shareInFile">
+        SELECT
+            F.FILE_ID AS fileId
+            , S.SHARE_ID AS shareId
+            , F.ORIGINAL_NAME AS originalName
+            , F.EXTENSION AS extension
+            , F."SIZE" AS "size"
+            , U.USER_ID AS "uploader.userId"
+            , P.POSITION_NAME AS "uploader.position.positionName"
+            , U.NAME AS "uploader.name"
+            , F.CATEGORY_ID AS categoryId
+            , C.CATEGORY_NAME AS categoryName
+            , S.CREATED_DATE AS shareCreatedDate
+        FROM
+            GROUVY_FILES F, GROUVY_FILE_SHARE S, GROUVY_USERS U, GROUVY_POSITIONS P, GROUVY_FILE_CATEGORIES C
+        WHERE
+            F.FILE_ID = S.FILE_ID
+            AND F.UPLOADER_ID = U.USER_ID
+            AND U.POSITION_NO = P.POSITION_NO
+            AND F.CATEGORY_ID = C.CATEGORY_ID
+            AND S.TARGET_USER_ID = #{userId}
+    </select>
+
+    <!--List<Trash> getTrashByUserId(int userId);-->
+    <select id="getTrashByUserId" resultType="Trash">
+        SELECT
+            T.TRASH_ID AS trashId
+            , F.FILE_ID AS "file.fileId"
+            , F.OWNER_TYPE AS "file.ownerType"
+            , T.DELETED_DATE AS deletedDate
+            , T.RESTORED_DATE AS restoredDate
+            , C.CATEGORY_ID AS "file.filecategoryId"
+            , C.CATEGORY_NAME AS "file.filecategoryName"
+            , F.ORIGINAL_NAME AS "file.originalName"
+            , F."SIZE" AS "file.size"
+            , F.EXTENSION AS "file.extension"
+        FROM
+            GROUVY_FILES F, GROUVY_FILE_TRASH T, GROUVY_FILE_CATEGORIES C
+        WHERE
+            F.FILE_ID = T.FILE_ID
+            AND F.CATEGORY_ID = C.CATEGORY_ID
+            AND F.UPLOADER_ID = #{userId}
+            AND F.IS_DELETED = 'Y'
+    </select>
+
+    <!--void insertTrash(Trash trash);-->
+    <insert id="insertTrash" parameterType="Trash">
+        INSERT INTO GROUVY_FILE_TRASH
+        (
+            TRASH_ID
+            , FILE_ID
+        )
+        VALUES
+        (
+            TRASH_TRASH_ID_SEQ.NEXTVAL
+            , #{file.fileId}
+        )
+    </insert>
+    <!-- Trash getTrashByTrashId(Integer trashId); -->
+    <select id="getTrashByTrashId" resultType="Trash">
+        SELECT
+            T.TRASH_ID AS trashID
+            , F.FILE_ID AS "file.fileId"
+            , F.OWNER_TYPE AS "file.ownerType"
+            , F.STORED_NAME AS "file.storedName"
+            , T.DELETED_DATE AS deletedDate
+            , T.RESTORED_DATE AS restoredDate
+        FROM
+            GROUVY_FILE_TRASH T, GROUVY_FILES F
+        WHERE
+            T.FILE_ID = F.FILE_ID
+            AND TRASH_ID = #{trashId}
+    </select>
+
+    <!--void deleteTrash(int trashId);-->
+    <delete id="deleteTrash">
+        DELETE FROM GROUVY_FILE_TRASH
+        WHERE TRASH_ID = #{trashId}
+    </delete>
+
+    <!--void deleteFile(int fileId);-->
+    <delete id="deleteFile">
+        DELETE FROM GROUVY_FILES
+        WHERE FILE_ID = #{fileId}
+    </delete>
+</mapper>

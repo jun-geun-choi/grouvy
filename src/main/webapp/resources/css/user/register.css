@@ -38,3 +38,19 @@ body {
     color: #fff;
     font-weight: 500;
 }
+
+.btn-grouvy-check {
+    background-color: #e6002d;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-grouvy-check:hover {
+    background-color: #b80024;
+    color: white;
+}

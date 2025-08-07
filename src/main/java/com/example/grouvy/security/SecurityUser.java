@@ -1,12 +1,10 @@
 package com.example.grouvy.security;
 
 import com.example.grouvy.user.vo.User;
-import lombok.Getter;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-
 import java.util.Collection;
 
 public class SecurityUser implements UserDetails {
@@ -36,12 +34,17 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return "N".equals(user.getIsDeleted());
+        boolean isEnabled = "퇴사".equals(user.getEmploymentStatus());
+        return !isEnabled;
     }
 
     public User getUser() {
         return user;
     }
 
+    // 부서명쓸일이 있어서 - 천지훈
+    public String getDepartmentName() {
+        return user.getDepartment().getDepartmentName();
+    }
 
 }

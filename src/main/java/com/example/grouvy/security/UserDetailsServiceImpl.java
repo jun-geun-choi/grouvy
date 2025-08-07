@@ -13,14 +13,13 @@ import org.springframework.stereotype.Service;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserMapper userMapper;
-
+  
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userMapper.getUserByUsernameWithRoleNames(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userMapper.findUserByEmailWithRoleNames(email);
         if (user == null) {
             throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
         }
-
         return new SecurityUser(user);
     }
 
