@@ -21,9 +21,10 @@ public interface AdminUserMapper {
     List<UserApproval> getAllPendingUsers();
     List<UserApproval> getAllApprovedUsers();
     void updatePendingUser(@Param("userId") int userId, @Param("status") String status);
-    void updateUser(User user);
+    void activateUser(User user);
     void insertUserRole(UserRole userRole);
 
-    void deletePendingUser(int userId);
+    void inactivateUser(int userId);
+    void updateUserInfo(User user);
 
 }

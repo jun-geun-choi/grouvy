@@ -1,6 +1,8 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -631,13 +633,22 @@ footer {
             <!-- 기능 페이지 -->
             <div class="main-content">
                 <h2>파일 업로드</h2>
+                <!-- 여기에 부서·이름·직급 표시 -->
+                <sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
+                <sec:authentication property="principal.user.name"           var="name"/>
+                <sec:authentication property="principal.user.position.positionName"   var="positionName"/>
+
+                <div class="user-info"
+                     style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
+                    ${departmentName}  ${name}  ${positionName}
+                </div>
                 
                 <form method="post" action="/file/form" class="upload-form" enctype="multipart/form-data">
                     <div class="form-group box-type-group">
                         <label class="form-label fw-bold mb-1 box-type-label">문서함 선택</label>
                         <div class="box-type-row">
                         <div class="form-check custom-box-type-check">
-                            <input class="form-check-input" type="radio" id="personal-box" name="ownerType" value="personal" checked>
+                            <input class="form-check-input" type="radio" id="personal-box" name="ownerType" value="personal">
                             <label class="form-check-label" for="personal-box">개인업무 문서함</label>
                         </div>
                         <div class="form-check custom-box-type-check">
@@ -649,7 +660,7 @@ footer {
                     <div class="form-group">
                         <label for="upload-area">파일 선택 📁</label>
 
-                        <input type="file" class="form-control" name="file" />
+                        <input type="file" class="form-control" name="file" required/>
                         <div id="selected-files" class="selected-files" style="display: none;">
                             <h4>선택된 파일</h4>
                             <div id="file-list"></div>
@@ -658,8 +669,8 @@ footer {
                     
                     <div class="form-group">
                         <label for="category">카테고리</label>
-                        <select id="category" name="fileCategoryId">
-                            <option disabled selected>카테고리 선택</option>
+                        <select id="category" name="fileCategoryId" required>
+                            <option value="" disabled selected>카테고리 선택</option>
                             <c:forEach var="category" items="${categories}" >
                                 <option value="${category.categoryId}" <c:if test="${file.fileCategoryId eq category.categoryId}">selected</c:if>>${category.categoryName}</option>
                             </c:forEach>
@@ -682,7 +693,7 @@ footer {
                     
                     
                     <div class="form-actions">
-                        <button class="btn-primary" onclick="uploadFiles()">저장</button>
+                        <button type="button" class="btn-primary" onclick="uploadFiles()">저장</button>
                         <button type="button" class="btn-secondary" onclick="history.back()">취소</button>
                     </div>
                 </form>
@@ -703,6 +714,8 @@ footer {
     </div>
 
     <footer>© 2025 그룹웨어 Corp.</footer>
+
+    <sec:authentication property="principal.user.userId" var="uploadUserId"/>
 
     <script>
 let shareTargets = [];
@@ -800,24 +813,36 @@ function loadUsers() {
         }
         $("#share-target-org-tree").html(htmlContent);
 
+        const uploadUserId = '${uploadUserId}';
         // 직원 li 클릭 이벤트 바인딩
         $("#share-target-org-tree .org-emp").off('click').on('click', function() {
             const userId = $(this).data('user-id');
-            const info = $(this).text();
+            const info   = $(this).text().trim();
+            const $list  = $('#share-target-list');
+            $(this).text();
             const shareTargetList = $('#share-target-list');
-            // 이미 추가된 경우 중복 추가 방지 (userId 기준)
-            if (shareTargetList.find(`input[name='targetUserIds'][value='\${userId}']`).length) return;
+
+            // === 본인 선택 방지 ===
+            if (String(userId) === String(uploadUserId)) {
+                alert('공유 대상에 본인을 지정할 수 없습니다.');
+                return;
+            }
+
+            // 이미 추가된 경우 중복 방지
+            if ($list.find(`input[name="targetUserIds"][value="\${userId}"]`).length) {
+                return;
+            }
+
             // 태그 생성
-            const tag =
-                $(`
-                    <span class="assignee-tag">\${info}
-                        <button type="button" class="remove-assignee-btn">×</button>
-                        <input type="hidden" name="targetUserIds" value="\${userId}">
-                    </span>`);
-            // 삭제 버튼 이벤트
-            tag.find('.remove-assignee-btn').on('click', function() { tag.remove(); });
-            shareTargetList.append(tag);
-            // 모달 닫기
+            const $tag = $(`
+            <span class="assignee-tag" data-name="\${info}">
+              \${info}
+              <button type="button" class="remove-assignee-btn">×</button>
+              <input type="hidden" name="targetUserIds" value="\${userId}">
+            </span>`);
+            $tag.find('.remove-assignee-btn').on('click', () => $tag.remove());
+            $list.append($tag);
+
             $('#share-target-modal').hide();
         });
     })
@@ -842,6 +867,37 @@ closeShareTargetModalBtn.addEventListener('click', () => {
 $('#share-target-list').on('click', '.remove-assignee-btn', function() {
     $(this).closest('.assignee-tag').remove();
 });
+function uploadFiles() {
+    const form = document.querySelector('.upload-form');
+    // 1) 카테고리: required 속성으로도 걸리지만, 추가로 JS에서 확인 가능
+    const category = form.querySelector('#category');
+    if (!category.value) {
+        alert('카테고리를 선택해주세요.');
+        category.focus();
+        return;
+    }
+
+    // 2) 파일 선택: required 속성이 있으나, 호환성을 위해 JS 검증
+    const fileInput = form.querySelector('input[name="file"]');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('업로드할 파일을 선택해주세요.');
+        fileInput.focus();
+        return;
+    }
+
+    // 3) 공유함 체크 시 공유 대상 최소 1명
+    const shareCheck = document.getElementById('share-check');
+    if (shareCheck.checked) {
+        const targets = form.querySelectorAll('#share-target-list input[name="targetUserIds"]');
+        if (targets.length === 0) {
+            alert('공유 대상은 최소 1명 이상 선택해야 합니다.');
+            return;
+        }
+    }
+
+    // 모두 통과하면 제출
+    form.submit();
+}
     </script>
 
 </body>

@@ -1,6 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+
+
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -443,6 +447,33 @@ footer {
 <body>
 <%@include file="../common/nav.jsp" %>
 
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="index.html"> 
+                <span class="logo-crop"> 
+                    <img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
+                </span>
+            </a>
+            <ul class="navbar-nav mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="#">전자결재</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#">업무문서함</a></li>
+                <li class="nav-item"><a class="nav-link" href="/task/todo">업무 관리</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
+                <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <a href="mypage.html" >
+                    <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
+                            alt="프로필" class="rounded-circle" width="36" height="36">
+                </a>
+                <a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
+            </div>
+        </div>
+    </nav>
+
 
     <main>
         <div class="container">
@@ -452,7 +483,7 @@ footer {
         <div class="sidebar-section">
             <div class="sidebar-section-title">개인업무 문서함</div>
             <ul class="sidebar-list">
-                <li>
+                <li class="active">
                 <a href="/file/personal" class="sidebar-link">파일 목록</a>
                 </li>
             </ul>
@@ -481,6 +512,15 @@ footer {
             <!-- 기능 페이지 -->
             <div class="main-content">
                 <h2>개인업무 문서함</h2>
+                <!-- 여기에 부서·이름·직급 표시 -->
+                <sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
+                <sec:authentication property="principal.user.name"           var="name"/>
+                <sec:authentication property="principal.user.position.positionName"   var="positionName"/>
+
+                <div class="user-info"
+                     style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
+                    ${departmentName}  ${name}  ${positionName}
+                </div>
                 
                 <div class="file-search-box">
                 <div class="file-search-group">
@@ -532,7 +572,7 @@ footer {
                             <a href="/file/form" class="btn search-btn">업로드</a>
                             <input type="file" id="file-input" style="display:none" multiple>
                             <!-- 선택한 파일 편집 -->
-                            <button type="button" class="btn edit-btn" id="edit-btn">파일편집</button>
+                            <button type="button" class="btn edit-btn" id="edit-btn">파일정보 편집</button>
 
                             <!-- 선택 파일 삭제 -->
                             <button type="submit" class="btn search-btn" id="delete-btn">삭제</button>
@@ -552,6 +592,11 @@ footer {
                             </tr>
                         </thead>
                         <tbody>
+                        <fmt:formatDate
+                                value="${now}"
+                                pattern="yyyyMMdd"
+                                timeZone="Asia/Seoul"
+                                var="today" />
                             <c:forEach var="file" items="${files}" varStatus="status">
                                 <tr data-file-id="${status.count}">
                                     <td><input type="checkbox" name="fileIds" value="${file.fileId}"></td>
@@ -565,8 +610,49 @@ footer {
                                         <td>공유안함</td>
                                     </c:if>
 
-                                    <td>${file.size} byte</td>
-                                    <td>${file.createdDate}</td>
+                                    <td>
+                                        <c:set var="size" value="${file.size}" />
+
+                                        <c:choose>
+                                            <c:when test="${size < 1024}">
+                                                ${size} byte
+                                            </c:when>
+
+                                            <c:when test="${size < 1024 * 1024}">
+                                                <fmt:formatNumber
+                                                        value="${size / 1024.0}"
+                                                        maxFractionDigits="2" /> KB
+                                            </c:when>
+
+                                            <c:otherwise>
+                                                <fmt:formatNumber
+                                                        value="${size / (1024.0 * 1024.0)}"
+                                                        maxFractionDigits="2" /> MB
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <fmt:formatDate
+                                                value="${file.createdDate}"
+                                                pattern="yyyyMMdd"
+                                                timeZone="Asia/Seoul"
+                                                var="fileDate" />
+
+                                        <c:choose>
+                                            <c:when test="${fileDate == today}">
+                                                <fmt:formatDate
+                                                        value="${file.createdDate}"
+                                                        pattern="HH:mm"
+                                                        timeZone="Asia/Seoul" />
+                                            </c:when>
+                                            <c:otherwise>
+                                                <fmt:formatDate
+                                                        value="${file.createdDate}"
+                                                        pattern="yyyy-MM-dd"
+                                                        timeZone="Asia/Seoul" />
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
                                 </tr>
 
                             </c:forEach>
@@ -605,12 +691,6 @@ footer {
         window.location.href = '/file/edit?fileId=' + fileId;
     });
 
-
-// 즐겨찾기 토글 함수
-function toggleFavorite(fileName) {
-    favorites[fileName] = !favorites[fileName];
-    renderTable();
-}
 
 // 전역 함수 등록
 window.toggleFavorite = toggleFavorite;

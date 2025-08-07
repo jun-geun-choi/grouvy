@@ -1,6 +1,5 @@
-package com.example.grouvy.file.vo;
+package com.example.grouvy.task.vo;
 
-import com.example.grouvy.department.vo.Department;
 import com.example.grouvy.user.vo.User;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,25 +10,19 @@ import java.util.Date;
 
 @Getter
 @Setter
-@Alias("FileVo")
-public class FileVo {
+@Alias("TaskFile")
+public class TaskFile {
     private int fileId;
-    private String ownerType;
+    private int taskId;
     private String originalName;
     private String storedName;
     private String extension;
     private int size;
+    private User uploadeUser;
+    private int uploadUserId;
     private String isDeleted;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdDate;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updatedDate;
-    private String shareStatus;
-
-    private int fileCategoryId;
-    private String fileCategoryName;
-
-    private User uploader;
-    private Department uploaderDepartment;
-
 }

@@ -2,6 +2,7 @@ package com.example.grouvy.user.service;
 
 import com.example.grouvy.department.vo.Department;
 import com.example.grouvy.user.dto.UserApprovalRequest;
+import com.example.grouvy.user.dto.UserUpdateRequest;
 import com.example.grouvy.user.mapper.AdminUserMapper;
 import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.*;
@@ -57,7 +58,7 @@ public class AdminUserService {
                 .positionNo(request.getPositionNo())
                 .departmentId(request.getDepartmentId())
                 .build();
-        adminUserMapper.updateUser(updatedUser);
+        adminUserMapper.activateUser(updatedUser);
 
         // 사원 유저 권한 부여
         UserRole newUserRole = UserRole.builder().userId(request.getUserId()).build();
@@ -68,14 +69,23 @@ public class AdminUserService {
     };
 
     public void rejectUser(UserApprovalRequest request) {
-        adminUserMapper.deletePendingUser(request.getUserId());
-
+        adminUserMapper.inactivateUser(request.getUserId());
         adminUserMapper.updatePendingUser(request.getUserId(), "반려");
 
     }
 
     public List<UserApproval> getAllApprovedUsers() {
         return adminUserMapper.getAllApprovedUsers();
+    }
+
+    public void updateUserInfo(UserUpdateRequest request) {
+        User foundUser = userMapper.findByUserId(request.getUserId());
+        User updatedUser = foundUser.toBuilder()
+                .departmentId(request.getDepartmentId())
+                .positionNo(request.getPositionNo())
+                .employmentStatus(request.getEmploymentStatus())
+                .build();
+        adminUserMapper.updateUserInfo(updatedUser);
     }
 
 }

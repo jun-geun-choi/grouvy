@@ -3,15 +3,15 @@
 <mapper namespace="com.example.grouvy.user.mapper.AdminUserMapper">
 
     <resultMap id="LoginHistoryMap" type="LoginHistory">
-        <id column="login_history_id" property="loginHistoryId" />
-        <result column="user_id" property="userId" />
-        <result column="ip_address" property="ipAddress" />
-        <result column="login_time" property="loginTime" />
-        <result column="login_status" property="loginStatus" />
+        <id column="login_history_id" property="loginHistoryId"/>
+        <result column="user_id" property="userId"/>
+        <result column="ip_address" property="ipAddress"/>
+        <result column="login_time" property="loginTime"/>
+        <result column="login_status" property="loginStatus"/>
 
-        <association property="user" javaType="User" >
-            <id column="user_id" property="userId" />
-            <result column="employee_no" property="employeeNo" />
+        <association property="user" javaType="User">
+            <id column="user_id" property="userId"/>
+            <result column="employee_no" property="employeeNo"/>
             <result column="name" property="name"/>
             <result column="email" property="email"/>
 
@@ -36,7 +36,7 @@
     </select>
 
     <!--  List<User> getAllUsers();  -->
-    <select id="getAllUsers" resultMap="com.example.grouvy.user.mapper.UserMapper.UserResultMapWithRoleNames" >
+    <select id="getAllUsers" resultMap="com.example.grouvy.user.mapper.UserMapper.UserResultMapWithRoleNames">
         SELECT U.USER_ID,
                U.DEPARTMENT_ID,
                U.EMPLOYEE_NO,
@@ -65,13 +65,13 @@
         FROM GROUVY_USERS U
                  LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
                  LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
-        ORDER BY
-            U.EMPLOYEE_NO DESC
+        WHERE U.APPROVAL_STATUS = 'APPROVED'
+        ORDER BY U.EMPLOYEE_NO DESC
     </select>
 
     <!-- List<Position> getAllPositions(); -->
     <select id="getAllPositions" resultType="Position">
-        SELECT POSITION_NO positionNo
+        SELECT POSITION_NO   positionNo
              , POSITION_NAME positionName
         FROM GROUVY_POSITIONS
 
@@ -79,7 +79,7 @@
 
     <!-- List<Department> getAllDepartments(); -->
     <select id="getAllDepartments" resultType="Department">
-        SELECT DEPARTMENT_ID departmentId
+        SELECT DEPARTMENT_ID   departmentId
              , DEPARTMENT_NAME departmentName
         FROM GROUVY_DEPARTMENTS
         WHERE IS_DELETED = 'N'
@@ -87,7 +87,8 @@
     </select>
 
     <!-- User getUserById(int userId); -->
-    <select id="getUserById" parameterType="int" resultMap="com.example.grouvy.user.mapper.UserMapper.UserResultMapWithRoleNames">
+    <select id="getUserById" parameterType="int"
+            resultMap="com.example.grouvy.user.mapper.UserMapper.UserResultMapWithRoleNames">
         SELECT U.USER_ID,
                U.DEPARTMENT_ID,
                U.EMPLOYEE_NO,
@@ -116,12 +117,11 @@
         FROM GROUVY_USERS U
                  LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
                  LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
-        WHERE
-            U.USER_ID = #{userId}
+        WHERE U.USER_ID = #{userId}
     </select>
 
     <!-- void insertUser(int userId); -->
-    <insert id="insertPendingUser" parameterType="UserApproval" >
+    <insert id="insertPendingUser" parameterType="UserApproval">
         <selectKey keyProperty="approvalId"
                    resultType="int"
                    order="BEFORE">
@@ -129,9 +129,9 @@
             FROM DUAL
         </selectKey>
         INSERT INTO GROUVY_USER_APPROVALS
-            (APPROVAL_ID, USER_ID)
+        (APPROVAL_ID, USER_ID)
         VALUES
-            (#{approvalId}, #{userId})
+        (#{approvalId}, #{userId})
 
     </insert>
 
@@ -149,7 +149,7 @@
             <result property="employeeNo" column="employee_no"/>
             <result property="departmentId" column="department_id"/>
             <result property="positionNo" column="position_no"/>
-            <result property="loginProvider" column="login_provider" />
+            <result property="loginProvider" column="login_provider"/>
 
             <association property="department" javaType="Department">
                 <id property="departmentId" column="department_id"/>
@@ -161,10 +161,10 @@
                 <result property="positionName" column="position_name"/>
             </association>
 
-<!--            <collection property="roleNames"-->
-<!--                        column="user_id"-->
-<!--                        ofType="string"-->
-<!--                        select="com.example.grouvy.user.mapper.UserMapper.findRoleNamesByUserId"/>-->
+            <!--            <collection property="roleNames"-->
+            <!--                        column="user_id"-->
+            <!--                        ofType="string"-->
+            <!--                        select="com.example.grouvy.user.mapper.UserMapper.findRoleNamesByUserId"/>-->
         </association>
     </resultMap>
 
@@ -194,24 +194,24 @@
 
     </select>
 
-    <!-- void updateUser(User user); -->
-    <update id="updateUser" parameterType="User">
+    <!-- void activateUser(User user); -->
+    <update id="activateUser" parameterType="User">
         UPDATE GROUVY_USERS
-        SET EMPLOYEE_NO   = #{employeeNo}
-          , DEPARTMENT_ID = #{departmentId}
-          , POSITION_NO   = #{positionNo}
-          , UPDATED_DATE  = SYSDATE
+        SET EMPLOYEE_NO       = #{employeeNo}
+          , DEPARTMENT_ID     = #{departmentId}
+          , POSITION_NO       = #{positionNo}
+          , UPDATED_DATE      = CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'
+          , APPROVAL_STATUS   = 'APPROVED'
+          , EMPLOYMENT_STATUS = '재직'
         WHERE USER_ID = #{userId}
     </update>
 
     <!-- void updatePendingUser(@Param("userId") int userId, @Param("status") String status); -->
     <update id="updatePendingUser">
         UPDATE GROUVY_USER_APPROVALS
-        SET
-            STATUS = #{status}
-            , UPDATED_DATE = SYSDATE
-        WHERE
-            USER_ID = #{userId}
+        SET STATUS       = #{status}
+          , UPDATED_DATE = CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'
+        WHERE USER_ID = #{userId}
     </update>
 
     <!-- void updateUserRole(int userId); -->
@@ -248,11 +248,21 @@
 
     </select>
 
-    <!-- void deletePendingUser(int userId); -->
-    <delete id="deletePendingUser" parameterType="int" >
-        DELETE FROM GROUVY_USERS
+    <!-- void inactivateUser(int userId); -->
+    <update id="inactivateUser" parameterType="int">
+        UPDATE GROUVY_USERS
+        SET APPROVAL_STATUS = 'REJECTED'
         WHERE USER_ID = #{userId}
+    </update>
 
-    </delete>
+    <!-- void updateUserInfo(User user); -->
+    <update id="updateUserInfo" parameterType="User">
+        UPDATE GROUVY_USERS
+        SET DEPARTMENT_ID     = #{departmentId}
+          , POSITION_NO       = #{positionNo}
+          , EMPLOYMENT_STATUS = #{employmentStatus}
+          , UPDATED_DATE      = CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'
+        WHERE USER_ID = #{userId}
+    </update>
 
 </mapper>
