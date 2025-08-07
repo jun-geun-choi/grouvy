@@ -42,5 +42,10 @@ public class SecurityUser implements UserDetails {
         return user;
     }
 
+    // 부서명쓸일이 있어서 - 천지훈
+    public String getDepartmentName() {
+        return user.getDepartment().getDepartmentName();
+    }
+
 
 }

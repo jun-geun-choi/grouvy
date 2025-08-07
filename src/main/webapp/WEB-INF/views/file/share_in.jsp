@@ -1,6 +1,8 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -460,7 +462,7 @@ footer {
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">공유받은 파일함</div>
                     <ul class="sidebar-list">
-                        <li><a href="/file/share" class="sidebar-link">파일 목록</a></li>
+                        <li class="active"><a href="/file/share" class="sidebar-link">파일 목록</a></li>
                     </ul>
                 </div>
                 <div class="sidebar-section">
@@ -471,6 +473,15 @@ footer {
             <!-- 기능 페이지 -->
             <div class="main-content">
                 <h2>공유받은 파일함</h2>
+                <!-- 여기에 부서·이름·직급 표시 -->
+                <sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
+                <sec:authentication property="principal.user.name"           var="name"/>
+                <sec:authentication property="principal.user.position.positionName"   var="positionName"/>
+
+                <div class="user-info"
+                     style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
+                    ${departmentName}  ${name}  ${positionName}
+                </div>
                 
                 <div class="file-search-box">
                 <div class="file-search-group">
@@ -506,7 +517,7 @@ footer {
                 
                 <form id="delete-form" method="post" action="/file/share_delete">
                     <div class="file-list-header">
-                        <span class="file-list-title">공유받은 파일 목록</span>
+                        <span class="file-list-title">파일 목록</span>
                         <div class="file-list-actions">
                             <button type="submit" id="delete-btn" class="btn search-btn">삭제</button>
                         </div>
@@ -523,14 +534,60 @@ footer {
                             </tr>
                         </thead>
                         <tbody>
+                        <fmt:formatDate
+                                value="${now}"
+                                pattern="yyyyMMdd"
+                                timeZone="Asia/Seoul"
+                                var="today" />
                         <c:forEach var="file" items="${files}">
                             <tr data-file-id="${file.fileId}">
                                 <td><input type="checkbox" name="fileIds" value="${file.fileId}"></td>
                                 <td>${file.categoryName}</td>
                                 <td><a href="/file/download?fileId=${file.fileId}">${file.originalName}</a></td>
                                 <td>${file.uploader.name} ${file.uploader.position.positionName}</td>
-                                <td>${file.size} byte</td>
-                                <td>${file.shareCreatedDate}</td>
+                                <td>
+                                    <c:set var="size" value="${file.size}" />
+
+                                    <c:choose>
+                                        <c:when test="${size < 1024}">
+                                            ${size} byte
+                                        </c:when>
+
+                                        <c:when test="${size < 1024 * 1024}">
+                                            <fmt:formatNumber
+                                                    value="${size / 1024.0}"
+                                                    maxFractionDigits="2" /> KB
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            <fmt:formatNumber
+                                                    value="${size / (1024.0 * 1024.0)}"
+                                                    maxFractionDigits="2" /> MB
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td>
+                                    <fmt:formatDate
+                                            value="${file.shareCreatedDate}"
+                                            pattern="yyyyMMdd"
+                                            timeZone="Asia/Seoul"
+                                            var="shareDate" />
+
+                                    <c:choose>
+                                        <c:when test="${shareDate == today}">
+                                            <fmt:formatDate
+                                                    value="${file.shareCreatedDate}"
+                                                    pattern="HH:mm"
+                                                    timeZone="Asia/Seoul" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <fmt:formatDate
+                                                    value="${file.shareCreatedDate}"
+                                                    pattern="yyyy-MM-dd"
+                                                    timeZone="Asia/Seoul" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
                             </tr>
                         </c:forEach>
 

@@ -33,6 +33,7 @@ public class  FileController {
     public void Categories(Model model) {
         List<Category> categories = fileService.getAllCategories();
         model.addAttribute("categories", categories);
+        model.addAttribute("now", new java.util.Date());
     }
 
     @PostMapping("/delete")
