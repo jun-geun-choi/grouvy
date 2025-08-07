@@ -31,9 +31,8 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
                         .requestMatchers("/login", "/register", "register/**").permitAll()
                         .requestMatchers("/resources/**").permitAll()
-//                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/admin/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().hasAnyRole("USER",  "ADMIN")
                 )
                 .formLogin(formLogin -> formLogin
                         .usernameParameter("email")
