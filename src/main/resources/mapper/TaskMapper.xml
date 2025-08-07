@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.task.mapper.TaskMapper">
+
+    <!--List<ModalFile> getAllFilesByUserId(int userId);-->
+    <select id="getAllFilesByUserId" resultType="ModalFile">
+        SELECT
+            F.FILE_ID AS fileId
+            , F.OWNER_TYPE AS ownerType
+            , F.ORIGINAL_NAME AS originalName
+            , F."SIZE" AS "size"
+            , C.CATEGORY_NAME AS categoryName
+            , F.CREATED_DATE AS createdDate
+        FROM
+            GROUVY_FILES F
+                JOIN GROUVY_FILE_CATEGORIES C
+                     ON F.CATEGORY_ID = C.CATEGORY_ID
+                JOIN GROUVY_USERS U
+                    ON F.UPLOADER_ID = U.USER_ID
+        WHERE
+            (
+                F.UPLOADER_ID = #{userId}
+                    OR
+                F.OWNER_TYPE = 'department'
+                    AND F.UPLOADER_DEPARTMENT_ID = U.DEPARTMENT_ID
+            )
+            AND F.IS_DELETED = 'N'
+        ORDER BY
+            F.OWNER_TYPE DESC
+            , F.CREATED_DATE DESC
+    </select>
+
+    <!--  void insertTask(TaskVo task);  -->
+    <insert id="insertTask" parameterType="TaskVo">
+    <selectKey keyProperty="taskId"
+               resultType="int"
+               order="BEFORE">
+            SELECT TASKS_TASK_ID_SEQ.NEXTVAL
+            FROM DUAL
+    </selectKey>
+        INSERT INTO GROUVY_TASKS
+            (
+             TASK_ID, WRITER_ID, TITLE, "CONTENT", "TYPE", DUE_DATE, STATUS
+            )
+        VALUES
+            (
+            #{taskId}, #{writerId}, #{title}, #{content}, #{type}, #{dueDate}, '등록됨'
+            )
+    </insert>
+    <!--  void insertReceiver(TaskReceiver taskReceiver);  -->
+    <insert id="insertReceiver" parameterType="TaskReceiver">
+        INSERT INTO GROUVY_TASK_RECEIVERS
+            (
+             TASK_ID, TARGET_USER_ID, ROLE
+            )
+        VALUES
+            (
+             #{taskId}, #{targetUserId}, #{role}
+            )
+    </insert>
+
+    <!-- void insertTaskFile(TaskFile taskFile); -->
+    <insert id="insertTaskFile" parameterType="TaskFile">
+        INSERT INTO GROUVY_TASK_FILES
+            (
+             FILE_ID, ORIGINAL_NAME, STORED_NAME, EXTENSION, "SIZE", TASK_ID, UPLOADER_ID
+            )
+        VALUES
+            (
+             TASK_FILES_FILE_ID_SEQ.nextval, #{originalName}, #{storedName}, #{extension}, #{size}, #{taskId}, #{uploadUserId}
+            )
+    </insert>
+
+
+    <!--List<Todo> getTodosByUserId(int userId);-->
+    <select id="getTodosByUserId" resultType="Todo">
+        SELECT
+            TASK_ID AS taskId
+            , TITLE AS title
+            , CREATED_DATE AS createdDate
+            , DUE_DATE AS dueDate
+            , STATUS AS status
+        FROM
+            GROUVY_TASKS
+        WHERE
+            WRITER_ID = #{userId}
+            AND TYPE = 'todo'
+            AND IS_DELETED = 'N'
+        ORDER BY
+            CREATED_DATE DESC
+    </select>
+
+    <!--ReceiveUserFeedback getReceiveUserFeedbackByTaskId(int taskId);-->
+    <select id="getReceiveUserFeedbackByTaskId" resultType="ReceiveUserFeedback">
+        SELECT
+            TASK_ID AS taskId
+            , UPDATED_DATE AS updatedDate
+            , PROGRESS_PERCENT AS progressPercent
+            , "COMMENT" AS "comment"
+        FROM
+            GROUVY_TASK_RECEIVERS
+        WHERE
+            TASK_ID = #{taskId}
+            AND ROLE = 'receive'
+    </select>
+
+    <!--TaskDetail getTaskDetailByTaskId(int taskId);-->
+    <select id="getTaskDetailByTaskId">
+--         taskId, status, writerId, writerName, writerPositionName, created, updated, due,
+--                 receiveUserId, receiveUserName, receiveUserPositionName, content
+        SELECT
+            T.TASK_ID AS taskId
+            , T.TITLE AS title
+            , T.TYPE AS type
+            , T.STATUS AS status
+            , T.WRITER_ID AS writerId
+            , U1.NAME AS writerName
+            , P1.POSITION_NAME AS writerPositionName
+            , T.CREATED_DATE AS createdDate
+            , T.UPDATED_DATE AS updatedDate
+            , T.DUE_DATE AS dueDate
+            , R.TARGET_USER_ID AS receiveUserId
+            , U2.NAME AS receiveUserName
+            , P2.POSITION_NAME AS receiveUserPositionName
+            , T.CONTENT AS content
+        FROM GROUVY_TASKS T, GROUVY_USERS U1, GROUVY_USERS U2, GROUVY_POSITIONS P1, GROUVY_POSITIONS P2, GROUVY_TASK_RECEIVERS R
+        WHERE
+            T.TASK_ID = R.TASK_ID
+            AND T.WRITER_ID = U1.USER_ID
+            AND R.TARGET_USER_ID = U2.USER_ID
+            AND U1.POSITION_NO = P1.POSITION_NO
+            AND U2.POSITION_NO = P2.POSITION_NO
+            AND T.TASK_ID = #{taskId}
+            AND R.ROLE = 'receive'
+            AND T.IS_DELETED = 'N'
+    </select>
+
+    <!--TaskDetail getTodoDetailByTaskId(int taskId);-->
+    <select id="getTodoDetailByTaskId" resultType="TaskDetail">
+        SELECT
+            T.TASK_ID AS taskId
+             , T.TITLE AS title
+             , T.TYPE AS type
+             , T.STATUS AS status
+             , T.WRITER_ID AS writerId
+             , U.NAME AS writerName
+             , P.POSITION_NAME AS writerPositionName
+             , T.CREATED_DATE AS createdDate
+             , T.UPDATED_DATE AS updatedDate
+             , T.DUE_DATE AS dueDate
+             , T.CONTENT AS content
+        FROM GROUVY_TASKS T, GROUVY_USERS U, GROUVY_POSITIONS P
+        WHERE
+          T.WRITER_ID = U.USER_ID
+          AND U.POSITION_NO = P.POSITION_NO
+          AND T.TASK_ID = #{taskId}
+          AND T.IS_DELETED = 'N'
+
+    </select>
+
+    <!--List<TaskDetail.Cc> getCcsByTaskId(int taskId);-->
+    <select id="getCcsByTaskId">
+<!--        List<Cc> ccs-->
+<!--        (userId, name, positionName)-->
+        SELECT
+            U.USER_ID AS userId
+            , U.NAME AS name
+            , P.POSITION_NAME AS positionName
+        FROM
+            GROUVY_TASK_RECEIVERS R, GROUVY_USERS U, GROUVY_POSITIONS P
+        WHERE
+            R.TARGET_USER_ID = U.USER_ID
+            AND U.POSITION_NO = P.POSITION_NO
+            AND R.TASK_ID = #{taskId}
+            AND R.ROLE = 'cc'
+    </select>
+
+    <!--List<TaskFile> getWriterFilesByTaskId(int taskId);-->
+    <select id="getWriterFilesByTaskId">
+        SELECT
+            F.FILE_ID AS fileId
+            , F.ORIGINAL_NAME AS originalName
+            , F.UPLOADER_ID AS uploderUserId
+        FROM
+            GROUVY_TASK_FILES F, GROUVY_TASKS T
+        WHERE
+            F.TASK_ID = T.TASK_ID
+            AND F.UPLOADER_ID = T.WRITER_ID
+            AND T.TASK_ID = #{taskId}
+            AND F.IS_DELETED = 'N'
+            AND T.IS_DELETED = 'N'
+    </select>
+
+    <!--List<TaskFile> getReceiveUserFilesByTaskId(int taskId);-->
+    <select id="getReceiveUserFilesByTaskId">
+        SELECT
+            F.FILE_ID AS fileId
+             , F.ORIGINAL_NAME AS originalName
+             , F.UPLOADER_ID AS uploderUserId
+        FROM
+            GROUVY_TASK_FILES F, GROUVY_TASKS T, GROUVY_TASK_RECEIVERS R
+        WHERE
+            F.TASK_ID = T.TASK_ID
+          AND T.TASK_ID = R.TASK_ID
+          AND R.ROLE = 'receive'
+          AND F.UPLOADER_ID = R.TARGET_USER_ID
+          AND T.TASK_ID = #{taskId}
+          AND F.IS_DELETED = 'N'
+          AND T.IS_DELETED = 'N'
+    </select>
+
+    <!--String getReceiveRoleByTaskIdAndUserId(int taskId, int userId);-->
+    <select id="getReceiveRoleByTaskIdAndUserId">
+        SELECT
+            ROLE
+        FROM
+            GROUVY_TASK_RECEIVERS
+        WHERE
+            TASK_ID = #{taskId}
+            AND TARGET_USER_ID = #{userId}
+    </select>
+    
+    <!--void updateReceivers(Feedback feedback);-->
+    <update id="updateReceivers">
+        UPDATE GROUVY_TASK_RECEIVERS
+        SET
+            PROGRESS_PERCENT = #{progressPercent}
+            , "COMMENT" = #{comment}
+            , UPDATED_DATE = SYSDATE
+        WHERE
+            TASK_ID = #{taskId}
+            AND TARGET_USER_ID = #{receiveUserId}
+    </update>
+
+    <!--TaskVo getTaskByTaskId(int taskId);-->
+    <select id="getTaskByTaskId" resultType="TaskVo">
+        SELECT
+            TASK_ID AS taskId
+            , WRITER_ID AS writerId
+            , TITLE AS title
+            , CONTENT AS content
+            , STATUS AS status
+            , TYPE AS type
+            , DUE_DATE AS dueDate
+            , IS_DELETED AS isDeleted
+            , CREATED_DATE AS createdDate
+            , UPDATED_DATE AS updatedDate
+        FROM GROUVY_TASKS
+        WHERE
+            TASK_ID = #{taskId}
+    </select>
+
+    <!--void updateTask(TaskVo task);-->
+    <update id="updateTask" parameterType="TaskVo">
+        UPDATE GROUVY_TASKS
+        SET
+            WRITER_ID = #{writerId}
+            , TITLE = #{title}
+            , CONTENT = #{content}
+            , STATUS = #{status}
+            , TYPE = #{type}
+            , DUE_DATE = #{dueDate}
+            , IS_DELETED = #{isDeleted}
+            , CREATED_DATE = #{createdDate}
+            , UPDATED_DATE = SYSDATE
+        WHERE
+            TASK_ID = #{taskId}
+    </update>
+
+    <!--TaskFile getTaskFileByFileId(int fileId);-->
+    <select id="getTaskFileByFileId" resultType="TaskFile">
+        SELECT
+            FILE_ID AS fileId
+             , ORIGINAL_NAME AS originalName
+             , STORED_NAME AS storedName
+             , EXTENSION AS extension
+             , "SIZE" AS "size"
+             , IS_DELETED AS isDeleted
+             , CREATED_DATE AS createdDate
+             , UPDATED_DATE AS updatedDate
+        FROM
+            GROUVY_TASK_FILES
+        WHERE
+            FILE_ID = #{fileId}
+    </select>
+</mapper>

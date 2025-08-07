@@ -1,4 +1,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
+
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -508,13 +511,25 @@ footer {
                     </ul>
                 </div>
                 <div class="sidebar-section">
-                    <div class="sidebar-section-title"><a href="/file/trash" class="sidebar-link">휴지통</a></div>
+                    <div class="sidebar-section-title">휴지통</div>
+                    <ul class="sidebar-list">
+                        <li class="active"><a href="/file/trash" class="sidebar-link">휴지통 목록</a></li>
+                    </ul>
                 </div>
             </div>
 
             <!-- 기능 페이지 -->
             <div class="main-content">
                 <h2>휴지통</h2>
+                <!-- 여기에 부서·이름·직급 표시 -->
+                <sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
+                <sec:authentication property="principal.user.name"           var="name"/>
+                <sec:authentication property="principal.user.position.positionName"   var="positionName"/>
+
+                <div class="user-info"
+                     style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
+                    ${departmentName}  ${name}  ${positionName}
+                </div>
                 
                 <div class="file-search-box">
                 <div class="file-search-group">
@@ -568,6 +583,11 @@ footer {
                             </tr>
                         </thead>
                         <tbody>
+                        <fmt:formatDate
+                                value="${now}"
+                                pattern="yyyyMMdd"
+                                timeZone="Asia/Seoul"
+                                var="today" />
                         <c:forEach var="trash" items="${trashList}">
                             <tr data-file-id="1">
                                 <td><input type="checkbox" name="trashIds" value="${trash.trashId}"></td>
@@ -577,8 +597,49 @@ footer {
                                 </td>
                                 <td>${trash.file.fileCategoryName}</td>
                                 <td>${trash.file.originalName}</td>
-                                <td>${trash.file.size}</td>
-                                <td>${trash.deletedDate}</td>
+                                <td>
+                                    <c:set var="size" value="${file.size}" />
+
+                                    <c:choose>
+                                        <c:when test="${size < 1024}">
+                                            ${size} byte
+                                        </c:when>
+
+                                        <c:when test="${size < 1024 * 1024}">
+                                            <fmt:formatNumber
+                                                    value="${size / 1024.0}"
+                                                    maxFractionDigits="2" /> KB
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            <fmt:formatNumber
+                                                    value="${size / (1024.0 * 1024.0)}"
+                                                    maxFractionDigits="2" /> MB
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td>
+                                    <fmt:formatDate
+                                            value="${trash.deletedDate}"
+                                            pattern="yyyyMMdd"
+                                            timeZone="Asia/Seoul"
+                                            var="deletedDate" />
+
+                                    <c:choose>
+                                        <c:when test="${deletedDate == today}">
+                                            <fmt:formatDate
+                                                    value="${trash.deletedDate}"
+                                                    pattern="HH:mm"
+                                                    timeZone="Asia/Seoul" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <fmt:formatDate
+                                                    value="${trash.deletedDate}"
+                                                    pattern="yyyy-MM-dd"
+                                                    timeZone="Asia/Seoul" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
                             </tr>
                         </c:forEach>
                         </tbody>

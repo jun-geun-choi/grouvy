@@ -1,0 +1,389 @@
+package com.example.grouvy.task.service;
+
+import com.example.grouvy.file.mapper.FileMapper;
+import com.example.grouvy.file.vo.FileVo;
+import com.example.grouvy.task.dto.request.Feedback;
+import com.example.grouvy.task.dto.request.TaskForm;
+import com.example.grouvy.task.dto.response.*;
+import com.example.grouvy.task.mapper.TaskMapper;
+import com.example.grouvy.task.vo.TaskFile;
+import com.example.grouvy.task.vo.TaskReceiver;
+import com.example.grouvy.task.vo.TaskVo;
+import com.example.grouvy.user.exception.AppException;
+import com.example.grouvy.user.vo.User;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class TaskService {
+
+    @Autowired
+    private TaskMapper taskMapper;
+
+    @Autowired
+    private FileMapper fileMapper;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Value("${app.file.save-directory}")
+    private String saveDirectory;
+
+    // 로그인 유저의 개인/부서 파일 모두 가져오기
+    public List<ModalFile> getFiles(int userId) {
+        return taskMapper.getAllFilesByUserId(userId);
+    }
+
+    // 업무등록
+    @Transactional
+    public void createTask(TaskForm taskForm) {
+        // 수신자 아이디
+        int receiveUserId = taskForm.getReceiveUserId();
+        // 참조자 아이디
+        List<Integer> ccUserIds = taskForm.getCcUserIds();
+        // 로컬파일
+        List<MultipartFile> localFiles = taskForm.getLocalFiles();
+        // 문서함 파일 아이디
+        List<Integer> existingFileIds = taskForm.getExistingFileIds();
+
+        // 업무자체등록
+        TaskVo task = modelMapper.map(taskForm, TaskVo.class);
+
+        task.setWriterId(taskForm.getWriterId());
+
+        taskMapper.insertTask(task);
+
+        // 수신자 등록
+        if (receiveUserId != 0) {
+            TaskReceiver taskReceiver = new TaskReceiver();
+            taskReceiver.setTaskId(task.getTaskId());
+            taskReceiver.setRole("receive");
+            taskReceiver.setTargetUserId(receiveUserId);
+            taskMapper.insertReceiver(taskReceiver);
+        }
+
+
+        // 참조자 등록
+        if (ccUserIds != null && !ccUserIds.isEmpty()) {
+            for (Integer ccUserId : ccUserIds) {
+                TaskReceiver taskCc = new TaskReceiver();
+                taskCc.setTaskId(task.getTaskId());
+                taskCc.setRole("cc");
+                taskCc.setTargetUserId(ccUserId);
+                taskMapper.insertReceiver(taskCc);
+            }
+        }
+
+        String taskDir = saveDirectory + "/task/";
+        // 디렉터리 확인 및 생성
+        Path taskPath = Paths.get(taskDir);
+        try {
+            Files.createDirectories(taskPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Task 디렉터리 생성 실패: " + taskDir, e);
+        }
+
+        // 로컬파일 저장
+        if (localFiles != null && !localFiles.isEmpty()) {
+
+            for (MultipartFile localFile : localFiles) {
+                // 빈거면 건너뛰기
+                if (localFile.isEmpty()) {
+                    continue;   // 빈 파일이면 건너뛴다
+                }
+                // 데이터베이스에 넣을 객체 생성
+                TaskFile taskFile = new TaskFile();
+
+                // 1. 파일저장
+                try {
+                    String originalFileName = localFile.getOriginalFilename();
+                    String fileName = UUID.randomUUID().toString() + originalFileName;
+                    taskFile.setOriginalName(originalFileName);
+                    taskFile.setStoredName(fileName);
+
+                    File dest = new File(saveDirectory + "/task", fileName);
+                    localFile.transferTo(dest);
+                } catch (Exception e) {
+                    throw new RuntimeException("로컬 첨부파일 저장오류", e);
+                }
+                taskFile.setSize((int)  localFile.getSize());
+                taskFile.setExtension(localFile.getOriginalFilename().substring(localFile.getOriginalFilename().lastIndexOf(".")));
+                taskFile.setOriginalName(localFile.getOriginalFilename());
+                taskFile.setTaskId(task.getTaskId());
+                taskFile.setUploadUserId(task.getWriterId());
+                // 2. 파일객체 데이터베이스 저장
+                taskMapper.insertTaskFile(taskFile);
+            }
+        }
+        // 문서함 파일 저장
+        if (existingFileIds != null && !existingFileIds.isEmpty()) {
+
+            for (Integer existingFileId : existingFileIds) {
+                // 문서함에 저장되어 있는 파일정보 객체 가져오기
+                FileVo originalFile = fileMapper.getFileByFileId(existingFileId);
+                String originalDir = saveDirectory + "/" + originalFile.getOwnerType() + "/";
+
+                try {
+                    // 파일 복사 및 저장
+                    Path source = Paths.get(originalDir, originalFile.getStoredName());
+                    String newStoredName = UUID.randomUUID().toString() + originalFile.getOriginalName();
+                    TaskFile taskFile = modelMapper.map(originalFile, TaskFile.class);
+                    Path target = Paths.get(taskDir, newStoredName);
+                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                    
+                    taskFile.setStoredName(newStoredName);
+                    taskFile.setOriginalName(originalFile.getOriginalName());
+                    taskFile.setExtension(originalFile.getExtension());
+                    taskFile.setSize(originalFile.getSize());
+                    taskFile.setTaskId(task.getTaskId());
+                    taskFile.setUploadUserId(task.getWriterId());
+
+                    // 데이터베이스에 저장
+                    taskMapper.insertTaskFile(taskFile);
+                } catch (Exception e) {
+                    throw new RuntimeException("문서함 첨부파일 저장오류", e);
+                }
+            }
+        }
+    }
+
+    public List<TaskListItem> getRequestAndReport(int userId, String type, String role) {
+        return taskMapper.getTaskByUserIdAndTypeAndRole(userId, type, role);
+    }
+
+    // 할일리스트 가져오기
+    public List<Todo> getTodos(int userId) {
+
+        return taskMapper.getTodosByUserId(userId);
+    }
+    
+    // 업무 상세내용
+    @Transactional
+    public TaskDetail getDetail(int taskId) {
+        /*
+            1. 업무내용
+                taskId, status, writerId, writerName, writerPositionName, created, updated, due,
+                receiverUserId, receiveUserName, receivePositionName, content
+         */
+        TaskDetail taskDetail = taskMapper.getTaskDetailByTaskId(taskId);
+
+        /*
+            2. 참조자 목록
+                List<Cc> ccs
+                (userId, name, positionName)
+         */
+        List<TaskDetail.Cc> ccs = taskMapper.getCcsByTaskId(taskId);
+        taskDetail.setCcs(ccs);
+
+        /*
+            3. 파일목록
+         */
+        List<TaskFile> writerFiles = taskMapper.getWriterFilesByTaskId(taskId);
+        taskDetail.setWriterFiles(writerFiles);
+        List<TaskFile> receiveUserFiles = taskMapper.getReceiveUserFilesByTaskId(taskId);
+        taskDetail.setFeedbackFiles(receiveUserFiles);
+
+        return taskDetail;
+    }
+
+    // 업무 수신자피드백
+    public ReceiveUserFeedback getFeedback(int taskId) {
+
+        return taskMapper.getReceiveUserFeedbackByTaskId(taskId);
+    }
+
+    // 해당업무의 유저의 역할
+    public String getMyRole(int taskId, int userId) {
+        TaskDetail detail = taskMapper.getTaskDetailByTaskId(taskId);
+
+        String role;
+
+        if (userId == detail.getWriterId()) {
+            role = "writer";
+        } else {
+            role = taskMapper.getReceiveRoleByTaskIdAndUserId(taskId, userId);
+        }
+        return role;
+    }
+
+    // 수신자의 업무피드백 저장
+    @Transactional
+    public void saveFeedBack(Feedback feedback) {
+
+        List<MultipartFile> localFiles = feedback.getLocalFeedbackFiles();
+
+        List<Integer> existingFileIds = feedback.getExistingFeedbackFileIds();
+
+        String taskDir = saveDirectory + "/task/";
+        // 디렉터리 확인 및 생성
+        Path taskPath = Paths.get(taskDir);
+        try {
+            Files.createDirectories(taskPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Task 디렉터리 생성 실패: " + taskDir, e);
+        }
+
+        // 로컬파일 저장
+        if (localFiles != null && !localFiles.isEmpty()) {
+
+            for (MultipartFile localFile : localFiles) {
+                // 빈거면 건너뛰기
+                if (localFile.isEmpty()) {
+                    continue;   // 빈 파일이면 건너뛴다
+                }
+                // 데이터베이스에 넣을 객체 생성
+                TaskFile taskFile = new TaskFile();
+
+                // 1. 파일저장
+                try {
+                    String originalFileName = localFile.getOriginalFilename();
+                    String fileName = UUID.randomUUID().toString() + originalFileName;
+                    taskFile.setOriginalName(originalFileName);
+                    taskFile.setStoredName(fileName);
+
+                    File dest = new File(saveDirectory + "/task", fileName);
+                    localFile.transferTo(dest);
+                } catch (Exception e) {
+                    throw new RuntimeException("로컬 첨부파일 저장오류", e);
+                }
+                taskFile.setSize((int)  localFile.getSize());
+                taskFile.setExtension(localFile.getOriginalFilename().substring(localFile.getOriginalFilename().lastIndexOf(".")));
+                taskFile.setOriginalName(localFile.getOriginalFilename());
+                taskFile.setTaskId(feedback.getTaskId());
+                taskFile.setUploadUserId(feedback.getReceiveUserId());
+                // 2. 파일객체 데이터베이스 저장
+                taskMapper.insertTaskFile(taskFile);
+            }
+        }
+        // 문서함 파일 저장
+        if (existingFileIds != null && !existingFileIds.isEmpty()) {
+
+            for (Integer existingFileId : existingFileIds) {
+                // 문서함에 저장되어 있는 파일정보 객체 가져오기
+                FileVo originalFile = fileMapper.getFileByFileId(existingFileId);
+                String originalDir = saveDirectory + "/" + originalFile.getOwnerType() + "/";
+
+                try {
+                    // 파일 복사 및 저장
+                    Path source = Paths.get(originalDir, originalFile.getStoredName());
+                    String newStoredName = UUID.randomUUID().toString() + originalFile.getOriginalName();
+                    TaskFile taskFile = modelMapper.map(originalFile, TaskFile.class);
+                    Path target = Paths.get(taskDir, newStoredName);
+                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+                    taskFile.setStoredName(newStoredName);
+                    taskFile.setOriginalName(originalFile.getOriginalName());
+                    taskFile.setExtension(originalFile.getExtension());
+                    taskFile.setSize(originalFile.getSize());
+                    taskFile.setTaskId(feedback.getTaskId());
+                    taskFile.setUploadUserId(feedback.getReceiveUserId());
+
+                    // 데이터베이스에 저장
+                    taskMapper.insertTaskFile(taskFile);
+                } catch (Exception e) {
+                    throw new RuntimeException("문서함 첨부파일 저장오류", e);
+                }
+            }
+        }
+
+        taskMapper.updateReceivers(feedback);
+
+        TaskVo task = taskMapper.getTaskByTaskId(feedback.getTaskId());
+
+        if (task.getType().equals("request")) {
+            // 요청일때
+            if (feedback.getProgressPercent() == 0) {
+                // 시작전
+                task.setStatus("등록됨");
+            } else if (feedback.getProgressPercent() > 0 && feedback.getProgressPercent() < 100) {
+                // 처리중
+                task.setStatus("처리중");
+            } else if (feedback.getProgressPercent() == 100) {
+                // 처리완료
+                task.setStatus("처리완료");
+            }
+        } else {
+            // 보고일때
+            if (feedback.getProgressPercent() == 0) {
+                // 시작전
+                task.setStatus("등록됨");
+            } else if (feedback.getProgressPercent() > 0 && feedback.getProgressPercent() < 100) {
+                // 검토중
+                task.setStatus("검토중");
+            } else if (feedback.getProgressPercent() == 100) {
+                // 검토완료
+                task.setStatus("검토완료");
+            }
+        }
+
+        taskMapper.updateTask(task);
+
+    }
+
+    // 업무반려에 따른 업무 업데이트
+    @Transactional
+    public void rejectTask(Feedback feedback) {
+        // 업무 업데이트
+        TaskVo task = taskMapper.getTaskByTaskId(feedback.getTaskId());
+
+        task.setStatus("반려");
+        taskMapper.updateTask(task);
+
+        // 수신자 업데이트
+        feedback.setProgressPercent(0);
+        taskMapper.updateReceivers(feedback);
+    }
+
+    // 할일 디테일 가져오기
+    public TaskDetail getTodoDetail(int taskId) {
+        TaskDetail taskDetail = taskMapper.getTodoDetailByTaskId(taskId);
+
+        return taskDetail;
+    }
+
+    // 할 일 완료
+    public void completeTodo(int taskId) {
+        TaskVo task = taskMapper.getTaskByTaskId(taskId);
+        
+        task.setStatus("완료");
+        taskMapper.updateTask(task);
+    }
+
+    // 업무 삭제
+    public void deleteTask(List<Integer> taskIds) {
+        for (Integer taskId : taskIds) {
+            TaskVo task = taskMapper.getTaskByTaskId(taskId);
+            task.setIsDeleted("Y");
+            taskMapper.updateTask(task);
+        }
+    }
+
+    // 다운로드할 파일 전달
+    @Transactional
+    public File getDownloadFile(int fileId) {
+        TaskFile taskFile = taskMapper.getTaskFileByFileId(fileId);
+        String filename = taskFile.getStoredName();
+
+        String fileDirectory = saveDirectory + "/task";
+
+        File file = new File(fileDirectory, filename);
+        if (!file.exists()) {
+            throw new AppException("파일이 존재하지 않습니다");
+        }
+
+        return file;
+    }
+}
