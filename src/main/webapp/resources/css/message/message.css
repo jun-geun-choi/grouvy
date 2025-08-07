@@ -192,6 +192,10 @@ textarea.form-control {
     font-size: 0.85em;
 }
 
+.unread-status {
+    font-weight: bold;
+}
+
 /* --- 반응형 스타일 (모든 페이지 공통) --- */
 @media (max-width: 768px) {
     .container {
