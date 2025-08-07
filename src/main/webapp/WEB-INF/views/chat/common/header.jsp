@@ -6,7 +6,20 @@
 <sec:authentication property="principal.user" var="user"/>
 <div class="sidebar_header">
     <%-- 나중에 DB에서 값을 가져오는 것으로 한다. --%>
-    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="프로필">
+    <c:choose>
+        <c:when test="${empty user.profileImgPath or profileImgPath eq 'null'}">
+            <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
+                 alt="기본 프로필"
+                 class="rounded-circle profile-photo"
+                 style="width: 70px; height: 70px; object-fit: cover;">
+        </c:when>
+        <c:otherwise>
+             <img src="https://storage.googleapis.com/grouvy-bucket/${user.profilePath}"
+                  alt="사용자 프로필"
+                  class="rounded-circle profile-photo"
+                  style="width: 70px; height: 70px; object-fit: cover;">
+        </c:otherwise>
+    </c:choose>
     <div class="fw-bold">${user.name}</div>
     <div class="text-muted" style="font-size:0.95em;">${user.position.positionName}</div>
 </div>

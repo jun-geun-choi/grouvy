@@ -1,0 +1,239 @@
+/* ==========================================================================
+   쪽지(Message) 기능 공통 스타일 (수정본)
+   ========================================================================== */
+
+/* --- 기본 레이아웃 및 폰트 --- */
+body {
+    background-color: #f7f7f7;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 20px auto;
+}
+
+/* --- 사이드바 (모든 페이지 공통) --- */
+.sidebar {
+    width: 200px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-right: 20px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h3 {
+    margin-top: 0;
+    font-size: 16px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    color: #333;
+    text-decoration: none;
+}
+
+.sidebar ul li a.active,
+.sidebar ul li a:hover {
+    color: #1abc9c;
+    font-weight: bold;
+}
+
+/* --- 메인 콘텐츠 영역 (모든 페이지 공통) --- */
+.main-content {
+    flex: 1;
+    background-color: white;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.main-content h2 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    color: #34495e;
+    font-size: 1.6em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 18px;
+}
+
+/* --- 폼 관련 스타일 (쪽지 쓰기/답장/전달 페이지) --- */
+form {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+
+.sender-info {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.recipient-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 38px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    align-items: center;
+    background-color: white;
+}
+
+.recipient-item {
+    background-color: #e9ecef;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.9em;
+    padding: 3px 7px;
+}
+
+.recipient-item .remove-btn {
+    margin-left: 5px;
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 0.8em;
+    flex-shrink: 0;
+}
+
+/* --- 쪽지 상세 페이지 (message_detail.jsp) 전용 스타일 --- */
+.message-header, .message-body, .message-footer {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
+}
+
+.message-header {
+    background-color: #f8f9fa;
+}
+
+.message-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.recalled-content {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.action-button {
+    margin-right: 10px;
+}
+
+.sender-box {
+    background-color: #e9ecef;
+    padding: 8px 12px;
+    border-radius: 5px;
+    display: inline-block;
+    font-size: 0.9em;
+}
+
+.recipient-box {
+    background-color: #f0f0f0;
+    padding: 5px 8px;
+    border-radius: 3px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    display: inline-block;
+    font-size: 0.85em;
+}
+
+/* --- 반응형 스타일 (모든 페이지 공통) --- */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .sidebar {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 20px;
+        padding: 15px;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    .btn {
+        /*
+         반응형에서 버튼 너비를 100%로 설정할 경우,
+         상세보기 페이지의 여러 버튼들이 세로로 나열될 수 있습니다.
+         필요에 따라 이 부분을 주석 처리하거나 조정하세요.
+        */
+        /* width: 100%; */
+    }
+}
+
+@media (max-width: 576px) {
+    .main-content h2 {
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+    }
+
+    .form-control {
+        font-size: 0.9em;
+    }
+}
+
+/*
+  Bootstrap에서 제공하는 기본 버튼 스타일을 사용하기 위해
+  기존의 자체 .btn, .btn-primary, .btn-secondary 등의
+  재정의 코드를 모두 삭제했습니다.
+*/

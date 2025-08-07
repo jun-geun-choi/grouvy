@@ -1,6 +1,9 @@
 package com.example.grouvy.config;
 
+import com.example.grouvy.security.CustomLoginSuccessHandler;
+import com.example.grouvy.security.CustomLogoutSuccessHandler;
 import jakarta.servlet.DispatcherType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -13,18 +16,23 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 // 보안 설정을 위한 클래스
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+//    private final OAuth2Fa
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CustomLoginSuccessHandler customLoginSuccessHandler, CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
-                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/login", "/register", "register/**").permitAll()
                         .requestMatchers("/resources/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin
@@ -32,16 +40,20 @@ public class SecurityConfig {
                         .passwordParameter("password")
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/", true)
+                        .defaultSuccessUrl("/")
+                        .successHandler(customLoginSuccessHandler)
                         .permitAll()
                         .failureUrl("/login?failed")
                 )
+//                .oauth2Login(customConfigurer ->customConfigurer
+//                        .successHandler(succesHandler)
+//                        .failureHandler(fa))
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessHandler(customLogoutSuccessHandler)
                         .permitAll()
                 );
-
 
         return http.build();
     }

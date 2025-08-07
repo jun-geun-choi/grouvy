@@ -12,13 +12,15 @@ import org.apache.ibatis.type.Alias;
 @NoArgsConstructor
 @Alias("ChatMessage")
 public class ChatMessage {
+
   private long chatMessageId;
-  private long roomId;
+  private int roomId;
   private int senderId;
   private String content;
   private Date createdDate;
   private String messageType;
 
-  private ChatRoom  chatRoom;
+  private ChatRoom chatRoom;
   private User user;
+
 }

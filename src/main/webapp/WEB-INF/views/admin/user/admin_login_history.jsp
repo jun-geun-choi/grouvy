@@ -1,166 +1,52 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: hyunbin
-  Date: 2025. 7. 22.
-  Time: 오후 1:51
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@include file="../../common/taglib.jsp"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <title>로그인 기록 관리</title>
-  <link
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+  <%@include file="../../common/head.jsp" %>
+  <c:url var="adminCss" value="/resources/css/user/admin_main.css"/>
+  <link href="${adminCss}" rel="stylesheet"/>
   <style>
-    body {
-      background-color: #f7f7f7;
-      font-family: Arial, sans-serif;
-      margin: 0;
-    }
+  .login-badge {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 30px;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+  min-width: 70px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
 
-    .navbarr {
-      display: flex;
-      justify-content: flex-end;
-      background-color: #34495e;
-    }
+.login-badge.login {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
 
-    .navbarr a {
-      padding: 10px 20px;
-      color: white;
-      text-decoration: none;
-      display: inline-block;
-    }
+.login-badge.logout {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+.table th, .table td {
+  padding-left: 15px;
+}
+.status-cell {
+  text-align: center;
+  vertical-align: middle;
+}
 
-    .navbarr a:hover, .navbarr a.active {
-      background-color: #1abc9c;
-    }
-
-    .navbar-brand {
-      color: #e6002d !important;
-      font-size: 1.5rem;
-    }
-
-    .navbar h3 {
-      margin: 0 auto;
-      padding-top: 10px;  /* 🔑 이 부분 추가 */
-      padding-bottom: 10px;
-    }
-
-    .nav-item {
-      padding-right: 1rem;
-    }
-
-    .navbar-nav .nav-link.active {
-      font-weight: bold;
-      color: #e6002d !important;
-    }
-
-    .logo-img {
-      width: 160px;
-      height: 50px;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    .navbar .container-fluid {
-      padding-right: 2rem;
-    }
-
-    .container {
-      display: flex;
-      padding: 20px;
-    }
-
-    .sidebar {
-      width: 200px;
-      background-color: white;
-      border-radius: 8px;
-      padding: 15px;
-      margin-right: 20px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .sidebar h3 {
-      margin-top: 0;
-      font-size: 16px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-    }
-
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .sidebar ul li {
-      margin: 10px 0;
-    }
-
-    .sidebar ul li a {
-      color: #333;
-      text-decoration: none;
-    }
-
-    .sidebar ul li a.active, .sidebar ul li a:hover {
-      color: #1abc9c;
-      font-weight: bold;
-    }
-
-    .main-content {
-      flex: 1;
-      background-color: white;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-
-    footer {
-      text-align: center;
-      padding: 10px;
-      font-size: 12px;
-      color: #999;
-    }
-  </style>
+</style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center" href="/">
-				<span class="logo-crop">
-					<img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
-				</span>
-    </a>
-    <h3>
-      <a class="mb-2 mb-lg-0 text-decoration-none text-dark" href="/admin">관리자 페이지</a>
-    </h3>
-    <div class="d-flex align-items-center">
-      <a href="mypage.html" >
-        <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-             alt="프로필" class="rounded-circle" width="36" height="36">
-      </a>
-      <a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
-    </div>
-  </div>
-</nav>
-<nav class="navbarr">
-  <a href="#">전자결재</a>
-  <a href="#">업무관리</a>
-  <a href="#">업무문서함</a>
-  <a href="#">조직도</a>
-</nav>
+<%@include file="../../common/nav.jsp" %>
+<%@include file="../admin_nav.jsp" %>
 <div class="container">
-  <div class="sidebar">
-    <h3>관리 기능</h3>
-    <ul>
-      <li><a href="/userApproval">회원가입 승인</a> </li>
-      <li><a href="/userList">사용자 계정관리</a> </li>
-      <li><a href="/userLoginHistory">로그인 기록</a> </li>
-      <li><a href="/userAttendanceHistory" class="active">출퇴근 기록</a></li>
-    </ul>
-  </div>
+  <%@include file="admin_user_sidebar.jsp" %>
   <div class="main-content">
     <h2>접속/로그인 기록 관리</h2>
     <table class="table table-bordered align-middle">
@@ -171,31 +57,34 @@
         <th>이메일</th>
         <th>최근 로그인 시각</th>
         <th>IP</th>
-        <th>비정상 로그인</th>
+        <th>로그인 상태</th>
       </tr>
       </thead>
       <tbody>
-      <tr>
-        <td>홍길순</td>
-        <td>20250001</td>
-        <td>hongsoon@email.com</td>
-        <td>2025-07-07 09:12:33</td>
-        <td>192.168.0.10</td>
-        <td><span class="badge bg-danger">탐지</span></td>
-      </tr>
-      <tr>
-        <td>김철수</td>
-        <td>20250002</td>
-        <td>kimcs@email.com</td>
-        <td>2025-07-07 08:55:10</td>
-        <td>192.168.0.11</td>
-        <td><span class="badge bg-success">정상</span></td>
-      </tr>
+      <c:forEach var="loginHistory" items="${loginHistorys }" varStatus="loop">
+        <tr>
+          <td>${loginHistory.user.name}</td>
+          <td>${loginHistory.user.employeeNo}</td>
+          <td>${loginHistory.user.email}</td>
+          <td><fmt:formatDate value="${loginHistory.loginTime}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+          <td>${loginHistory.ipAddress}</td>
+          <td class="status-cell">
+            <c:choose>
+              <c:when test="${loginHistory.loginStatus eq 'login'}">
+                <span class="login-badge login">로그인</span>
+              </c:when>
+              <c:otherwise>
+                <span class="login-badge logout">로그아웃</span>
+              </c:otherwise>
+            </c:choose>
+          </td>
+        </tr>
+      </c:forEach>
       <!-- 추가 행 -->
       </tbody>
     </table>
   </div>
 </div>
-<footer>© 2025 그룹웨어 Corp.</footer>
+<%@include file="../../common/footer.jsp" %>
 </body>
 </html>

@@ -445,6 +445,7 @@ footer {
 </style>
 </head>
 <body>
+<%@include file="../common/nav.jsp" %>
 
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
         <div class="container-fluid">
@@ -472,6 +473,7 @@ footer {
             </div>
         </div>
     </nav>
+
 
     <main>
         <div class="container">

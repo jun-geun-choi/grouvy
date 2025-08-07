@@ -10,13 +10,13 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-@NoArgsConstructor // 기본 생성자
-@Builder // 가독성 좋은 체인 방식 생성자
-@AllArgsConstructor // 전체 필드 초기화 생성자
+@NoArgsConstructor
+@Builder(toBuilder = true)
+@AllArgsConstructor
 @Alias("User")
 public class User {
     private int userId;
-    private int employeeNo;
+    private Integer employeeNo;
     private String name;
     private String loginProvider;
     private String email;
@@ -29,12 +29,13 @@ public class User {
     private Date createdDate;
     private Date updatedDate;
     private Date resignDate;
-    private String isDeleted;
+    private String employmentStatus;
+    private String approvalStatus;
 
     private Long departmentId;
     private Department department;
 
-    private int positionNo;
+    private Integer positionNo;
     private Position position;
 
     private List<String> roleNames;

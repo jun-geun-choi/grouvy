@@ -34,7 +34,8 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return "N".equals(user.getIsDeleted());
+        boolean isEnabled = "퇴사".equals(user.getEmploymentStatus());
+        return !isEnabled;
     }
 
     public User getUser() {

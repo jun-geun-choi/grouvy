@@ -1,10 +1,9 @@
 package com.example.grouvy.user.mapper;
 
+import com.example.grouvy.user.dto.ProfileRequest;
 import com.example.grouvy.user.vo.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-
 
 import java.util.List;
 
@@ -12,11 +11,19 @@ import java.util.List;
 public interface UserMapper {
 
     void insertUser(User user);
-    User getUserByEmail(String email);
-    User getUserByUsernameWithRoleNames(String username);
     List<String> getRoleNamesByUserId(int userId);
+    User findUserByEmail(String email);
+    User findUserByEmailWithRoleNames(String email);
 
-    User findByUserId(@Param("userId") String userId);
+    User findByUserId(@Param("userId") int userId);
     List<User> findUsersByDeptId(@Param("departmentId") Long departmentId);
+    String findUserNameByUserId(@Param("userId") int userId);
+    int countUsersInDepartment(long departmentId);
+    List<User> searchUsers(@Param("keyword") String keyword);
 
+    void updateUserProfile(@Param("userId") int userId, @Param("imageUrl")  String imageUrl);
+
+    // login/logout log
+    void insertLoginLog(@Param("userId") int userId, @Param("ip") String ip);
+    void insertLogoutLog(@Param("userId") int userId, @Param("ip") String ip);
 }
