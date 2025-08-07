@@ -4,7 +4,6 @@ import com.example.grouvy.user.dto.ProfileRequest;
 import com.example.grouvy.user.vo.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
 import java.util.List;
 
 @Mapper
@@ -26,4 +25,5 @@ public interface UserMapper {
     // login/logout log
     void insertLoginLog(@Param("userId") int userId, @Param("ip") String ip);
     void insertLogoutLog(@Param("userId") int userId, @Param("ip") String ip);
+
 }

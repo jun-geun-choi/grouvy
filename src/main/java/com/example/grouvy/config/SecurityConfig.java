@@ -22,7 +22,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
 //    private final OAuth2Fa
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CustomLoginSuccessHandler customLoginSuccessHandler, CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
         http
@@ -53,7 +52,6 @@ public class SecurityConfig {
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .permitAll()
                 );
-
         return http.build();
     }
 

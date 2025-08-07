@@ -10,6 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+
 @NoArgsConstructor
 @Builder(toBuilder = true)
 @AllArgsConstructor
@@ -29,6 +30,7 @@ public class User {
     private Date createdDate;
     private Date updatedDate;
     private Date resignDate;
+
     private String employmentStatus;
     private String approvalStatus;
 
@@ -36,10 +38,9 @@ public class User {
     private Department department;
 
     private Integer positionNo;
+
     private Position position;
 
     private List<String> roleNames;
-
-
 
 }
