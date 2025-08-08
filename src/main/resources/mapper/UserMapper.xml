@@ -161,6 +161,7 @@
                  LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
                  LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
         WHERE U.USER_ID = #{userId}
+          AND U.APPROVAL_STATUS = 'APPROVED'
 --           AND U.IS_DELETED = 'N'
     </select>
 
@@ -179,8 +180,10 @@
                  LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
                  LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
         WHERE U.DEPARTMENT_ID = #{departmentId}
+          AND U.APPROVAL_STATUS = 'APPROVED'
 --           AND U.IS_DELETED = 'N'
-        ORDER BY U.NAME ASC
+        ORDER BY P.POSITION_NO ASC,
+                 U.NAME ASC
     </select>
 
     <!-- findUserNameByUserId: 특정 사용자 ID로 사용자 이름(NAME)만 조회합니다. -->
@@ -195,6 +198,7 @@
         SELECT COUNT(*)
         FROM GROUVY_USERS
         WHERE DEPARTMENT_ID = #{departmentId}
+          AND APPROVAL_STATUS = 'APPROVED'
 --           AND IS_DELETED = 'N'
     </select>
 
@@ -241,11 +245,12 @@
         SELECT
             U.USER_ID, U.NAME, U.EMAIL, U.PROFILE_IMG_PATH, U.PHONE_NUMBER,
             D.DEPARTMENT_ID, D.DEPARTMENT_NAME,
-            P.POSITION_NO, P.POSITION_NAME
+            P.POSITION_NO,
+            P.POSITION_NAME
         FROM GROUVY_USERS U
                  LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
                  LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
---         WHERE U.IS_DELETED = 'N'
+        WHERE U.EMPLOYMENT_STATUS = '재직'
           AND (
             U.NAME LIKE '%' || #{keyword} || '%'
                 OR D.DEPARTMENT_NAME LIKE '%' || #{keyword} || '%'

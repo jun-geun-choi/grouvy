@@ -148,7 +148,7 @@
                         return `
                             <li class="user-item">
                                 <a href="#" class="user-link-modal" data-user-id="\${user.userId}" data-user-name="\${user.name}">
-                                    \${String(user.name || '이름없음')} (\${String(user.email || '이메일없음')})
+                                    \${String(user.name || '이름없음')} (\${String(user.position.positionName || '직급없음')}) (\${String(user.email || '이메일없음')})
                                 </a>
                             </li>`;
                     }).join('');

@@ -4,6 +4,7 @@ import com.example.grouvy.user.vo.User;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.ibatis.type.Alias;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -19,5 +20,6 @@ public class ShareInFile {
     private User uploader;
     private int categoryId;
     private String categoryName;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date shareCreatedDate;
 }

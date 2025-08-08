@@ -56,8 +56,9 @@
                         </td>
                         <td>
                             <input type="hidden" name="userId" value="${approval.user.userId}"/>
+                            <input type="hidden" name="approvalId" value="${approval.approvalId}"/>
                             <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">승인</button>
-                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">거절</button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">반려</button>
                         </td>
                     </form>
                 </tr>

@@ -108,7 +108,8 @@
                                     <td>\${message.senderName || '알 수 없는 발신자'}</td>
                                     <td class="\${message.inboxStatus === 'UNREAD' ? 'unread' : ''}">\${message.subject || '(제목 없음)'}</td>
                                     <td>\${formatDate(message.sendDate)}</td>
-                                    <td>\${message.inboxStatus === 'UNREAD' ? '읽지 않음' : (message.inboxStatus === 'RECALLED_BY_SENDER' ? '회수됨' : '읽음')}</td>
+                                    <td class="\${message.inboxStatus === 'UNREAD' ? 'unread-status' : ''}">
+                                        \${message.inboxStatus === 'UNREAD' ? '읽지 않음' : (message.inboxStatus === 'RECALLED_BY_SENDER' ? '회수됨' : '읽음')}</td>
                                     <td>\${message.importantYn === 'Y' ? '<i class="fas fa-star text-warning"></i>' : '<i class="far fa-star text-muted"></i>'}</td>
                                 </tr>
                             `;

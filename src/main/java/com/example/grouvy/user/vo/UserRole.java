@@ -1,5 +1,4 @@
 package com.example.grouvy.user.vo;
-
 import lombok.*;
 import org.apache.ibatis.type.Alias;
 

@@ -1,15 +1,17 @@
 package com.example.grouvy.user.controller;
 
+import com.example.grouvy.security.SecurityUser;
 import com.example.grouvy.user.dto.UserApprovalRequest;
+import com.example.grouvy.user.dto.UserUpdateRequest;
 import com.example.grouvy.user.service.AdminUserService;
+import com.example.grouvy.user.vo.User;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -24,12 +26,22 @@ public class AdminController {
     }
 
     @GetMapping("/admin/user/list")
-    public String userList(Model model) {
+    public String userList(Model model,  @AuthenticationPrincipal SecurityUser loginUser) {
         model.addAttribute("users", adminUserService.getAllUsers());
         model.addAttribute("positions", adminUserService.getAllPositions());
         model.addAttribute("departments", adminUserService.getAllDepartments());
-//        model.addAttribute("employmentStatus", adminUserService.getAllEmploymentStatus());
+
+        int managerId = loginUser.getUser().getUserId();
+        model.addAttribute("managerId", managerId);
+
         return "admin/user/admin_user_list";
+    }
+
+    @PostMapping("/admin/user/update")
+    public String updateUser(@ModelAttribute UserUpdateRequest userUpdateRequest) {
+        adminUserService.updateUserInfo(userUpdateRequest);
+
+        return "redirect:/admin/user/list";
     }
 
     @GetMapping("/admin/user/login-history")
@@ -51,16 +63,13 @@ public class AdminController {
         model.addAttribute("departments", adminUserService.getAllDepartments());
         model.addAttribute("positions", adminUserService.getAllPositions());
 
-//        model.addAttribute("approvedUsers", adminUserService.getAllApprovedUsers());
+        model.addAttribute("approvedUsers", adminUserService.getAllApprovedUsers());
 
         return "admin/user/admin_user_approval";
     }
 
     @PostMapping("/admin/handle-user-approval")
     public String approveUser(@ModelAttribute UserApprovalRequest request) {
-        System.out.println("approveUser");
-        System.out.println(request.getApprovalId());
-        System.out.println(request.getAction());
         if (request.getAction().equals("approve")) {
             System.out.println("승인");
             adminUserService.approveUser(request);
@@ -68,7 +77,6 @@ public class AdminController {
             System.out.println("거절");
             adminUserService.rejectUser(request);
         }
-
 
         return "redirect:/admin/user/approval";
     }

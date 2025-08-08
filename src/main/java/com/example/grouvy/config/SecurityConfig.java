@@ -22,7 +22,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
 //    private final OAuth2Fa
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CustomLoginSuccessHandler customLoginSuccessHandler, CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
         http
@@ -31,9 +30,8 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
                         .requestMatchers("/login", "/register", "register/**").permitAll()
                         .requestMatchers("/resources/**").permitAll()
-//                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/admin/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().hasAnyRole("USER",  "ADMIN")
                 )
                 .formLogin(formLogin -> formLogin
                         .usernameParameter("email")
@@ -54,7 +52,6 @@ public class SecurityConfig {
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .permitAll()
                 );
-
         return http.build();
     }
 

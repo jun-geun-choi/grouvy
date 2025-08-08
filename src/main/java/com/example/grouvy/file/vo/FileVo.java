@@ -5,6 +5,7 @@ import com.example.grouvy.user.vo.User;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.ibatis.type.Alias;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -19,7 +20,9 @@ public class FileVo {
     private String extension;
     private int size;
     private String isDeleted;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdDate;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updatedDate;
     private String shareStatus;
 
