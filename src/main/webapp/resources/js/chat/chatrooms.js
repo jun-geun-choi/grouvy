@@ -9,6 +9,10 @@ const chatRooms = [
 // 채팅방 리스트 렌더링 함수
 function renderChatList() {
   const $chatsList = $('#chats-list').empty();
+  $.getJSON(`api/chat/chattingRoom`,function(data){
+
+
+  });
   chatRooms.forEach((room, idx) => {
     const $item = $(`
           <div class="chat_list_item">
