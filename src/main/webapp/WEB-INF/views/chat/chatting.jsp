@@ -264,7 +264,7 @@
   // 팝업 오픈 함수
   function openChatPopup(groupChatRoomId,groupChatRoomName) {
     window.open(
-        `/chat/groupChatting?roomId=\${groupChatRoomId}&roomName=\${groupChatRoomName}`,
+        `/chat/chatting?roomId=\${groupChatRoomId}`,
         '_blank',
         'width=420,height=650,resizable=no,scrollbars=no'
     );
@@ -280,7 +280,7 @@
 
     $("#user-list-container").empty();
 
-    $.getJSON(`/api/chat/allUser`, function (data) {
+    $.getJSON(`/api/chat/allUser?roomId=\${currentRoomId}`, function (data) {
       let allDeptAndUsers = data.data;
       console.log("allDeptAndUsers:",allDeptAndUsers);
 
@@ -341,7 +341,7 @@
 
     $.ajax({
       type: "POST",
-      url: "/api/chat/groups",
+      url: "/api/chat",
       contentType: "application/json",
       data: JSON.stringify(groupData),
       dataType: "json",
@@ -350,7 +350,7 @@
         console.log("groupChatRoom:", groupChatRoom);
         let groupChatRoomId = groupChatRoom.roomId;
         let groupChatRoomName = groupChatRoom.roomName;
-        openChatPopup(groupChatRoomId,groupChatRoomName);
+        openChatPopup(groupChatRoomId);
       }
     });
     $("#add-participant-modal").modal('hide');

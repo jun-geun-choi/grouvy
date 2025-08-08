@@ -62,8 +62,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
-
-
 <script>
 
     // 로그인된 사용자의 부서 아이디와, 사용자 아이디를 시큐리티에서 뽑음.
@@ -77,82 +75,95 @@
 
   // 1.나의 부서 직원들 리스트 뿌리기
   function loadMyList() {
-        $.getJSON(`/api/chat/friends?deptNo=\${departmentId}&userId=\${userId}`, function (data) {
+        $.getJSON(`/api/chat/friends?deptNo=\${departmentId}`, function (data) {
           /*api/chat/friends?deptNo 얘는 상대 경로이다. ajax 호출할 때는 절대 경로 호츌하기
           *  위에 처럼 하면 경로가 chat/api/chat/friends?deptNo 이렇게 chat이 두번 호출하게 된다. */
           let htmlContent = "";
           let friends = data.data;
-          console.log("friends: ",friends);
-          let deptName = friends[0].departmentName;
 
-          if (friends.length != 0) {
-            htmlContent += `
-       <div class="accordion_item">
-          <h2 class="accordion-header" id="heading-myDeptAccordion">
-            <button class="accordion_button collapsed"
-                   type="button"
-                   id="dept-id"
-                   data-dept-id="\${departmentId}"
-                   data-bs-toggle="collapse"
-                   data-bs-target="#collapse-myDeptAccordion"
-                   aria-expanded="false"
-                   aria-controls="collapse-myDeptAccordion">
-              내 부서: \${deptName}
-            </button>
-          </h2>`;
+          if (friends.length !== 0) {
+            console.log("friends: ", friends);
 
-            for (let friend of friends) {
-              if(friend.profileImgpath == null) {
+            for (let i = 0; i < friends.length; i++) {
+              let parentDept = friends[i];
+              let parentDeptName = parentDept.parentDeptName;
+              let deptAndUserDtos = parentDept.deptAndUserDtos;
+
+              htmlContent += `
+                      <div class="accordion_item">
+                        <h2 class="accordion-header" id="heading-parent-\${i}">
+                          <button class="accordion_button collapsed"
+                                  type="button"
+                                  data-bs-toggle="collapse"
+                                  data-bs-target="#collapse-parent-\${i}"
+                                  aria-expanded="false"
+                                  aria-controls="collapse-parent-\${i}">
+                            본부: \${parentDeptName}
+                          </button>
+                        </h2>
+                        <div id="collapse-parent-\${i}"
+                             class="accordion-collapse collapse"
+                             aria-labelledby="heading-parent-\${i}"
+                             data-bs-parent="#my-department-section">
+                          <div class="accordion-body p-0">
+                    `;
+
+              // 각 부서(deptAndUserDtos) 반복
+              for (let j = 0; j < deptAndUserDtos.length; j++) {
+                let dept = deptAndUserDtos[j];
+                let departmentName = dept.departmentName;
+                let members = dept.members;
+                let headingId = `heading-dept-\${i}-\${j}`;
+                let collapseId = `collapse-dept-\${i}-\${j}`;
+
                 htmlContent += `
-                <div id="collapse-myDeptAccordion"
-                    class="accordion-collapse collapse"
-                    aria-labelledby="heading-myDeptAccordion"
-                    data-bs-parent="#my-department-section">
+                        <div class="accordion_item">
+                          <h2 class="accordion-header" id="\${headingId}">
+                            <button class="accordion_button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#\${collapseId}"
+                                    aria-expanded="false"
+                                    aria-controls="\${collapseId}">
+                              부서: \${departmentName}
+                            </button>
+                          </h2>
+                          <div id="\${collapseId}"
+                               class="accordion-collapse collapse"
+                               aria-labelledby="\${headingId}"
+                               data-bs-parent="#collapse-parent-\${i}">
+                            <div class="accordion-body p-0">
+                      `;
 
-                    <div class="accordion-body p-0">
-                        <div class="chat_list_item"
-                             data-user-id ="\${friend.userId}"
-                             data-user-name="\${friend.name}">
+                for (let member of members) {
+                  let profileImg = member.imgPath
+                      ? `https://storage.googleapis.com/grouvy-bucket/\${member.imgPath}`
+                      : `https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg`;
+
+                  htmlContent += `
+                          <div class="chat_list_item"
+                               data-user-id="\${member.id}"
+                               data-user-name="\${member.userName}">
                             <div class="chat_avatar">
-                               <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
-                                    alt="기본 프로필"
-                                    class="rounded-circle profile-photo"
-                                    style="width: 40px; height: 40px; object-fit: cover;">
+                              <img src="\${profileImg}"
+                                   alt="프로필 이미지"
+                                   class="rounded-circle profile-photo"
+                                   style="width: 40px; height: 40px; object-fit: cover;">
                             </div>
                             <div class="chat_info">
-                                <div class="chat_name">\${friend.name}</div>
+                              <div class="chat_name">\${member.userName}</div>
                             </div>
-                        </div>
-                `;
-              }else {
-                htmlContent += `
-                <div id="collapse-myDeptAccordion"
-                    class="accordion-collapse collapse"
-                    aria-labelledby="heading-myDeptAccordion"
-                    data-bs-parent="#my-department-section">
+                          </div>
+                        `;
+                }
 
-                    <div class="accordion-body p-0">
-                        <div class="chat_list_item"
-                             data-user-id ="\${friend.userId}"
-                             data-user-name="\${friend.name}">
-                            <div class="chat_avatar">
-                               <img src=""https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}""
-                                    alt="사용자 프로필 이미지"
-                                    class="rounded-circle profile-photo"
-                                    style="width: 40px; height: 40px; object-fit: cover;">
-                            </div>
-                            <div class="chat_info">
-                                <div class="chat_name">\${friend.name}</div>
-                            </div>
-                        </div>
-                `;
+                htmlContent += `</div></div></div>`; // 부서 아코디언 닫기
               }
 
+              htmlContent += `</div></div></div>`; // 본부 아코디언 닫기
+            }
+          }
 
-              /*<div class="chat_list_item"는 직원 한명 한명 어떻게 화면에 표시할지에 대한 div이다.*/
-            } // for
-            htmlContent += `</div></div></div>`;
-          }// if
 
           // 1. 기존 내용 비우고
           $('#my-department-section').empty();
@@ -167,10 +178,10 @@
   // 2.내가 즐겨찾기한 직원들 리스트 뿌리기
 
   // 3.팝업 오픈 함수
-  function openChatPopup(roomId,selectUserId) {
+  function openChatPopup(roomId) {
 
     window.open(
-        `/chat/chatting?roomId=\${roomId}&selectUserId=\${selectUserId}`,
+        `/chat/chatting?roomId=\${roomId}`,
         '_blank',
         'width=420,height=650,resizable=no,scrollbars=no'
     );
@@ -229,9 +240,15 @@
           $('#start-chat-btn').off('click').on('click', function () {
             closeContextMenu();
 
+            let userIds = []
+            userIds.push(userId);
+            userIds.push(parseInt(selectUserId));
+            let roomName = "";
+            console.log(userIds);
+
             let userData = {
-              userId : userId,
-              selectUserId: selectUserId
+              id : userIds,
+              name: roomName
             }
             console.log('userData', userData);
 
@@ -246,7 +263,7 @@
                 let room = result.data;
                 console.log("room: ",room);
                 console.log("room.roomId: ", room.roomId);
-                openChatPopup(room.roomId,selectUserId);
+                openChatPopup(room.roomId);
               }
             }) //ajax
           });
