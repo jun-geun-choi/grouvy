@@ -3,7 +3,7 @@
 <mapper namespace="com.example.grouvy.schedule.mapper.ScheduleMapper">
  <!-- 샘플 mapper 입니다. -->
 
- <select id="getHolidayById" resultType="Holiday">
+ <select id="getHolidayl" resultType="Holiday">
     SELECT
         HOLIDAY_TITLE       AS holidayTitle
         ,HOLIDAY_ID
@@ -47,6 +47,27 @@
             S.CATEGORY_ID = C.CATEGORY_ID
     </select>
 
+    <select id="getHoliday" resultType="Holiday">
+        SELECT
+            HOLIDAY_TITLE   AS holidayTitle
+            ,HOLIDAY_DATE    AS holidayDate
+        FROM
+            GROUVY_HOLIDAYS
+    </select>
+
+    <insert id="insertHoliday" parameterType="Holiday">
+        <selectKey keyProperty="holidayId" resultType="int" order="BEFORE">
+            SELECT HOLIDAYS_HOLIDAY_ID_SEQ.nextval FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_HOLIDAYS
+            (HOLIDAY_ID,
+             HOLIDAY_TITLE,
+             HOLIDAY_DATE)
+        VALUES
+            (#{holidayId},#{holidayTitle}, #{holidayDate})
+
+    </insert>
+
  <insert id="insertSchedule" parameterType="Schedule">
      <selectKey keyProperty="scheduleId" resultType="int" order="BEFORE">
          SELECT SCHEDULES_SCHEDULE_ID_SEQ.nextval FROM DUAL
@@ -72,5 +93,59 @@
 
  </insert>
 
+    <select id="getScheduleCategory" resultType="ScheduleCategory">
+        SELECT
+            CATEGORY_ID        AS categoryId
+            ,CATEGORY_TITLE    AS categoryTitle
+            ,CATEGORY_COLOR    AS categoryColor
+        FROM
+            GROUVY_SCHEDULES_CATEGORIES
+    </select>
+
+    <update id="updateCategory" parameterType="Category">
+        UPDATE GROUVY_SCHEDULES_CATEGORIES
+            SET
+                CATEGORY_COLOR  = #{categoryColor}
+            WHERE
+                CATEGORY_ID = #{categoryId}
+    </update>
+
+    <update id="deleteScheduleByUserNo" parameterType="Schedule">
+        UPDATE GROUVY_SCHEDULES
+            SET
+                IS_DELETED = "T"
+            WHERE
+                SCHEDULE_ID = #{scheduleId}
+    </update>
+
+    <delete id="deleteHolidayById" parameterType="int">
+        DELETE FROM GROUVY_HOLIDAYS
+        WHERE
+                HOLIDAY_ID = #{holidayId}
+    </delete>
+
+    <insert id="insertConferenceRoom" parameterType="ConferenceRoom">
+        <selectKey keyProperty="conferenceRoomId" resultType="int" order="BEFORE">
+            SELECT CONFERENCE_ROOMS_CONFERENCE_ROOM_ID_SEQ.nextval FROM DUAL
+        </selectKey>
+            INSERT INTO GROUVY_CONFERENCE_ROOMS
+            (CONFERENCE_ROOM_ID,
+             CONFERENCE_ROOM_TITLE,
+             CONFERENCE_ROOM_LOCATION,
+             SCHEDULE_ID)
+                VALUES
+        (#{conferenceRoomId},#{conferenceRoomTitle},#{conferenceRoomLocation},4)
+
+
+    </insert>
+
+    <select id="getConferenceRoom" parameterType="ConferenceRoom">
+        SELECT
+            CONFERENCE_ROOM_ID AS conferenceRoomId,
+            CONFERENCE_ROOM_TITLE AS conferenceRoomTitle,
+            CONFERENCE_ROOM_LOCATION AS conferenceRoomLocation
+        FROM
+            GROUVY_CONFERENCE_ROOMS
+    </select>
 
 </mapper>
