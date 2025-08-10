@@ -10,25 +10,44 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
           rel="stylesheet">
     <link rel="stylesheet" href="<c:url value='/resources/css/chat/style.css' />"/>
+    <style>
+      /* 즐겨찾기 목록 컨테이너에 대한 스타일 */
+      #friends-list {
+        /* 최대 높이를 지정합니다. 이 높이를 넘어가면 스크롤이 생깁니다. */
+        /* 뷰포트 높이의 40%로 설정하거나, 300px 등 고정값으로 설정할 수 있습니다. */
+        max-height: 40vh;
+
+        /* 내용이 max-height를 초과할 경우 세로 스크롤바를 자동으로 표시합니다. */
+        overflow-y: auto;
+      }
+    </style>
 </head>
 <body>
 
 <div class="sidebar">
     <%@include file="common/header.jsp" %>
 
-    <%-- 검색 입력필드 --%>
-    <%--    <div class="p-3 pb-2">
-          <input type="text" class="form-control" placeholder="이름을 입력하세요.">
-        </div>--%>
-
-    <%-- 같은 부서 직원 리스트를 뿌리는 곳. --%>
-    <div class="accordion" id="my-department-section" style="margin-bottom: 0.5rem;">
-        <%-- ajax로 값을 불러온다. --%>
+    <!-- 1. 같은 부서 직원 목록 -->
+    <div class="list-section">
+        <h4 class="list-header">
+            <i class="bi bi-diagram-3"></i> 같은 부서 직원
+        </h4>
+        <div class="accordion" id="my-department-section">
+            <%-- ajax로 값을 불러온다. --%>
+        </div>
     </div>
-    <%-- 내가 즐겨찾기한 직원 리스트를 뿌리는 곳. --%>
-    <div class="chat_list" id="friends-list">
-        <div class="accordion" id="friends-dept-accordion">
-            <!-- JS로 동적 생성 -->
+
+    <hr class="section-divider">
+
+    <!-- 2. 즐겨찾기 목록 -->
+    <div class="list-section">
+        <h4 class="list-header">
+            <i class="bi bi-star"></i> 즐겨찾기
+        </h4>
+        <div class="chat_list" id="friends-list">
+            <div class="accordion" id="friends-dept-accordion">
+                <!-- JS로 동적 생성 -->
+            </div>
         </div>
     </div>
 </div>
@@ -176,6 +195,81 @@
   }
 
   // 2.내가 즐겨찾기한 직원들 리스트 뿌리기
+    function renderFriendsList() {
+      $.getJSON(`/api/chat/myWishList`, function (data) {
+        let result = data.data; // 서버에서 받은 배열 [ {departmentName, members: [...]}, ... ]
+        console.log("즐겨찾기 목록:", result);
+        let htmlContent = "";
+
+        if (result && result.length > 0) {
+          // 1. 부서별로 반복 (result 배열 순회)
+          for (let i = 0; i < result.length; i++) {
+            let dept = result[i];
+            let departmentName = dept.departmentName;
+            let members = dept.members;
+
+            // 해당 부서에 멤버가 없으면 아코디언을 생성하지 않음
+            if (members.length === 0) {
+              continue;
+            }
+
+            // 부서별 아코디언 아이템 생성
+            htmlContent += `
+                    <div class="accordion_item">
+                      <h2 class="accordion-header" id="friends-heading-dept-\${i}">
+                        <button class="accordion_button collapsed"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#friends-collapse-dept-\${i}"
+                                aria-expanded="false"
+                                aria-controls="friends-collapse-dept-\${i}">
+                          \${departmentName} (\${members.length})
+                        </button>
+                      </h2>
+                      <div id="friends-collapse-dept-\${i}"
+                           class="accordion-collapse collapse"
+                           aria-labelledby="friends-heading-dept-\${i}"
+                           data-bs-parent="#friends-dept-accordion">
+                        <div class="accordion-body p-0">
+                `;
+
+            // 2. 부서 내 멤버별로 반복 (members 배열 순회)
+            for (let member of members) {
+              // 프로필 이미지 경로 설정 (기본 이미지 포함)
+              let profileImg = member.imgPath
+                  ? `https://storage.googleapis.com/grouvy-bucket/\${member.imgPath}`
+                  : `https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg`;
+
+              // 각 멤버의 리스트 아이템 HTML 생성
+              htmlContent += `
+                        <div class="chat_list_item"
+                             data-user-id="\${member.id}"
+                             data-user-name="\${member.userName}">
+                          <div class="chat_avatar">
+                            <img src="\${profileImg}"
+                                 alt="프로필 이미지"
+                                 class="rounded-circle profile-photo"
+                                 style="width: 40px; height: 40px; object-fit: cover;">
+                          </div>
+                          <div class="chat_info">
+                            <div class="chat_name">\${member.userName}</div>
+                          </div>
+                        </div>
+                    `;
+            }
+
+            htmlContent += `</div></div></div>`; // 아코디언 아이템 닫기
+          }
+        }
+
+        // 3. 생성된 HTML을 화면에 렌더링
+        $('#friends-dept-accordion').empty();
+        $('#friends-dept-accordion').append(htmlContent);
+        // 4. 새로 추가된 요소들에 컨텍스트 메뉴 이벤트 연결
+        setupMemberContextMenu("#friends-dept-accordion .chat_list_item");
+
+     });
+    }
 
   // 3.팝업 오픈 함수
   function openChatPopup(roomId) {
@@ -219,17 +313,9 @@
 
           //0.우클릭 메뉴들을 정의함. - 대화시작, 프로필, 삭제
           let menuHtml= "";
-          if(departmentId === $loadDepartmentId) {                 //- 나의 부서 직원들이라면, 삭제 버튼 비활성화
            menuHtml = `<button id='start-chat-btn'>대화 시작</button>
-                          <button id='view-profile-btn'>프로필 상세 보기</button>
-                          <button id='delete-friend-btn'
-                                 class='d-none'>삭제</button>`;
-          }
-          else {
-           menuHtml = `<button id='start-chat-btn'>대화 시작</button>
-                          <button id='view-profile-btn'>프로필 상 보기</button>
-                          <button id='delete-friend-btn'>삭제</button>`;
-          }
+                          <button id='view-profile-btn'>프로필 상세 보기</button>`;
+
 
           $('#context-menu').html(menuHtml).css({                                         // 우클릭 메뉴 화면에 띄우기
             top: e.clientY + 'px',

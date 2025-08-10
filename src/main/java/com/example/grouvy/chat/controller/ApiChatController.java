@@ -27,9 +27,6 @@ public class ApiChatController {
 
   @Autowired
   private ChatService chatService;
-
-
-
   /**
    * 같은 부서 직원 리스트 가져오기
    * @param departmentNo
@@ -42,6 +39,18 @@ public class ApiChatController {
       @AuthenticationPrincipal SecurityUser securityUser) {
     int userId = securityUser.getUser().getUserId();
     List<ParentDeptDto> data = chatService.getMyListByDeptNo(departmentNo, userId);
+    return ResponseEntityUtils.ok(data);
+  }
+
+  /**
+   * 내가 친구 추가한 유저 리스트를 반환한다.
+   * @param securityUser
+   * @return
+   */
+  @GetMapping("/myWishList")
+  public ResponseEntity<ApiResponse<List<DeptAndUserDto>>> getMyWishListByUserId(@AuthenticationPrincipal SecurityUser securityUser) {
+    int userId = securityUser.getUser().getUserId();
+    List<DeptAndUserDto> data = chatService.getMyWishListByUserId(userId);
     return ResponseEntityUtils.ok(data);
   }
 
@@ -105,6 +114,15 @@ public class ApiChatController {
     List<ParentDeptDto> parentDeptDtos = chatService.getOrganization();
     return  ResponseEntityUtils.ok(parentDeptDtos);
 
+  }
+
+  @PostMapping("/wisiList")
+  public ResponseEntity<ApiResponse<Void>> addWishList(@RequestBody Map<String, Object> data,
+                                                       @AuthenticationPrincipal SecurityUser securityUser) {
+    int userId = securityUser.getUser().getUserId();
+    List<Integer> userIds = (List<Integer>) data.get("id");
+    chatService.addWishList(userIds, userId);
+    return ResponseEntityUtils.ok("추가 되었습니다.");
   }
 
 }

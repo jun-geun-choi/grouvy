@@ -9,11 +9,13 @@ import com.example.grouvy.chat.mapper.ChatMapper;
 import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
 import com.example.grouvy.chat.vo.ChatRoomUser;
+import com.example.grouvy.chat.vo.ChatWishList;
 import com.example.grouvy.department.vo.Department;
 import com.example.grouvy.user.vo.User;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +110,7 @@ public class ChatService {
 
   /**
    * 그냥 부서 정보 전체를 가져온다.
+   *
    * @return
    */
   public List<ParentDeptDto> getOrganization() {
@@ -143,6 +146,29 @@ public class ChatService {
   }
 
   /**
+   * 나의 위시리스트 목록을 가져온다.
+   * @param userId
+   * @return
+   */
+  public List<DeptAndUserDto> getMyWishListByUserId(int userId) {
+    List<DeptAndUserDto> list = new ArrayList<>();
+    Map<String,List<UserDto>> groupping = new LinkedHashMap<>();
+    List<User> users = chatMapper.getMyWishListByUserId(userId);
+
+    for(User user :  users) {
+      String deptName = user.getDepartment().getDepartmentName();
+      groupping.computeIfAbsent(deptName,k-> new ArrayList<>())
+               .add(new UserDto(user));
+    }
+
+    for(Map.Entry<String, List<UserDto>> child : groupping.entrySet()) {
+      list.add(new DeptAndUserDto(child.getKey(), child.getValue()));
+    }
+
+    return list;
+  }
+
+  /**
    * 특정 사용자 정보를 반환
    *
    * @param userId
@@ -155,9 +181,7 @@ public class ChatService {
   }
 
   /**
-   * 이 두 사용자가 참여하고 있는 채팅방이 있는지 확인한다. 있는 경우라면, 한 명은 채팅방을 나가고 한 명은 아직 참여 중인 상태인 것이다. -> 그래서 참여 중이 아닌
-   * 참여자를 찾아 참여 시키도록 한다. - 이 때에는 is_active가 Y,N인 경우 전부 조회해야된다. -> 왜냐하면, 나간 사람 임장에서 새로운 채팅방이 아닌 기존
-   * 채팅방을 재활용 해야된다 없는 경우라면, 채팅방을 만든다.
+   * 사용자들의 id와, 그 인원 수로 채팅방을 조회 해보고, 없으면 새로 만든다.
    *
    * @param
    * @param
@@ -170,19 +194,19 @@ public class ChatService {
       condition.put("userIds", userIds);
       condition.put("listSize", userIds.size());
     }
-    if(userIds.size() >= 3) {
-      condition.put("isActive","Y");
+    if (userIds.size() >= 3) {
+      condition.put("isActive", "Y");
       condition.put("userIds", userIds);
       condition.put("listSize", userIds.size());
     }
     // 단일 이냐, 그룹이냐에 따라 채팅방을 불러오자!
-    ChatRoom existsRoom = chatMapper.getGroupRoomsByUserId(condition);
+    ChatRoom existsRoom = chatMapper.getChatRoomByUserId(condition);
 
     // 채팅방이 있다면
     if (existsRoom != null) {
 
       // 그룹이면 그 채팅방을 그대로 반환.
-      if(userIds.size() >= 3) {
+      if (userIds.size() >= 3) {
         return existsRoom;
       }
 
@@ -205,7 +229,7 @@ public class ChatService {
     ChatRoom newRoom = new ChatRoom();
     if (userIds.size() == 2) {
       newRoom.setIsGroup("N");
-    }else {
+    } else {
       newRoom.setIsGroup("Y");
       newRoom.setRoomName(roomName);
     }
@@ -248,7 +272,7 @@ public class ChatService {
     return newRoom;
   }*/
 
-  public ChatRoom getChatRoomByRoomId(int roomId){
+  public ChatRoom getChatRoomByRoomId(int roomId) {
     return chatMapper.getChatRoomByRoomId(roomId);
   }
 
@@ -410,5 +434,37 @@ public class ChatService {
         chatMapper.updateChatRoomUser(user);
       }
     }
+  }
+
+  /**
+   *  친구 추가 버튼을 누르면 DB에 등록하는 로직이다.
+   * @param userIds
+   * @param userId
+   */
+  public void addWishList(List<Integer> userIds, int userId) {
+    List<Integer> myWishListIds = chatMapper.getMyWishListIds(userId);
+    Set<Integer> myWishListIdsSet = new HashSet<>();
+
+    if(myWishListIds!= null) {
+      myWishListIdsSet.addAll(myWishListIds);
+    }
+
+    List<Integer> insertIds = userIds.stream()
+                                     .filter(id -> !myWishListIdsSet.contains(id))
+                                     .filter(id -> id != userId)
+                                     .collect(Collectors.toList());
+
+    if(!insertIds.isEmpty()) {
+      List<ChatWishList> wishList = new ArrayList<>();
+      for(Integer id : insertIds) {
+        ChatWishList chatWishList = new ChatWishList();
+        chatWishList.setUserId(userId);
+        chatWishList.setSelectedUserId(id);
+        chatWishList.setMemo("");
+        wishList.add(chatWishList);
+      }
+      chatMapper.insertChatWishList(wishList);
+    }
+
   }
 }

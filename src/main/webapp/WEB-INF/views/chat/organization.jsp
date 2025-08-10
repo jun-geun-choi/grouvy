@@ -193,8 +193,26 @@
         if (orgSelectedMembers.size === 0) {
           return alert('직원을 선택하세요.');
         }
-        alert('친구 추가 기능은 데모입니다. 선택: ' + Array.from(orgSelectedMembers).map(
-                m => JSON.parse(m).name).join(', '));
+        let userData = {id : userIds};
+
+        // 이미 선택된 사용자를 다시 추가하지 않도록 체크박스 해제 및 orgSelectedMembers 초기화
+        $('.org-member-checkbox:checked').prop('checked', false);
+        orgSelectedMembers.clear();
+        updateOrgSelectedCount();
+
+        $.ajax({
+          type: "POST",
+          url: "/api/chat/wisiList",
+          contentType: "application/json",
+          data: JSON.stringify(userData),
+          dataType: "json",
+          success: function (data) {
+            console.log(data)
+            showAlert('성공적으로 추가되었습니다.', 'success');
+          }
+        });
+
+
       });
 
       // 대화 버튼 클릭 이벤트
@@ -202,13 +220,6 @@
         if (orgSelectedMembers.size === 0) {
           return alert('직원을 선택하세요.');
         }
-        /* 조직도에서 그룹 채팅 구현
-        - 선택한 유저 아이디를 모은다.
-        - 선택한 유저 이름들을 모은다.
-        - 선택한 유저 이름들이 쭉 나열 하여 그룹 채팅방 이름을 만든다.
-        - 비동기 통신에 보낼 데이터로 만들어 -> post요청을 한다.
-        - 1:1 요청일 때는 1:1 채팅방을 만들고, 그룹 요청일 때는 그룹 채팅방을 만들어야 한다.
-         */
 
         let groupRoomName ="";
         // 유저 이름들 만들기
@@ -249,6 +260,30 @@
               '_blank',
               'width=420,height=650,resizable=no,scrollbars=no'
       );
+    }
+
+    // 알림창을 표시하는 함수
+    function showAlert(message, type) {
+      const alertHtml = `
+    <div class="alert alert-\${type} alert-dismissible fade show" role="alert">
+      \${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+
+      // 1. 새로운 알림창 jQuery 객체를 먼저 생성합니다.
+      const $newAlert = $(alertHtml);
+
+      // 2. 생성한 객체를 컨테이너에 추가합니다.
+      $('#alert-container').append($newAlert);
+
+      // 3. 3초 후에 해당 객체가 사라지도록 설정합니다.
+      setTimeout(() => {
+        $newAlert.fadeOut(500, function() {
+          // fadeOut 애니메이션이 끝난 후 요소를 완전히 제거합니다.
+          $(this).remove();
+        });
+      }, 1000); // 3000ms = 3초
     }
 
     // 컨텍스트 메뉴 & 프로필 모달
