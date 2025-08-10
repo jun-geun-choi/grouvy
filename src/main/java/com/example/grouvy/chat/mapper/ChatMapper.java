@@ -3,6 +3,7 @@ package com.example.grouvy.chat.mapper;
 import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
 import com.example.grouvy.chat.vo.ChatRoomUser;
+import com.example.grouvy.chat.vo.ChatWishList;
 import com.example.grouvy.user.vo.User;
 import java.util.List;
 import java.util.Map;
@@ -38,17 +39,26 @@ public interface ChatMapper {
    * @param selectUserId 지정된 사용자의 ID
    * @return 1:1 채팅방 반환
    */
-  public ChatRoom getRoomByUserId(@Param("userId") int userId,
+  public ChatRoom getRoomByUserId111(@Param("userId") int userId,
       @Param("selectUserId") int selectUserId);
 
 
-  /** => 채팅방을 조회하는데 그룹이든, 1:1이든 이걸로 한번에 조회 가능. 단, 위에 것 보다 성능이 떨어짐.
-   *  채팅방에서 선택된 유저 아이디들과, 선택된 유저가 몇 명인지에 대한 정보를 기반으로,
-   *  이 유저들만 존재하는 채팅방이 있는지 조회한다.
+  /**
+   * 유저 수와 ,id로 채팅방을 조회한다.
+   * 1:1의 경우, is_active를 조건으로 필터링 하면 안된다.
+   *      -> 상대방이 나갔을 경우, 그 상대방이 다시 나와 채팅방을 열려면,
+   *      -> 전에 사용했던 채팅방을 재활용 해야되기 때문이다.
+   *      -> 둘다 나가지 않는 이상, 그 둘의 채팅방은 계속 남아있기 때문이다.
+   * 그룹의 경우 , 그룹의 경우 is_active를 조건으로 필터링 해야된다.
    * @return 이 유저들만 포함된 단일의 채팅방 (ChatRoom)
    */
-  public ChatRoom getGroupRoomsByUserId(Map<String,Object>condition);
+  public ChatRoom getChatRoomByUserId(Map<String,Object>condition);
 
+  /**
+   * roomId로 채팅방을 반환
+   * @param roomId
+   * @return
+   */
   public ChatRoom getChatRoomByRoomId(@Param("roomId") int roomId);
 
 
@@ -116,4 +126,18 @@ public interface ChatMapper {
   public void deleteChatRoomUser(int roomId);
   public void deleteChatRoom(int roomId);
 
+  /**
+   * 나의 아이디로, 나의 위시리스틑 ID 목록을 가져온다.
+   * @param userId
+   * @return
+   */
+  public List<Integer> getMyWishListIds(int userId);
+
+  /**
+   * 위시 리스트에 데이터를 추가한다.
+   * @param chatWishList
+   */
+  public void insertChatWishList(List<ChatWishList> chatWishList);
+
+  public List<User> getMyWishListByUserId(int userId);
 }

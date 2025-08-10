@@ -68,10 +68,10 @@
     </select>
 
     <!--
-           public ChatRoom getGroupRoomsByUserId(List<Integer> userIds, int listSize);
+            public ChatRoom getChatRoomByUserId(Map<String,Object>condition);
            이 인원의 유저들이 참여하고 있는 채팅방을 반환한다.
        -->
-    <select id="getGroupRoomsByUserId" resultType="ChatRoom" parameterType="map">
+    <select id="getChatRoomByUserId" resultType="ChatRoom" parameterType="map">
         SELECT
              R.ROOM_ID AS roomId
             ,R.ROOM_NAME AS roomName
@@ -176,6 +176,7 @@
              , U.NAME       AS "user.name"
              , CU.IS_ACTIVE AS isActive
              , U.EMAIL      AS "user.email"
+             ,R.IS_GROUP    AS "chatRoom.isGroup"
         FROM GROUVY_CHAT_ROOMS R,
              GROUVY_CHAT_ROOM_USERS CU,
              GROUVY_USERS U
@@ -269,7 +270,59 @@
     <delete id="deleteChatRoom">
         DELETE
         GROUVY_CHAT_ROOMS
-        WHERE ROOM_ID =
-        #{roomId}
+        WHERE ROOM_ID = #{roomId}
     </delete>
+
+    <!--public List<Integer> getMyWishListIds(int userId);-->
+    <select id="getMyWishListIds" resultType="int">
+        SELECT
+            SELECTED_ID
+        FROM
+            GROUVY_CHAT_WISHLIST
+        WHERE
+            USER_ID = #{userId}
+    </select>
+
+    <!-- public void insertChatWishList(List<ChatWishList> chatWishList); -->
+    <insert id="insertChatWishList" parameterType="list">
+        <!-- 1. INSERT ALL 키워드로 시작합니다. -->
+        INSERT ALL
+
+        <!-- 2. foreach 루프는 INTO ... VALUES (...) 구문을 반복적으로 생성합니다. -->
+        <!--    - separator="," 는 더 이상 필요 없으므로 제거합니다. -->
+        <foreach collection="list" item="wish">
+            INTO GROUVY_CHAT_WISHLIST (
+            USER_ID,
+            SELECTED_ID,
+            MEMO
+            )
+            VALUES (
+            #{wish.userId},
+            #{wish.selectedUserId},
+            #{wish.memo}
+            )
+        </foreach>
+
+        <!-- 3. Oracle의 INSERT ALL 문법을 완성하기 위해 마지막에 이 구문을 반드시 추가해야 합니다. -->
+        SELECT 1 FROM DUAL
+    </insert>
+
+    <!--public List<User> getMyWishListByUserId(int userId);-->
+    <select id="getMyWishListByUserId" resultType="User">
+        SELECT
+            D.DEPARTMENT_NAME                       AS "department.departmentName"
+             ,U.NAME                                AS name
+             ,U.PROFILE_IMG_PATH                    AS profileImgPath
+             ,U.USER_ID                             AS userId
+             ,P.POSITION_NAME                       AS "position.positionName"
+        FROM
+            GROUVY_USERS U , GROUVY_CHAT_WISHLIST W , GROUVY_DEPARTMENTS D, GROUVY_POSITIONS p
+        WHERE
+            W.SELECTED_ID = U.USER_ID
+          AND U.DEPARTMENT_ID = D.DEPARTMENT_ID
+          AND U.POSITION_NO = P.POSITION_NO
+          AND W.USER_ID = #{userId}
+        ORDER BY D.DEPARTMENT_ID ASC, U.POSITION_NO ASC
+    </select>
+
 </mapper>
