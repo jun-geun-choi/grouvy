@@ -1,10 +1,10 @@
 package com.example.grouvy.security;
 
 import com.example.grouvy.user.vo.User;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 
 public class SecurityUser implements UserDetails {
@@ -46,6 +46,5 @@ public class SecurityUser implements UserDetails {
     public String getDepartmentName() {
         return user.getDepartment().getDepartmentName();
     }
-
 
 }

@@ -11,6 +11,7 @@
   <title>일정 관리 - 캘린더</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/resources/css/schedule/fullcalendar.css">
   <style>
     body {
       margin: 0;
@@ -310,7 +311,9 @@
   </div>
 
 </body>
+<script src='https://cdn.jsdelivr.net/npm/rrule@2.6.4/dist/es5/rrule.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/index.global.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.18/index.global.min.js'></script>
 <script>
 
   // const data = [{
@@ -323,8 +326,48 @@
   //   title:"테스트"
   // }];
 
+  function dateFormat(date) {
+    let dateFormat2 = date.getFullYear() +
+            '-' + ( (date.getMonth()+1) < 9 ? "0" + (date.getMonth()+1) : (date.getMonth()+1) )+
+            '-' + ( (date.getDate()) < 9 ? "0" + (date.getDate()) : (date.getDate()) );
+    return dateFormat2;
+  }
+
+
+  const ttt = [
+  <c:forEach var="holiday" items="${holidayList }" varStatus="loop">
+    {
+      "title": '${holiday.holidayTitle}',
+      "rrule": {
+        "freq": 'yearly',
+        "interval": 1,
+        "dtstart": '2000-0${holiday.holidayDate.getMonth()+1}-0${holiday.holidayDate.getDate()}',
+        "until": '2085-06-01'
+      }
+    },
+  </c:forEach>
+  ];
+
+  // const tmpd =
+  //   [{
+  //     "title": 'my recurring event',
+  //     "rrule": {
+  //       "freq": 'YEARLY',
+  //       "interval": 1,
+  //       // byweekday: [ 'mo', 'fr' ],
+  //       "dtstart": '2025-02-01', // will also accept '20120201T103000'
+  //       "until": '2025-06-01' // will also accept '20120201'
+  //     }
+  //   }];
+
+
+
+
+
+
   const data = ${scheduleJson};
   console.log(data);
+  console.log(ttt);
   // var jsonData = JSON.stringify(data);
   // var word1 = str.substring(0, str.indexOf(','));
 
@@ -334,7 +377,15 @@
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
-      events:data,
+      titleFormat: function (date) {
+        year = date.date.year;
+        month = date.date.month + 1;
+
+        return year + "년 " + month + "월";
+      },
+      eventSources: [ {events:data}, ttt],
+      // events:
+      //         data,
       eventClick: function(info){
         alert('제목' + info.event.title);
       },

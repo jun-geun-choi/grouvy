@@ -58,6 +58,7 @@ public class UserController {
         }
 
         try {
+
             int userId = userService.registerUser(userRegisterForm);
             adminUserService.registerPendingUser(userId);
 //            adminUserService.registerUser();
