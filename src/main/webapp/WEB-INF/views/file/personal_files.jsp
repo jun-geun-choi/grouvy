@@ -1,8 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
+<%@ page language="java" contentType="text/html;charset=UTF-8"
 pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ include file="../common/taglib.jsp" %>
+
 
 
 
@@ -447,33 +446,7 @@ footer {
 <body>
 <%@include file="../common/nav.jsp" %>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html"> 
-                <span class="logo-crop"> 
-                    <img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
-                </span>
-            </a>
-            <ul class="navbar-nav mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="#">전자결재</a></li>
-                <li class="nav-item"><a class="nav-link active" href="#">업무문서함</a></li>
-                <li class="nav-item"><a class="nav-link" href="/task/todo">업무 관리</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-                <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-            </ul>
-            <div class="d-flex align-items-center">
-                <a href="mypage.html" >
-                    <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-                            alt="프로필" class="rounded-circle" width="36" height="36">
-                </a>
-                <a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
-            </div>
-        </div>
-    </nav>
-
+<%@ include file="../common/nav.jsp" %>
 
     <main>
         <div class="container">
@@ -512,56 +485,42 @@ footer {
             <!-- 기능 페이지 -->
             <div class="main-content">
                 <h2>개인업무 문서함</h2>
-                <!-- 여기에 부서·이름·직급 표시 -->
-                <sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
-                <sec:authentication property="principal.user.name"           var="name"/>
-                <sec:authentication property="principal.user.position.positionName"   var="positionName"/>
 
-                <div class="user-info"
-                     style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
-                    ${departmentName}  ${name}  ${positionName}
-                </div>
-                
-                <div class="file-search-box">
-                <div class="file-search-group">
-    <select id="favorite-select">
-        <option value="">즐겨찾기 여부</option>
-        <option value="Y">즐겨찾기만</option>
-        <option value="N">즐겨찾기 제외</option>
-    </select>
-    <select id="category-select">
-        <option value="">카테고리</option>
-        <option value="업무관리">업무관리</option>
-        <option value="문서">문서</option>
-        <option value="보고서">보고서</option>
-        <option value="스프레드시트">스프레드시트</option>
-        <option value="프레젠테이션">프레젠테이션</option>
-        <option value="이미지">이미지</option>
-        <option value="기타">기타</option>
-    </select>
-    <select id="shared-select">
-        <option value="">공유여부</option>
-        <option value="공유함">공유 O</option>
-        <option value="공유안함">공유 X</option>
-    </select>
-    </div>
-    <span class="file-search-divider"></span>
-    <div class="file-search-group">
-    <span class="date-label">등록일</span>
-    <input type="date" class="date-input" placeholder="시작일">
-    <span class="date-separator">~</span>
-    <input type="date" class="date-input" placeholder="종료일">
-    </div>
-    <span class="file-search-divider"></span>
-    <div class="file-search-group">
-    <select>
-        <option>파일명</option>
-        <option>확장자</option>
-    </select>
-    <input type="text" class="input-file-name" placeholder="검색어">
-    <button class="search-btn">검색</button>
-    </div>
-</div>
+<%--                <div class="file-search-box">--%>
+<%--                <div class="file-search-group">--%>
+<%--    <select id="category-select">--%>
+<%--        <option value="">카테고리</option>--%>
+<%--        <option value="업무관리">업무관리</option>--%>
+<%--        <option value="문서">문서</option>--%>
+<%--        <option value="보고서">보고서</option>--%>
+<%--        <option value="스프레드시트">스프레드시트</option>--%>
+<%--        <option value="프레젠테이션">프레젠테이션</option>--%>
+<%--        <option value="이미지">이미지</option>--%>
+<%--        <option value="기타">기타</option>--%>
+<%--    </select>--%>
+<%--    <select id="shared-select">--%>
+<%--        <option value="">공유여부</option>--%>
+<%--        <option value="공유함">공유 O</option>--%>
+<%--        <option value="공유안함">공유 X</option>--%>
+<%--    </select>--%>
+<%--    </div>--%>
+<%--    <span class="file-search-divider"></span>--%>
+<%--    <div class="file-search-group">--%>
+<%--    <span class="date-label">등록일</span>--%>
+<%--    <input type="date" class="date-input" placeholder="시작일">--%>
+<%--    <span class="date-separator">~</span>--%>
+<%--    <input type="date" class="date-input" placeholder="종료일">--%>
+<%--    </div>--%>
+<%--    <span class="file-search-divider"></span>--%>
+<%--    <div class="file-search-group">--%>
+<%--    <select>--%>
+<%--        <option>파일명</option>--%>
+<%--        <option>확장자</option>--%>
+<%--    </select>--%>
+<%--    <input type="text" class="input-file-name" placeholder="검색어">--%>
+<%--    <button class="search-btn">검색</button>--%>
+<%--    </div>--%>
+<%--</div>--%>
                 
                 <div class="file-list-box">
                     <div class="file-list-header">
@@ -583,7 +542,6 @@ footer {
                         <thead>
                             <tr>
                                 <th><input type="checkbox"></th>
-                                <th>★</th>
                                 <th>카테고리</th>
                                 <th>파일명</th>
                                 <th>공유여부</th>
@@ -600,7 +558,6 @@ footer {
                             <c:forEach var="file" items="${files}" varStatus="status">
                                 <tr data-file-id="${status.count}">
                                     <td><input type="checkbox" name="fileIds" value="${file.fileId}"></td>
-                                    <td>★</td>
                                     <td>${file.fileCategoryName}</td>
                                     <td><a href="/file/download?fileId=${file.fileId}">${file.originalName}</a></td>
                                     <c:if test="${file.shareStatus eq 'Y'}">
@@ -693,8 +650,6 @@ footer {
 
 
 // 전역 함수 등록
-window.toggleFavorite = toggleFavorite;
-
 document.querySelector('.file-table').addEventListener('change', function(e) {
     if (e.target.type === 'checkbox') {
     const tr = e.target.closest('tr');
