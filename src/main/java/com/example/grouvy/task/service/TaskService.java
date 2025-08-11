@@ -2,6 +2,8 @@ package com.example.grouvy.task.service;
 
 import com.example.grouvy.file.mapper.FileMapper;
 import com.example.grouvy.file.vo.FileVo;
+import com.example.grouvy.notification.service.NotificationService;
+import com.example.grouvy.notification.vo.Notification;
 import com.example.grouvy.task.dto.request.Feedback;
 import com.example.grouvy.task.dto.request.TaskForm;
 import com.example.grouvy.task.dto.response.*;
@@ -10,6 +12,7 @@ import com.example.grouvy.task.vo.TaskFile;
 import com.example.grouvy.task.vo.TaskReceiver;
 import com.example.grouvy.task.vo.TaskVo;
 import com.example.grouvy.user.exception.AppException;
+import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.User;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
@@ -53,6 +56,12 @@ public class TaskService {
 
     @Value("${spring.cloud.gcp.storage.bucket}")
     private String bucketName;
+
+    //알림조회의존성
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    private UserMapper userMapper;
 
     // 로그인 유저의 개인/부서 파일 모두 가져오기
     public List<ModalFile> getFiles(int userId) {
@@ -176,7 +185,40 @@ public class TaskService {
 
                 // 데이터베이스에 저장
                 taskMapper.insertTaskFile(taskFile);
+            }
+        }
 
+        //알림 로직.
+        User writer = userMapper.findByUserId(taskForm.getWriterId());
+        String taskTitle = taskForm.getTitle();
+        String targetUrl = "/task/detail/" + task.getTaskId();
+
+        //수신자에게 알림 발송
+        if (receiveUserId != 0 && receiveUserId != writer.getUserId()) {
+            Notification notificationToReceiver = Notification.builder()
+                    .userId(receiveUserId)
+                    .notificationType("신규업무")
+                    .notificationContent(writer.getName() + "님이 새로운 업무 '" + taskTitle + "'를 등록했습니다.")
+                    .targetUrl(targetUrl)
+                    .isRead("N")
+                    .build();
+            notificationService.createNotification(notificationToReceiver);
+        }
+
+        //참조자 알림발송
+        if (ccUserIds != null && !ccUserIds.isEmpty()) {
+            String contentForCc = writer.getName() + "님이 '" + taskTitle + "' 업무에 당신을 참조자로 지정했습니다.";
+            for (Integer ccUserId : ccUserIds) {
+                if (ccUserId.equals(taskForm.getWriterId())) continue;
+
+                Notification notificationToCc = Notification.builder()
+                        .userId(ccUserId)
+                        .notificationType("업무참조")
+                        .notificationContent(contentForCc)
+                        .targetUrl(targetUrl)
+                        .isRead("N")
+                        .build();
+                notificationService.createNotification(notificationToCc);
             }
         }
     }
@@ -383,8 +425,32 @@ public class TaskService {
             }
         }
 
+
         taskMapper.updateTask(task);
 
+        //알림로직.
+        User receiver = userMapper.findByUserId(feedback.getReceiveUserId());
+        String taskTitle = task.getTitle();
+        String targetUrl = "/task/detail/" + task.getTaskId();
+        String notificationContent;
+
+        // 진행률 알림 메시지 생성
+        if (feedback.getProgressPercent() == 100) {
+            String completeMessage = task.getType().equals("request") ? "처리를 완료했습니다." : "검토를 완료했습니다.";
+            notificationContent = receiver.getName() + "님이 '" + taskTitle + "' 업무의 " + completeMessage;
+        } else {
+            notificationContent = receiver.getName() + "님이 '" + taskTitle + "' 업무에 대한 피드백을 등록했습니다.";
+        }
+
+        //알림 발송
+        Notification notification = Notification.builder()
+                .userId(task.getWriterId())
+                .notificationType("업무검토")
+                .notificationContent(notificationContent)
+                .targetUrl(targetUrl)
+                .isRead("N")
+                .build();
+        notificationService.createNotification(notification);
     }
 
     // 업무반려에 따른 업무 업데이트
@@ -399,6 +465,24 @@ public class TaskService {
         // 수신자 업데이트
         feedback.setProgressPercent(0);
         taskMapper.updateReceivers(feedback);
+
+        //알림로직.
+        User receiver = userMapper.findByUserId(feedback.getReceiveUserId());
+        String taskTitle = task.getTitle();
+        String targetUrl = "/task/detail/" + task.getTaskId();
+
+        //알림 메시지 생성
+        String notificationContent = receiver.getName() + "님이 '" + taskTitle + "' 업무를 반려했습니다.";
+
+        //알림 발송
+        Notification notification = Notification.builder()
+                .userId(task.getWriterId())
+                .notificationType("업무반려")
+                .notificationContent(notificationContent)
+                .targetUrl(targetUrl)
+                .isRead("N")
+                .build();
+        notificationService.createNotification(notification);
     }
 
     // 할일 디테일 가져오기
