@@ -14,6 +14,9 @@ import com.example.grouvy.notification.vo.Notification;
 import com.example.grouvy.user.exception.AppException;
 import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.User;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,11 +37,17 @@ public class FileService {
     @Value("${app.file.save-directory}")
     private String saveDirectory;
 
+    @Value("${spring.cloud.gcp.storage.bucket}")
+    private String bucketName;
+
     @Autowired
     private ModelMapper modelMapper;
 
     @Autowired
     private FileMapper fileMapper;
+
+    @Autowired
+    private Storage storage;
 
     //알림조회의존성
     @Autowired
@@ -46,6 +55,7 @@ public class FileService {
     @Autowired
     private UserMapper userMapper;
 
+    // 파일 업로드
     @Transactional
     public void uploadFile(User user, FileForm fileUploadForm) {
         FileVo file = modelMapper.map(fileUploadForm, FileVo.class);
@@ -60,8 +70,15 @@ public class FileService {
             file.setOriginalName(originalFileName);
             file.setStoredName(filename);
 
-            File dest = new File(saveDirectory + "/" + file.getOwnerType(), filename);
-            uploadedFile.transferTo(dest);
+            BlobInfo blobInfo = storage.create(
+                    BlobInfo.newBuilder(bucketName, filename)
+                            .setContentType(uploadedFile.getContentType())
+                            .build(),
+                    uploadedFile.getInputStream()
+            );
+
+//            File dest = new File(saveDirectory + "/" + file.getOwnerType(), filename);
+//            uploadedFile.transferTo(dest);
         } catch (Exception e) {
             throw new RuntimeException("첨부파일저장오류", e);
         }
@@ -147,7 +164,7 @@ public class FileService {
         return fileMapper.getDepartmentFilesByDepartmentId(departmentId);
     }
 
-    // 파일 삭제
+    // 파일 삭제로 변경
     @Transactional
     public void deleteFiles(List<Integer> fileIds) {
         // 삭제대상 파일번호 리스트 반복
@@ -174,6 +191,7 @@ public class FileService {
 
     }
 
+    // 모달 유저 가져오기
     public List<ModalUser> targetList() {
         return fileMapper.getModalUsers();
     }
@@ -325,8 +343,8 @@ public class FileService {
         }
     }
 
-    @Transactional
     // 휴지통 영구삭제
+    @Transactional
     public void deleteTrash(List<Integer> trashIds) {
         for (Integer trashId : trashIds) {
             Trash trash = fileMapper.getTrashByTrashId(trashId);
@@ -334,27 +352,19 @@ public class FileService {
             FileVo file = trash.getFile();
 
             // 저장 파일 삭제
-            String subDir = file.getOwnerType().equals("personal") ? "personal" : "department";
 
             // 1) 필수 정보 null 체크
-            String baseDir = saveDirectory;
             String ownerType = file.getOwnerType();
             String storedName = file.getStoredName();
 
-            if (baseDir == null || ownerType == null || storedName == null) {
+            if (ownerType == null || storedName == null) {
                 throw new AppException(String.format(
-                        "파일 경로 구성 정보 누락: baseDir=%s, ownerType=%s, storedName=%s",
-                        baseDir, ownerType, storedName
+                        "파일 경로 구성 정보 누락: ownerType=%s, storedName=%s",
+                        ownerType, storedName
                 ));
             }
 
-            Path filePath = Paths.get(saveDirectory, subDir, file.getStoredName());
-
-            try {
-                Files.deleteIfExists(filePath);
-            } catch (IOException e) {
-                throw new AppException("파일 삭제 중 오류: " + filePath, e);
-            }
+            storage.delete(bucketName, storedName);
 
             // 휴지통 항목 삭제
             fileMapper.deleteTrash(trashId);
@@ -367,21 +377,25 @@ public class FileService {
     @Transactional
     public File getDownloadFile(int fileId) {
         FileVo fileVo = fileMapper.getFileByFileId(fileId);
-        String filename = fileVo.getStoredName();
+        String storedName = fileVo.getStoredName();
+        String originalName = fileVo.getOriginalName();
 
-        String fileDirectory;
+        // 2) 임시파일 경로 준비
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        File file = new File(tmpDir + storedName);
 
-        if (fileVo.getOwnerType().equals("personal")) {
-            fileDirectory = saveDirectory + "/personal";
-        } else {
-            fileDirectory = saveDirectory + "/department";
+        // 3) 클라우드에서 내려받아 임시 저장
+        Blob blob = storage.get(bucketName, storedName);
+        if (blob == null) {
+            throw new AppException("파일이 없습니다" + storedName);
         }
+        blob.downloadTo(file.toPath());
 
-        File file = new File(fileDirectory, filename);
-        if (!file.exists()) {
-            throw new AppException("파일이 존재하지 않습니다");
-        }
-
+        // 4) 파일명 변경
+//        File originalNamed = new File(tmpDir, originalName);
+//        if (file.renameTo(originalNamed)) {
+//            return originalNamed;
+//        }
         return file;
     }
 }

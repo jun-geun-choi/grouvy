@@ -1,8 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
+<%@ page language="java" contentType="text/html;charset=UTF-8"
 pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ include file="../common/taglib.jsp" %>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -712,33 +711,7 @@ th, thead, .table thead th, .file-table th, .detail-table th, .process-table th 
 </head>
 <body>
 
-	<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-		<div class="container-fluid">
-			<a class="navbar-brand d-flex align-items-center" href="index.html"> 
-				<span class="logo-crop"> 
-					<img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
-				</span>
-			</a>
-			<ul class="navbar-nav mb-2 mb-lg-0">
-				<li class="nav-item"><a class="nav-link" href="#">전자결재</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">업무문서함</a></li>
-				<li class="nav-item"><a class="nav-link active" href="#">업무 관리</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-				<li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-			</ul>
-			<div class="d-flex align-items-center">
-				<a href="mypage.html" >
-					<img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-							alt="프로필" class="rounded-circle" width="36" height="36">
-				</a>
-				<a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
-			</div>
-		</div>
-	</nav>
-
+<%@ include file="../common/nav.jsp" %>
 	<main>
 		<div class="container">
 			<div class="sidebar">
@@ -770,15 +743,7 @@ th, thead, .table thead th, .file-table th, .detail-table th, .process-table th 
 			<fmt:formatDate value="${now}" pattern="yyyy-MM-dd" var="todayDate"/>
 			<div class="main-content">
 				<h2>업무 등록</h2>
-				<!-- 여기에 부서·이름·직급 표시 -->
-				<sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
-				<sec:authentication property="principal.user.name"           var="name"/>
-				<sec:authentication property="principal.user.position.positionName"   var="positionName"/>
 
-				<div class="user-info"
-					 style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
-					${departmentName}  ${name}  ${positionName}
-				</div>
 				<form method="post" enctype="multipart/form-data" class="upload-form" action="/task/">
 				<div class="task-form">
 					<div class="form-row">

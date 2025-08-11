@@ -24,7 +24,9 @@ public class FileDownloadView extends AbstractView {
 		File file = (File) model.get("file"); 
 		String filename = file.getName();
 		String originalFilename = filename.substring(36);
-		String encodedFilename = URLEncoder.encode(originalFilename, "utf-8");
+		String encodedFilename = URLEncoder.encode(originalFilename, "utf-8")
+											.replace("+", "%20");
+		// String encodedFilename = URLEncoder.encode(filename, "utf-8");
 
 		// 응답정보 설정
 		// 1. 응답컨텐츠 타입을 설정
