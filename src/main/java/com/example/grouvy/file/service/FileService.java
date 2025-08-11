@@ -121,7 +121,7 @@ public class FileService {
 
                     Notification notification = Notification.builder()
                             .userId(targetUserId)
-                            .notificationType("FILE_SHARED")
+                            .notificationType("개인파일 공유")
                             .notificationContent(uploaderName + "님이 '" + fileName + "' 파일을 공유했습니다.")
                             .targetUrl(targetUrl)
                             .isRead("N")
@@ -141,7 +141,7 @@ public class FileService {
 
                     Notification notification = Notification.builder()
                             .userId(member.getUserId())
-                            .notificationType("FILE_DEPT_UPLOAD")
+                            .notificationType("부서파일 업로드")
                             .notificationContent(uploaderName + "님이 부서 문서함에 '" + fileName + "' 파일을 업로드했습니다.")
                             .targetUrl(targetUrl)
                             .isRead("N")

@@ -99,7 +99,7 @@ public class MessageSendService {
 
                 Notification notification = Notification.builder()
                         .userId(receiverId)
-                        .notificationType("MSG_RECV")
+                        .notificationType("수신쪽지")
                         .notificationContent(senderName + "님이 쪽지를 보냈습니다: " + messageSendRequestDto.getSubject())
                         .targetUrl(String.format(targetUrlFormat, msgId))
                         .isRead("N")
@@ -116,7 +116,7 @@ public class MessageSendService {
 
                 Notification notification = Notification.builder()
                         .userId(ccId)
-                        .notificationType("MSG_RECV_CC")
+                        .notificationType("수신쪽지(CC)")
                         .notificationContent(senderName + "님이 쪽지를 보냈습니다: " + messageSendRequestDto.getSubject())
                         .targetUrl(String.format(targetUrlFormat, msgId))
                         .isRead("N")
@@ -133,7 +133,7 @@ public class MessageSendService {
 
                 Notification notification = Notification.builder()
                         .userId(bccId)
-                        .notificationType("MSG_RECV_BCC")
+                        .notificationType("수신쪽지(BCC)")
                         .notificationContent(senderName + "님이 쪽지를 보냈습니다: " + messageSendRequestDto.getSubject())
                         .targetUrl(String.format(targetUrlFormat, msgId))
                         .isRead("N")
