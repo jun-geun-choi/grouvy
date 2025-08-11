@@ -186,6 +186,30 @@
                  U.NAME ASC
     </select>
 
+    <!-- findAllUsersByDeptIds: 모든 부서 ID로 모든 사용자 목록을 조회합니다. -->
+    <select id="findAllUsersByDeptIds" parameterType="java.util.List" resultMap="UserResultMapWithRoleNames">
+        SELECT U.USER_ID,
+        U.DEPARTMENT_ID,
+        U.EMPLOYEE_NO,
+        U.NAME,
+        U.EMAIL,
+        U.PHONE_NUMBER,
+        U.POSITION_NO,
+        D.DEPARTMENT_NAME,
+        P.POSITION_NAME
+        FROM GROUVY_USERS U
+        LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+        LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        WHERE U.DEPARTMENT_ID IN
+        <foreach item="deptId" collection="list" open="(" separator="," close=")">
+            #{deptId}
+        </foreach>
+        AND U.APPROVAL_STATUS = 'APPROVED'
+        ORDER BY U.DEPARTMENT_ID ASC,
+        P.POSITION_NO ASC,
+        U.NAME ASC
+    </select>
+
     <!-- findUserNameByUserId: 특정 사용자 ID로 사용자 이름(NAME)만 조회합니다. -->
     <select id="findUserNameByUserId" parameterType="int" resultType="string">
         SELECT NAME
