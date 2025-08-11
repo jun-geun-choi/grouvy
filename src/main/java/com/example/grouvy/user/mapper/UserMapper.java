@@ -16,6 +16,7 @@ public interface UserMapper {
 
     User findByUserId(@Param("userId") int userId);
     List<User> findUsersByDeptId(@Param("departmentId") Long departmentId);
+    List<User> findAllUsersByDeptIds(List<Long> departmentIds);
     String findUserNameByUserId(@Param("userId") int userId);
     int countUsersInDepartment(long departmentId);
     List<User> searchUsers(@Param("keyword") String keyword);
