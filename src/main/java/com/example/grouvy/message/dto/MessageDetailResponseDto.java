@@ -28,4 +28,5 @@ public class MessageDetailResponseDto {
     private Long receiveId;
     private String inboxStatus;
     private String importantYn;
+    private Long sendId;
 }

@@ -34,7 +34,8 @@
     </resultMap>
 
     <!--메세지 쓰기-->
-    <insert id="insertMessage" parameterType="com.example.grouvy.message.vo.Message" useGeneratedKeys="true" keyProperty="messageId">
+    <insert id="insertMessage" parameterType="com.example.grouvy.message.vo.Message" useGeneratedKeys="true"
+            keyProperty="messageId">
         <selectKey keyProperty="messageId" resultType="long" order="BEFORE">
             SELECT MESSAGES_MESSAGE_ID_SEQ.NEXTVAL FROM DUAL
         </selectKey>
@@ -45,7 +46,8 @@
         )
     </insert>
 
-    <insert id="insertMessageSender" parameterType="com.example.grouvy.message.vo.MessageSender" useGeneratedKeys="true" keyProperty="sendId">
+    <insert id="insertMessageSender" parameterType="com.example.grouvy.message.vo.MessageSender" useGeneratedKeys="true"
+            keyProperty="sendId">
         <selectKey keyProperty="sendId" resultType="long" order="BEFORE">
             SELECT MESSAGE_SEND_SEND_ID_SEQ.NEXTVAL FROM DUAL
         </selectKey>
@@ -56,25 +58,35 @@
         )
     </insert>
 
-    <insert id="insertMessageReceiver" parameterType="com.example.grouvy.message.vo.MessageReceiver" useGeneratedKeys="true" keyProperty="receiveId">
+    <insert id="insertMessageReceiver" parameterType="com.example.grouvy.message.vo.MessageReceiver"
+            useGeneratedKeys="true" keyProperty="receiveId">
         <selectKey keyProperty="receiveId" resultType="long" order="BEFORE">
             SELECT MESSAGE_RECEIVE_RECEIVE_ID_SEQ.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO GROUVY_MESSAGE_RECEIVE (
         RECEIVE_ID, MESSAGE_ID, RECEIVER_ID, RECEIVER_TYPE, READ_DATE, INBOX_STATUS, IS_DELETED, IMPORTANT_YN
         ) VALUES (
-        #{receiveId}, #{messageId}, #{receiverId}, #{receiverType}, #{readDate, jdbcType=DATE}, #{inboxStatus}, #{isDeleted}, #{importantYn}
+        #{receiveId}, #{messageId}, #{receiverId}, #{receiverType}, #{readDate, jdbcType=DATE}, #{inboxStatus},
+        #{isDeleted}, #{importantYn}
         )
     </insert>
 
     <!--메세지 조회-->
     <select id="findReceivedMessagesByReceiverIdPaginated" resultMap="messageReceiverResultMap">
-        SELECT
-            mr.RECEIVE_ID, mr.MESSAGE_ID, mr.RECEIVER_ID, mr.RECEIVER_TYPE, mr.READ_DATE, mr.INBOX_STATUS, mr.IS_DELETED, mr.IMPORTANT_YN,
-            m.SUBJECT, u.NAME AS SENDER_NAME, m.SEND_DATE
+        SELECT mr.RECEIVE_ID,
+               mr.MESSAGE_ID,
+               mr.RECEIVER_ID,
+               mr.RECEIVER_TYPE,
+               mr.READ_DATE,
+               mr.INBOX_STATUS,
+               mr.IS_DELETED,
+               mr.IMPORTANT_YN,
+               m.SUBJECT,
+               u.NAME AS SENDER_NAME,
+               m.SEND_DATE
         FROM GROUVY_MESSAGE_RECEIVE mr
-        JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
-        JOIN GROUVY_USERS u ON m.SENDER_ID = u.USER_ID
+                 JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
+                 JOIN GROUVY_USERS u ON m.SENDER_ID = u.USER_ID
         WHERE mr.RECEIVER_ID = #{receiverId}
           AND mr.IS_DELETED = 'N'
           AND mr.INBOX_STATUS != 'RECALLED'
@@ -83,50 +95,79 @@
     </select>
 
     <select id="findSentMessagesBySenderIdPaginated" resultMap="messageResultMap">
-        SELECT
-            ms.SEND_ID,
-            m.MESSAGE_ID, m.SENDER_ID, m.SUBJECT, m.MESSAGE_CONTENT, m.SEND_DATE, m.RECALL_ABLE
+        SELECT ms.SEND_ID,
+               m.MESSAGE_ID,
+               m.SENDER_ID,
+               m.SUBJECT,
+               m.MESSAGE_CONTENT,
+               m.SEND_DATE,
+               m.RECALL_ABLE
         FROM GROUVY_MESSAGES m
-        JOIN GROUVY_MESSAGE_SEND ms ON m.MESSAGE_ID = ms.MESSAGE_ID
-        WHERE ms.SENDER_ID = #{senderId} AND ms.IS_DELETED = 'N'
+                 JOIN GROUVY_MESSAGE_SEND ms ON m.MESSAGE_ID = ms.MESSAGE_ID
+        WHERE ms.SENDER_ID = #{senderId}
+          AND ms.IS_DELETED = 'N'
         ORDER BY m.SEND_DATE DESC
         OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
     </select>
 
     <select id="findMessageDetailById" parameterType="long" resultMap="messageResultMap">
         SELECT
-            MESSAGE_ID, SENDER_ID, SUBJECT, MESSAGE_CONTENT, SEND_DATE, RECALL_ABLE
-        FROM GROUVY_MESSAGES
-        WHERE MESSAGE_ID = #{messageId}
+            m.MESSAGE_ID,
+            m.SENDER_ID,
+            m.SUBJECT,
+            m.MESSAGE_CONTENT,
+            m.SEND_DATE,
+            m.RECALL_ABLE,
+            ms.SEND_ID
+        FROM
+            GROUVY_MESSAGES m
+                LEFT JOIN GROUVY_MESSAGE_SEND ms ON m.MESSAGE_ID = ms.MESSAGE_ID
+        WHERE
+            m.MESSAGE_ID = #{messageId}
     </select>
 
     <!--유저 조회-->
     <select id="findReceiverById" parameterType="long" resultMap="messageReceiverResultMap">
-        SELECT
-            RECEIVE_ID, MESSAGE_ID, RECEIVER_ID, RECEIVER_TYPE, READ_DATE, INBOX_STATUS, IS_DELETED, IMPORTANT_YN
+        SELECT RECEIVE_ID,
+               MESSAGE_ID,
+               RECEIVER_ID,
+               RECEIVER_TYPE,
+               READ_DATE,
+               INBOX_STATUS,
+               IS_DELETED,
+               IMPORTANT_YN
         FROM GROUVY_MESSAGE_RECEIVE
         WHERE RECEIVE_ID = #{receiveId}
     </select>
 
     <select id="findSenderById" parameterType="long" resultMap="messageSenderResultMap">
-        SELECT
-            SEND_ID, MESSAGE_ID, SENDER_ID, IS_DELETED
+        SELECT SEND_ID,
+               MESSAGE_ID,
+               SENDER_ID,
+               IS_DELETED
         FROM GROUVY_MESSAGE_SEND
         WHERE SEND_ID = #{sendId}
     </select>
 
     <select id="findAllReceiversByMessageId" parameterType="long" resultMap="messageReceiverResultMap">
-        SELECT
-            RECEIVE_ID, MESSAGE_ID, RECEIVER_ID, RECEIVER_TYPE, READ_DATE, INBOX_STATUS, IS_DELETED, IMPORTANT_YN
+        SELECT RECEIVE_ID,
+               MESSAGE_ID,
+               RECEIVER_ID,
+               RECEIVER_TYPE,
+               READ_DATE,
+               INBOX_STATUS,
+               IS_DELETED,
+               IMPORTANT_YN
         FROM GROUVY_MESSAGE_RECEIVE
-        WHERE MESSAGE_ID = #{messageId} AND IS_DELETED = 'N'
+        WHERE MESSAGE_ID = #{messageId}
+          AND IS_DELETED = 'N'
     </select>
 
     <!--개수 세기-->
     <select id="countImportantMessages" parameterType="int" resultType="int">
         SELECT COUNT(*)
         FROM GROUVY_MESSAGE_RECEIVE mr
-        JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
+                 JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
         WHERE mr.RECEIVER_ID = #{receiverId}
           AND mr.IS_DELETED = 'N'
           AND mr.IMPORTANT_YN = 'Y'
@@ -136,13 +177,15 @@
     <select id="countUnreadReceivedMessages" parameterType="int" resultType="int">
         SELECT COUNT(*)
         FROM GROUVY_MESSAGE_RECEIVE
-        WHERE RECEIVER_ID = #{receiverId} AND IS_DELETED = 'N' AND INBOX_STATUS = 'UNREAD'
+        WHERE RECEIVER_ID = #{receiverId}
+          AND IS_DELETED = 'N'
+          AND INBOX_STATUS = 'UNREAD'
     </select>
 
     <select id="countTotalReceivedMessages" parameterType="int" resultType="int">
         SELECT COUNT(*)
         FROM GROUVY_MESSAGE_RECEIVE mr
-        JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
+                 JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
         WHERE mr.RECEIVER_ID = #{receiverId}
           AND mr.IS_DELETED = 'N'
           AND mr.INBOX_STATUS != 'RECALLED'
@@ -151,26 +194,32 @@
     <select id="countTotalSentMessages" parameterType="int" resultType="int">
         SELECT COUNT(*)
         FROM GROUVY_MESSAGE_SEND
-        WHERE SENDER_ID = #{senderId} AND IS_DELETED = 'N'
+        WHERE SENDER_ID = #{senderId}
+          AND IS_DELETED = 'N'
     </select>
 
     <select id="countUnreadReceiversByMessageId" parameterType="long" resultType="int">
         SELECT COUNT(*)
         FROM GROUVY_MESSAGE_RECEIVE
-        WHERE MESSAGE_ID = #{messageId} AND INBOX_STATUS = 'UNREAD' AND IS_DELETED = 'N'
+        WHERE MESSAGE_ID = #{messageId}
+          AND INBOX_STATUS = 'UNREAD'
+          AND IS_DELETED = 'N'
     </select>
 
     <select id="countTotalReceiversByMessageId" parameterType="long" resultType="int">
         SELECT COUNT(*)
         FROM GROUVY_MESSAGE_RECEIVE
-        WHERE MESSAGE_ID = #{messageId} AND IS_DELETED = 'N'
+        WHERE MESSAGE_ID = #{messageId}
+          AND IS_DELETED = 'N'
     </select>
 
-<!--메세지 회수-->
+    <!--메세지 회수-->
     <update id="updateInboxStatusToRecalled">
         UPDATE GROUVY_MESSAGE_RECEIVE
         SET INBOX_STATUS = 'RECALLED'
-        WHERE MESSAGE_ID = #{messageId} AND INBOX_STATUS = 'UNREAD' AND IS_DELETED = 'N'
+        WHERE MESSAGE_ID = #{messageId}
+          AND INBOX_STATUS = 'UNREAD'
+          AND IS_DELETED = 'N'
     </update>
 
     <update id="updateMessageRecallAbleToN">
@@ -183,17 +232,20 @@
     <select id="findReceiverUserNamesByMessageIdAndType" resultType="string">
         SELECT u.NAME
         FROM GROUVY_MESSAGE_RECEIVE mr
-        JOIN GROUVY_USERS u ON mr.RECEIVER_ID = u.USER_ID
+                 JOIN GROUVY_USERS u ON mr.RECEIVER_ID = u.USER_ID
         WHERE mr.MESSAGE_ID = #{messageId}
-        AND mr.RECEIVER_TYPE = #{receiverType}
+          AND mr.RECEIVER_TYPE = #{receiverType}
         ORDER BY u.NAME
     </select>
 
-<!--메세지읽음처리-->
+    <!--메세지읽음처리-->
     <update id="updateMessageReceiverReadDate">
         UPDATE GROUVY_MESSAGE_RECEIVE
-        SET READ_DATE = SYSDATE, INBOX_STATUS = 'READ'
-        WHERE RECEIVE_ID = #{receiveId} AND INBOX_STATUS = 'UNREAD' AND IS_DELETED = 'N'
+        SET READ_DATE    = SYSDATE,
+            INBOX_STATUS = 'READ'
+        WHERE RECEIVE_ID = #{receiveId}
+          AND INBOX_STATUS = 'UNREAD'
+          AND IS_DELETED = 'N'
     </update>
 
     <update id="updateMessageReceiverIsDeleted">
@@ -216,18 +268,49 @@
 
 
     <select id="findImportantMessagesByReceiverIdPaginated" resultMap="messageReceiverResultMap">
-        SELECT
-            mr.RECEIVE_ID, mr.MESSAGE_ID, mr.RECEIVER_ID, mr.RECEIVER_TYPE, mr.READ_DATE, mr.INBOX_STATUS, mr.IS_DELETED, mr.IMPORTANT_YN,
-            m.SUBJECT, u.NAME AS SENDER_NAME, m.SEND_DATE
+        SELECT mr.RECEIVE_ID,
+               mr.MESSAGE_ID,
+               mr.RECEIVER_ID,
+               mr.RECEIVER_TYPE,
+               mr.READ_DATE,
+               mr.INBOX_STATUS,
+               mr.IS_DELETED,
+               mr.IMPORTANT_YN,
+               m.SUBJECT,
+               u.NAME AS SENDER_NAME,
+               m.SEND_DATE
         FROM GROUVY_MESSAGE_RECEIVE mr
-        JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
-        JOIN GROUVY_USERS u ON m.SENDER_ID = u.USER_ID
+                 JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
+                 JOIN GROUVY_USERS u ON m.SENDER_ID = u.USER_ID
         WHERE mr.RECEIVER_ID = #{receiverId}
           AND mr.IS_DELETED = 'N'
           AND mr.IMPORTANT_YN = 'Y'
           AND mr.INBOX_STATUS != 'RECALLED'
         ORDER BY m.SEND_DATE DESC
         OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+    </select>
+
+<!--    메인페이지 쪽지조회-->
+    <select id="findUnreadMessagesForDashboard" resultMap="messageReceiverResultMap">
+        SELECT mr.RECEIVE_ID,
+               mr.MESSAGE_ID,
+               mr.RECEIVER_ID,
+               mr.RECEIVER_TYPE,
+               mr.READ_DATE,
+               mr.INBOX_STATUS,
+               mr.IS_DELETED,
+               mr.IMPORTANT_YN,
+               m.SUBJECT,
+               u.NAME AS SENDER_NAME,
+               m.SEND_DATE
+        FROM GROUVY_MESSAGE_RECEIVE mr
+                 JOIN GROUVY_MESSAGES m ON mr.MESSAGE_ID = m.MESSAGE_ID
+                 JOIN GROUVY_USERS u ON m.SENDER_ID = u.USER_ID
+        WHERE mr.RECEIVER_ID = #{receiverId}
+          AND mr.IS_DELETED = 'N'
+          AND mr.INBOX_STATUS = 'UNREAD'
+        ORDER BY m.SEND_DATE DESC
+        OFFSET 0 ROWS FETCH NEXT #{limit} ROWS ONLY
     </select>
 
 </mapper>

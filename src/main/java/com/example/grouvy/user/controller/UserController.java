@@ -1,5 +1,10 @@
 package com.example.grouvy.user.controller;
 
+
+import com.example.grouvy.message.mapper.MessageMapper;
+import com.example.grouvy.message.service.MessageQueryService;
+import com.example.grouvy.message.vo.MessageReceiver;
+import com.example.grouvy.notification.mapper.NotificationMapper;
 import com.example.grouvy.file.service.FileService;
 import com.example.grouvy.security.SecurityUser;
 import com.example.grouvy.user.dto.AttendanceStatusDto;
@@ -39,12 +44,29 @@ public class UserController {
     private final UserMapper userMapper;
     private final MailService mailService;
     private final AdminUserService adminUserService;
+  
+    // 업무관련 의존성입주입
     private final TaskService taskService;
-    private final FileService fileService;
+
+    // 쪽지 및 알림 관련 서비스/매퍼 주입 추가
+    private final MessageMapper messageMapper;
+    private final NotificationMapper notificationMapper;
+    private final MessageQueryService messageQueryService;
 
     @GetMapping("/")
     public String home(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+        int currentUserId = securityUser.getUser().getUserId();
 
+        //쪽지,o
+        int unreadMessageCount = messageMapper.countUnreadReceivedMessages(currentUserId);
+        int unreadNotificationCount = notificationMapper.countTotalNotifications(currentUserId);
+        List<MessageReceiver> unreadMessages = messageQueryService.getUnreadMessagesForDashboard(currentUserId, 5);
+
+        model.addAttribute("unreadMessageCount", unreadMessageCount);
+        model.addAttribute("unreadNotificationCount", unreadNotificationCount);
+        model.addAttribute("unreadMessages", unreadMessages);
+
+        //업무로직
         List<TaskListItem> receiveRequestList = taskService.getRequestAndReport(securityUser.getUser().getUserId(), "request", "receive");
         List<TaskListItem> receiveReportList = taskService.getRequestAndReport(securityUser.getUser().getUserId(), "report", "receive");
 
