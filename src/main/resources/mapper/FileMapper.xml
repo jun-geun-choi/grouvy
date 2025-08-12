@@ -160,7 +160,7 @@
         WHERE
             U.DEPARTMENT_ID = D.DEPARTMENT_ID
             and U.POSITION_NO = P.POSITION_NO
-            and U.IS_DELETED = 'N'
+            and U.EMPLOYMENT_STATUS = '재직'
         ORDER BY
             U.DEPARTMENT_ID ASC
             , U.POSITION_NO ASC
@@ -220,7 +220,7 @@
             U.DEPARTMENT_ID = D.DEPARTMENT_ID
             AND U.POSITION_NO = P.POSITION_NO
             AND U.USER_ID = #{userId}
-            AND U.IS_DELETED = 'N'
+            AND U.EMPLOYMENT_STATUS = '재직'
     </select>
     <!-- List<Integer> getTargetUserIdsByFileId(int fileId); -->
     <select id="getTargetUserIdsByFileId">
@@ -299,6 +299,8 @@
             AND U.POSITION_NO = P.POSITION_NO
             AND F.CATEGORY_ID = C.CATEGORY_ID
             AND S.TARGET_USER_ID = #{userId}
+        ORDER BY
+            S.CREATED_DATE DESC
     </select>
 
     <!--List<Trash> getTrashByUserId(int userId);-->
@@ -321,6 +323,8 @@
             AND F.CATEGORY_ID = C.CATEGORY_ID
             AND F.UPLOADER_ID = #{userId}
             AND F.IS_DELETED = 'Y'
+        ORDER BY
+            T.DELETED_DATE DESC
     </select>
 
     <!--void insertTrash(Trash trash);-->

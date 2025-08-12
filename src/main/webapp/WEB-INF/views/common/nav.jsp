@@ -11,7 +11,7 @@
       <li class="nav-item"><a class="nav-link active" href="#">전자결재</a></li>
       <!-- 커서 active-->
       <li class="nav-item"><a class="nav-link" href="/file/personal">업무문서함</a></li>
-      <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
+      <li class="nav-item"><a class="nav-link" href="/task/todo">업무 관리</a></li>
       <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/message/send">쪽지</a></li>
       <li class="nav-item"><a class="nav-link" href="#"
                               onclick="window.open('/chat/friends', 'messengerPopup', 'width=380,height=650,resizable=no,scrollbars=yes'); return false;">메신저</a>

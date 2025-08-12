@@ -1,7 +1,10 @@
 package com.example.grouvy.user.controller;
 
+import com.example.grouvy.file.service.FileService;
 import com.example.grouvy.security.SecurityUser;
 import com.example.grouvy.user.dto.AttendanceStatusDto;
+import com.example.grouvy.task.dto.response.TaskListItem;
+import com.example.grouvy.task.service.TaskService;
 import com.example.grouvy.user.dto.ProfileRequest;
 import com.example.grouvy.user.dto.UserAttendanceRequest;
 import com.example.grouvy.user.exception.UserRegisterException;
@@ -26,6 +29,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -35,9 +39,18 @@ public class UserController {
     private final UserMapper userMapper;
     private final MailService mailService;
     private final AdminUserService adminUserService;
+    private final TaskService taskService;
+    private final FileService fileService;
 
     @GetMapping("/")
-    public String home() {
+    public String home(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+
+        List<TaskListItem> receiveRequestList = taskService.getRequestAndReport(securityUser.getUser().getUserId(), "request", "receive");
+        List<TaskListItem> receiveReportList = taskService.getRequestAndReport(securityUser.getUser().getUserId(), "report", "receive");
+
+        model.addAttribute("receiveRequestList", receiveRequestList);
+        model.addAttribute("receiveReportList", receiveReportList);
+
         return "home";
     }
 
@@ -60,6 +73,7 @@ public class UserController {
         }
 
         try {
+
             int userId = userService.registerUser(userRegisterForm);
             adminUserService.registerPendingUser(userId);
         } catch (UserRegisterException e) {

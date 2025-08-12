@@ -25,7 +25,6 @@ public class UserRegisterForm {
 
 //    @NotBlank(message = "비밀번호 확인은 필수 입력값입니다.")
     private String confirmCode;
-
     @NotBlank(message = "비밀번호는 필수 입력값입니다.")
     @Size(min = 8, message = "비밀번호는 8글자 이상 입력해주세요.")
     private String password;

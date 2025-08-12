@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.grouvy.approval.mapper.ApprovalMapper">
+
+    <!--
+        List<ApprovalDept> getAllDepts();
+    -->
+    <select id="getAllDepts" parameterType="ApprovalDept">
+        select
+            department_id           departmentId
+             , department_name      departmentName
+             , parent_department_id parentDepartmentId
+        from grouvy_departments
+    </select>
+
+    <!--
+        List<ApprovalEmps> getAllEmps();
+    -->
+    <select id="getAllEmps" parameterType="ApprovalEmp">
+        select
+            U.employee_no       empNo
+            , U.department_id     departmentId
+            , U.name           name
+            , P.position_name  positionName
+        from grouvy_users U, grouvy_positions P
+        where U.position_no = P.position_no
+    </select>
+
+    <!--
+        List<ApprovalDept> getAllTeams();
+    -->
+    <select id="getAllTeams" parameterType="ApprovalDept">
+        SELECT department_id        departmentId
+             , department_name      departmentName
+             , parent_department_id parentDepartmentId
+        FROM GROUVY_DEPARTMENTS
+        WHERE department_name LIKE '%팀'
+    </select>
+
+    <!--
+        List<ApprovalWait> getApprovalsWait(int employeeNo);
+    -->
+    <select id="getApprovalsWait" resultType="ApprovalWait">
+        SELECT A.APPROVAL_NO        approvalNo
+             , A.TITLE              title
+             , A.WRITER_ID          writerId
+             , A.WRITER_NAME        writerName
+             , A.APPROVAL_DEPARTMENT_NAME approvalDepartmentName
+             , A.CREATED_DATE       createdDate
+             , B.ASSIGNED_DATE      assignedDate
+        FROM GROUVY_APPROVAL A, GROUVY_APPROVER B
+        WHERE A.APPROVAL_NO = B.APPROVAL_NO
+          AND B.APPROVER_ID = #{employeeNo}
+          AND B.STATUS = '진행중'
+          AND B.DELEGATEE_ID = NULL
+        ORDER BY ASSIGNED_DATE DESC
+    </select>
+
+    <!--
+        List<ApprovalWait> getDelegatedWaitingApprovals(int employeeNo);
+    -->
+    <select id="getDelegatedWaitingApprovals" resultType="ApprovalWait">
+        SELECT A.APPROVAL_NO        approvalNo
+             , A.TITLE              title
+             , A.WRITER_ID          writerId
+             , A.WRITER_NAME        writerName
+             , A.APPROVAL_DEPARTMENT_NAME approvalDepartmentName
+             , A.CREATED_DATE       createdDate
+             , B.ASSIGNED_DATE      assignedDate
+        FROM GROUVY_APPROVAL A, GROUVY_APPROVER B
+        WHERE A.APPROVAL_NO = B.APPROVAL_NO
+          AND B.DELEGATEE_ID = #{employeeNo}
+          AND B.STATUS = '진행중'
+        ORDER BY ASSIGNED_DATE DESC
+
+    </select>
+
+    <!--
+        ApprovalRequest getApprovalByapprovalNo(int approvalNo);
+    -->
+    <select id="getApprovalByapprovalNo" resultType="Approval">
+        SELECT
+            APPROVAL_NO                 approvalNo
+             , TITLE                    title
+             , WRITER_ID                writerId
+             , WRITER_NAME              writerName
+             , APPROVAL_DEPARTMENT_NAME approvalDepartmentName
+             , RECEIVER_DEPARTMENT_NAME receiverDepartmentName
+             , CREATED_DATE             createdDate
+             , FORM_DATA                formData
+        FROM GROUVY_APPROVAL
+        WHERE APPROVAL_NO = #{approvalNo}
+    </select>
+
+    <!--
+        List<Approver> getApproversByApprovalNo(int approvalNo);
+    -->
+    <select id="getApproversByApprovalNo" resultType="DetailApprover">
+        SELECT
+            A.APPROVER_NO         no
+             , A.APPROVER_ID      approverId
+             , U.NAME             approverName
+             , A.APPROVAL_NO      approvalNo
+             , A.STEP             step
+             , A.STATUS           status
+             , A.DECISION_DATE    approvedDate
+             , A.ASSIGNED_DATE    assignedDate
+             , P.POSITION_NAME    positionName
+        FROM GROUVY_APPROVER A, GROUVY_USERS U, GROUVY_POSITIONS P
+        WHERE A.APPROVER_ID = U.EMPLOYEE_NO
+          AND U.POSITION_NO = P.POSITION_NO
+          AND A.APPROVAL_NO = #{approvalNo}
+        ORDER BY STEP ASC
+    </select>
+
+    <!--
+        ApprovalWriter getWriterByApprovalNo(int approvalNo);
+    -->
+    <select id="getWriterByApprovalNo" resultType="ApprovalWriter">
+        SELECT
+            A.WRITER_NAME           writerName
+             , A.WRITER_ID          writerId
+             , A.CREATED_DATE       createdDate
+             , P.POSITION_NAME      positionName
+        FROM GROUVY_APPROVAL A, GROUVY_POSITIONS P, GROUVY_USERS U
+        WHERE A.WRITER_ID = U.EMPLOYEE_NO
+          AND U.POSITION_NO = P.POSITION_NO
+          AND A.APPROVAL_NO = #{approvalNo}
+    </select>
+
+    <!--
+        void insertApproval(Approval approval);
+    -->
+    <insert id="insertApproval" parameterType="approval">
+        <selectKey keyProperty="approvalNo"
+                   resultType="int"
+                   order="BEFORE">
+            select approval_approval_no_seq.nextval
+            from dual
+        </selectKey>
+        insert into grouvy_approval
+        (APPROVAL_NO, TITLE, WRITER_ID, FORM_NO, WRITER_NAME
+        , APPROVAL_DEPARTMENT_NAME, RECEIVER_DEPARTMENT_NAME,FORM_DATA)
+        VALUES
+        (#{approvalNo}, #{title}, #{writerId}, #{formNo}, #{writerName},
+        #{approvalDepartmentName}, #{receiverDepartmentName},
+        #{formData})
+    </insert>
+
+    <!--
+        void insertApprover(Approver approver);
+    -->
+    <insert id="insertApprover" parameterType="approver">
+        INSERT INTO GROUVY_APPROVER
+            (APPROVER_NO, APPROVER_ID, APPROVAL_NO, STEP, STATUS, ASSIGNED_DATE, DELEGATEE_ID)
+        VALUES
+            (APPROVER_APPROVER_NO_SEQ.NEXTVAL, #{approverId}, #{approvalNo}, #{step}, #{status}, #{assignedDate}, #{delegateeNo})
+    </insert>
+    
+    <!--
+        void updateStatusAndApprovedDate(ApprovalDecisionRequest approvalDecisionRequest);
+    -->
+    <update id="updateStatusAndApprovedDate">
+        update
+            GROUVY_APPROVER
+        SET
+            STATUS = '결재완료'
+            , DECISION_DATE = SYSDATE
+            , OPINION = #{opinion}
+        WHERE
+            APPROVER_ID = #{approverId}
+        AND APPROVAL_NO = #{approvalNo}
+    </update>
+
+    <!--
+        int getApproverStep(ApprovalDecisionRequest approvalDecisionRequest);
+    -->
+    <select id="getApproverStep" resultType="int">
+        SELECT
+            STEP
+        FROM
+            GROUVY_APPROVER
+        WHERE
+            APPROVAL_NO = #{approvalNo}
+          AND
+            STATUS = '진행중'
+    </select>
+
+    <!--
+        boolean getNextStepApprover(int nextStep, int approvalNo);
+    -->
+    <select id="getNextStepApprover" resultType="int">
+        SELECT
+            APPROVER_ID
+        FROM
+            GROUVY_APPROVER
+        WHERE
+            STEP = #{nextStep}
+          AND
+            APPROVAL_NO = #{approvalNo}
+    </select>
+
+    <!--
+        void updateNextStepStatusAndAssignedDate(int nextStep, int approvalNo);
+    -->
+    <update id="updateNextStepStatusAndAssignedDate">
+        UPDATE
+            GROUVY_APPROVER
+        SET
+            STATUS = '진행중'
+          , ASSIGNED_DATE = SYSDATE
+        WHERE
+            STEP = #{nextStep}
+          AND APPROVAL_NO = #{approvalNo}
+    </update>
+
+    <!--
+        void updateApprovalApproveStatus(int approvalNo);
+    -->
+    <update id="updateApprovalApproveStatus">
+        UPDATE
+            GROUVY_APPROVAL
+        SET
+            STATUS = '결재완료'
+        WHERE
+            APPROVAL_NO = #{approvalNo}
+    </update>
+
+    <!--
+        void updateRejectStatusAndDecisionDate(ApprovalDecisionRequest approvalDecisionRequest);
+    -->
+    <update id="updateRejectStatusAndDecisionDate">
+        UPDATE
+            GROUVY_APPROVER
+        SET
+            STATUS = '반려'
+          , DECISION_DATE = SYSDATE
+          , OPINION = #{opinion}
+        WHERE
+            APPROVAL_NO = #{approvalNo}
+          AND
+            APPROVER_ID = #{approverId}
+    </update>
+
+    <!--
+        void updateApprovalRejectStatus(int approvalNo)
+    -->
+    <update id="updateApprovalRejectStatus">
+        UPDATE
+            GROUVY_APPROVAL
+        SET
+            STATUS = '반려'
+        WHERE
+            APPROVAL_NO = #{approvalNo}
+    </update>
+
+    <!--
+        void insertDelegation(Delegation delegation)
+    -->
+    <insert id="insertDelegation" parameterType="delegation">
+        <selectKey keyProperty="delegationNo"
+                resultType="int"
+                order="BEFORE">
+            SELECT APPROVAL_DELEGATION_SEQ.NEXTVAL
+            FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_APPROVAL_DELEGATION
+        (DELEGATION_NO, DELEGATOR_NO,
+         DELEGATEE_NO, START_DATE,
+         END_DATE, REASON)
+        VALUES
+            (#{delegationNo}, #{delegatorNo}, #{delegateeNo}
+            , #{startDate}, #{endDate}, #{reason})
+    </insert>
+
+    <!--
+        void updateDelegateeNo(Delegation delegation)
+    -->
+    <update id="updateDelegateeNo">
+        UPDATE
+            GROUVY_APPROVER
+        SET
+            DELEGATEE_ID = #{delegateeNo}
+        WHERE
+            APPROVER_ID = #{delegatorNo}
+    </update>
+
+    <!--
+        Integer getIsDelegating(int approverNo)
+    -->
+    <select id="getIsDelegating" resultType="Integer">
+        <![CDATA[
+        SELECT
+            DELEGATEE_NO
+        FROM
+            GROUVY_APPROVAL_DELEGATION
+        WHERE
+            DELEGATOR_NO = #{approverNo}
+          AND
+            SYSDATE >= START_DATE
+          AND
+            SYSDATE <= END_DATE
+        ]]>
+    </select>
+
+    <!--
+        ApproverPreview getApproverPreviewByApproverNo(int approverNo)
+    -->
+    <select id="getApproverPreviewByApproverNo" resultType="ApproverPreview">
+        SELECT
+            U.NAME              name
+             , P.POSITION_NAME  positionName
+        FROM
+            GROUVY_USERS U, GROUVY_POSITIONS P
+        WHERE
+            U.POSITION_NO = P.POSITION_NO
+          AND
+            U.EMPLOYEE_NO = #{approverNo}
+    </select>
+
+    <!--
+        Integer getIsDelegatingByDelegationNo(int delegationNo);
+    -->
+    <select id="getIsDelegatingByDelegationNo" resultType="Integer">
+        <![CDATA[
+        SELECT
+        DELEGATEE_NO
+        FROM
+        GROUVY_APPROVAL_DELEGATION
+        WHERE
+        DELEGATION_NO = #{delegationNo}
+        AND
+        SYSDATE >= START_DATE
+        AND
+        SYSDATE <= END_DATE
+        ]]>
+    </select>
+
+    <!--
+        Integer getIsDelegatee(DetailApprover detailApprover);
+    -->
+    <select id="getIsDelegatee" parameterType="Integer">
+        SELECT
+            DELEGATEE_ID
+        FROM
+            GROUVY_APPROVER
+        WHERE
+            APPROVER_ID = #{approverId}
+          AND
+            APPROVAL_NO = #{approvalNo}
+    </select>
+
+    <!--
+        Integer getDelegateeIdByApprovalNo(int approvalNo);
+    -->
+    <select id="getDelegateeIdByApprovalNo" parameterType="Integer">
+        SELECT
+            DELEGATEE_ID
+        FROM
+            GROUVY_APPROVER
+        WHERE
+            APPROVAL_NO = #{approvalNo}
+          AND
+            STATUS = '진행중'
+    </select>
+
+    <!--
+        void updateDelegateeStatusAndDecisionDate(approvalDecisionRequest);
+    -->
+    <update id="updateDelegateeStatusAndDecisionDate">
+        update
+            GROUVY_APPROVER
+        SET
+            STATUS = '결재완료'
+          , DECISION_DATE = SYSDATE
+          , OPINION = #{opinion}
+        WHERE
+            DELEGATEE_ID = #{approverId}
+          AND APPROVAL_NO = #{approvalNo}
+          AND STATUS = '진행중'
+    </update>
+
+    <!--
+        int getApproverIdByapprovalDecisionRequest(ApprovalDecisionRequest approvalDecisionRequest);
+    -->
+    <select id="getApproverIdByapprovalDecisionRequest" resultType="int">
+        SELECT
+            APPROVER_ID
+        FROM
+            GROUVY_APPROVER
+        WHERE
+            DELEGATEE_ID = #{approverId}
+          AND
+            APPROVAL_NO = #{approvalNo}
+          AND
+            STATUS = '진행중'
+    </select>
+
+    <!--
+        Delegatee getDelegationByEmpNo(int empNo);
+    -->
+    <select id="getDelegationByEmpNo" resultType="Delegatee">
+        SELECT
+            U.NAME              name
+             , D.START_DATE     startDate
+             , D.END_DATE       endDate
+             , D.REASON         reason
+             , D.DELEGATION_NO  delegationNo
+        FROM
+            GROUVY_APPROVAL_DELEGATION D, GROUVY_USERS U
+        WHERE
+            U.EMPLOYEE_NO = D.DELEGATEE_NO
+          AND
+            D.DELEGATOR_NO = #{empNo}
+    </select>
+    
+    <!--
+        void deleteDelegation(int delegationNo);
+    -->
+    <delete id="deleteDelegation">
+        DELETE
+            GROUVY_APPROVAL_DELEGATION
+        WHERE
+            DELEGATION_NO = #{delegationNo}
+    </delete>
+
+    <!--
+        void updateApprovalDelegatee(int empNo);
+    -->
+    <update id="updateApprovalDelegatee">
+        update
+            GROUVY_APPROVER
+        SET
+            DELEGATEE_ID = NULL
+        WHERE
+            APPROVER_ID = #{empNo}
+    </update>
+
+</mapper>

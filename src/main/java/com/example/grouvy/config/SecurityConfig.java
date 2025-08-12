@@ -48,7 +48,6 @@ public class SecurityConfig {
                         .logoutSuccessHandler(customLogoutSuccessHandler)
                         .permitAll()
                 );
-
         return http.build();
     }
 

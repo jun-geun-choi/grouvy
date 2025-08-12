@@ -39,8 +39,6 @@ public class UserService {
 //        if (foundUser != null) {
 //            throw new UserRegisterException("email", "이미 사용 중인 이메일입니다.");
 //        }
-
-
         if (!form.getPassword().equals(form.getConfirmPassword())) {
             throw new UserRegisterException("confirmPassword", "비밀번호가 일치하지 않습니다.");
         }

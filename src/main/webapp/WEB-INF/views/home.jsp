@@ -206,14 +206,82 @@
                         </div>
                         <div class="col-12">
                             <div class="card p-3 h-100">
-                                <h6 class="fw-bold mb-2">수신 업무 요청</h6>
-                                <div class="text-muted small">해당하는 데이터가 없습니다.</div>
+                                <h6 class="fw-bold mb-2 "><a href="/task/request/receive" class="text-decoration-none text-dark">수신 업무 요청</a></h6>
+                                <div class="text-muted small">
+                                    <ul class="list-group list-group-flush">
+
+                                        <c:forEach var="request" items="${receiveRequestList}" varStatus="st">
+                                          <c:if test="${st.count <= 5}">
+                                            <li class="list-group-item px-0 py-2">
+                                              <div class="d-flex justify-content-between align-items-start">
+                                                <div class="me-2">
+                                                  <a href="/task/detail/${request.taskId}" class="text-decoration-none text-dark fw-semibold text-truncate d-block" style="max-width: 400px;">
+                                                    ${request.title}
+                                                  </a>
+                                                  <div class="small text-muted mt-1">
+                                                    요청자: ${request.writerName} ${request.writerPositionName}
+                                                  </div>
+                                                </div>
+
+                                                <div class="text-end">
+                                                  <c:choose>
+                                                      <c:when test="${not empty request.dueDate}">
+                                                        <span class="badge bg-secondary">
+                                                          마감일: ${request.dueDate}
+                                                        </span>
+                                                      </c:when>
+                                                      <c:otherwise>
+                                                        <span class="badge bg-secondary">
+                                                          마감일 없음
+                                                        </span>
+                                                      </c:otherwise>
+                                                    </c:choose>
+
+                                                  <%-- 상태 배지 --%>
+                                                  <span class="badge ${request.status eq '처리완료' ? 'bg-success' : 'bg-primary'} ms-1">
+                                                  ${request.status}
+                                                </span>
+                                                </div>
+                                              </div>
+                                            </li>
+                                          </c:if>
+                                        </c:forEach>
+                                      </ul>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="card p-3 h-100">
-                                <h6 class="fw-bold mb-2">수신 업무 보고</h6>
-                                <div class="text-muted small">해당하는 데이터가 없습니다.</div>
+                                <h6 class="fw-bold mb-2 "><a href="/task/report/receive" class="text-decoration-none text-dark">수신 업무 보고</a></h6>
+                                <div class="text-muted small">
+                                    <ul class="list-group list-group-flush">
+
+                                        <c:forEach var="report" items="${receiveReportList}" varStatus="st">
+                                          <c:if test="${st.count <= 5}">
+                                            <li class="list-group-item px-0 py-2">
+                                              <div class="d-flex justify-content-between align-items-start">
+                                                <div class="me-2">
+                                                  <a href="/task/request/detail/${report.taskId}" class="text-decoration-none text-dark fw-semibold text-truncate d-block" style="max-width: 400px;">
+                                                    ${report.title}
+                                                  </a>
+                                                  <div class="small text-muted mt-1">
+                                                    보고자: ${report.writerName} ${report.writerPositionName}
+                                                  </div>
+                                                </div>
+
+                                                <div class="text-end">
+
+                                                  <%-- 상태 배지 --%>
+                                                  <span class="badge ${report.status eq '검토완료' ? 'bg-success' : 'bg-primary'} ms-1">
+                                                  ${report.status}
+                                                </span>
+                                                </div>
+                                              </div>
+                                            </li>
+                                          </c:if>
+                                        </c:forEach>
+                                      </ul>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12">

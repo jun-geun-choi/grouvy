@@ -1,8 +1,5 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-
+<%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="../common/taglib.jsp" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -467,39 +464,31 @@ footer {
             <!-- 기능 페이지 -->
             <div class="main-content">
                 <h2>부서업무 문서함 <span style="font-size:1.1em; color:#333;">[<sec:authentication property="principal.departmentName" />]</span></h2>
-                <!-- 여기에 부서·이름·직급 표시 -->
-                <sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
-                <sec:authentication property="principal.user.name"           var="name"/>
-                <sec:authentication property="principal.user.position.positionName"   var="positionName"/>
 
-                <div class="user-info"
-                     style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
-                    ${departmentName}  ${name}  ${positionName}
-                </div>
-                <div class="file-search-box">
-                    <select id="category-select">
-                        <option value="">전체 카테고리</option>
-                        <option value="업무관리">업무관리</option>
-                        <option value="문서">문서</option>
-                        <option value="보고서">보고서</option>
-                        <option value="스프레드시트">스프레드시트</option>
-                        <option value="프레젠테이션">프레젠테이션</option>
-                        <option value="이미지">이미지</option>
-                        <option value="기타">기타</option>
-                    </select>
-                    
-                    <span class="date-label">등록일</span>
-                    <input type="date" class="date-input" placeholder="시작일">
-                    <span class="date-separator">~</span>
-                    <input type="date" class="date-input" placeholder="종료일">
-                    
-                    <select>
-                        <option>파일명</option>
-                        <option>확장자</option>
-                    </select>
-                    <input type="text" class="input-file-name" placeholder="검색어">
-                    <button class="search-btn">검색</button>
-                </div>
+<%--                <div class="file-search-box">--%>
+<%--                    <select id="category-select">--%>
+<%--                        <option value="">전체 카테고리</option>--%>
+<%--                        <option value="업무관리">업무관리</option>--%>
+<%--                        <option value="문서">문서</option>--%>
+<%--                        <option value="보고서">보고서</option>--%>
+<%--                        <option value="스프레드시트">스프레드시트</option>--%>
+<%--                        <option value="프레젠테이션">프레젠테이션</option>--%>
+<%--                        <option value="이미지">이미지</option>--%>
+<%--                        <option value="기타">기타</option>--%>
+<%--                    </select>--%>
+<%--                    --%>
+<%--                    <span class="date-label">등록일</span>--%>
+<%--                    <input type="date" class="date-input" placeholder="시작일">--%>
+<%--                    <span class="date-separator">~</span>--%>
+<%--                    <input type="date" class="date-input" placeholder="종료일">--%>
+<%--                    --%>
+<%--                    <select>--%>
+<%--                        <option>파일명</option>--%>
+<%--                        <option>확장자</option>--%>
+<%--                    </select>--%>
+<%--                    <input type="text" class="input-file-name" placeholder="검색어">--%>
+<%--                    <button class="search-btn">검색</button>--%>
+<%--                </div>--%>
                 
                 <div class="file-list-box">
                     <div class="file-list-header">
@@ -595,9 +584,10 @@ footer {
 
     </main>
 
-    <footer>© 2025 그룹웨어 Corp.</footer>
+    <%@ include file="../common/footer.jsp" %>
 
-    <script>
+
+<script>
 
         document.getElementById('delete-form').addEventListener('submit', function(e) {
             const checked = document.querySelectorAll('input[name="fileIds"]:checked');
@@ -684,5 +674,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<%@include file="../chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    // 최초 연결
+    connectNoticeSocket();
+</script>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>
 </html>

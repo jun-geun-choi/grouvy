@@ -3,6 +3,7 @@ package com.example.grouvy.chat.dto;
 import com.example.grouvy.user.vo.User;
 import lombok.Getter;
 
+//직원 한명에 대한 데이터
 @Getter
 public class UserDto {
   private int id; //userId

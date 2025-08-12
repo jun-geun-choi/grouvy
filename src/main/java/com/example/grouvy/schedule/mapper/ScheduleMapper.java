@@ -1,8 +1,6 @@
 package com.example.grouvy.schedule.mapper;
 
-import com.example.grouvy.schedule.vo.Holiday;
-import com.example.grouvy.schedule.vo.Schedule;
-import com.example.grouvy.schedule.vo.SimpleSchedule;
+import com.example.grouvy.schedule.vo.*;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -16,5 +14,24 @@ public interface ScheduleMapper {
 
     List<SimpleSchedule> getSimpleSchedule();
 
+    List<Holiday> getHoliday();
+
+    List<ScheduleCategory> getScheduleCategory();
+
+    List<ConferenceRoom> getMeetingRoom();
+
+    List<ConferenceRoom> getConferenceRoom();
+
+    void updateCategory(ScheduleCategory scheduleCategory);
+
     void insertSchedule(Schedule schedule);
+
+    void insertHoliday(Holiday holiday);
+
+    void deleteScheduleByUserNo(int no);
+
+    void deleteHolidayById(int no);
+
+    void insertConferenceRoom(ConferenceRoom conferenceRoom);
+
 }

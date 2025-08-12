@@ -20,8 +20,6 @@ public interface TaskMapper {
 
     void insertTaskFile(TaskFile taskFile);
 
-    List<TaskListItem> getTaskByUserIdAndTypeAndRole(@Param("userId") int userId, @Param("type") String type, @Param("role") String role);
-
     List<Todo> getTodosByUserId(int userId);
 
     ReceiveUserFeedback getReceiveUserFeedbackByTaskId(int taskId);
@@ -45,4 +43,10 @@ public interface TaskMapper {
     TaskDetail getTodoDetailByTaskId(int taskId);
 
     TaskFile getTaskFileByFileId(int fileId);
+
+    List<TaskListItem> getTaskListItemByWriterId(@Param("userId") int userId, @Param("type") String type);
+
+    List<TaskListItem> getTaskListItemByReceiveUserId(@Param("userId") int userId, @Param("type") String type);
+
+    List<TaskListItem> getTaskListItemByCcId(@Param("userId") int userId, @Param("type") String type);
 }

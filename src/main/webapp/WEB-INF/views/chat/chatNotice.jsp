@@ -154,69 +154,83 @@
 </style>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-  // 닫기
+  // [수정 1] 알림 자동 닫기 타이머 ID를 저장할 변수 선언
+  let notificationTimer;
+
+  // 닫기 버튼 클릭 이벤트
   $("#close-popup").click(function () {
+    // [수정 2] 수동으로 닫을 때도 자동 닫기 타이머를 반드시 취소
+    clearTimeout(notificationTimer);
+
     const $popup = $("#notice-popup");
     $popup.addClass("hide");
     setTimeout(() => $popup.hide(), 300);
   });
 
-  // 자동 닫기
-  setTimeout(() => {
-    const $popup = $("#notice-popup");
-    if (!$popup.hasClass("hide")) {
-      $popup.addClass("hide");
-      setTimeout(() => $popup.hide(), 300);
-    }
-  }, 3000);
+  /*
+   * [수정 3] 페이지 로드 시 실행되던 기존의 잘못된 자동 닫기 코드는 삭제합니다.
+   */
 
   // 알림 배너를 띄우는 로직 함수
-  function showNotification(userName, content,time,profile,roomId,roomName, isGroup,selectUserId) {
+  function showNotification(userName, content, time, profile, roomId, roomName, isGroup, selectUserId) {
+    // [수정 4] 새로운 알림이 뜨면, 기존에 설정된 자동 닫기 타이머가 있다면 먼저 취소
+    clearTimeout(notificationTimer);
+
     const $noticePopup = $("#notice-popup");
     const $noticeImg = $("#notice-img img");
     const $msgName = $("#msg-name");
     const $msgContent = $("#msg-content");
     const $msgTime = $("#msg-time");
 
-    //1:1 채팅의 경우, 사용자 이름이 나오고, 아닌 경우 그룹 채팅 이름이 나온다.
-    if(isGroup == "Y") {
+    // 1:1 채팅 또는 그룹 채팅에 따라 이름 설정
+    if (isGroup == "Y") {
       $msgName.text(roomName);
     } else {
-      $msgName.text(userName+"님의 메세지")
+      $msgName.text(userName + "님의 메세지");
     }
 
-    // 메세지 표현 및 시간 표현
     $msgContent.text(content);
     $msgTime.text(time);
 
-    //프로필 이미지 표현
     const imgPath = (!profile || profile === "null")
-      ? "https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
-      : "https://storage.googleapis.com/grouvy-bucket/" + profile;
+            ? "https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
+            : "https://storage.googleapis.com/grouvy-bucket/" + profile;
     $noticeImg.attr("src", imgPath);
 
-    // 알림 배너를 올린다.
     $noticePopup.removeClass("hide").css("display", "flex");
 
-    //배너가 열리고, 그 배너를 클릭하면 채팅창이 열린다.(1:1 or 그룹 채팅 여부가 다르게 된다.)
-    $("#notice-body").click(function(){
-      if(isGroup == "N") {
+    // [수정 5] 알림이 표시된 후, 5초 뒤에 자동으로 닫히도록 새로운 타이머 설정
+    notificationTimer = setTimeout(() => {
+      const $popup = $("#notice-popup");
+      if (!$popup.hasClass("hide")) {
+        $popup.addClass("hide");
+        setTimeout(() => $popup.hide(), 300);
+      }
+    }, 1000); // 5초 (5000ms), 시간은 원하시는 대로 조절 가능합니다.
+
+    // 배너 클릭 시 채팅창 열기 (이벤트 중복을 막기 위해 .off().on() 사용)
+    $("#notice-body").off('click').on('click', function() {
+      // 배너를 클릭해서 창을 열면 자동 닫기 타이머는 취소
+      clearTimeout(notificationTimer);
+
+      if (isGroup == "N") {
         window.open(
-          `/chat/chatting?roomId=\${roomId}&selectUserId=\${selectUserId}`,
-          '_blank',
-          'width=420,height=650,resizable=no,scrollbars=no'
+                `/chat/chatting?roomId=${roomId}&selectUserId=${selectUserId}`,
+                '_blank',
+                'width=420,height=650,resizable=no,scrollbars=no'
+        );
+      } else if (isGroup == "Y") {
+        window.open(
+                `/chat/groupChatting?roomId=${roomId}&roomName=${roomName}`,
+                '_blank',
+                'width=420,height=650,resizable=no,scrollbars=no'
         );
       }
-      if(isGroup=="Y"){
-        window.open(
-          `/chat/groupChatting?roomId=\${roomId}&roomName=\${roomName}`,
-          '_blank',
-          'width=420,height=650,resizable=no,scrollbars=no'
-        );
-      }
+
+      // 클릭 후 즉시 팝업 닫기
       const $popup = $("#notice-popup");
       $popup.addClass("hide");
-
+      setTimeout(() => $popup.hide(), 300);
     });
   }
 </script>
