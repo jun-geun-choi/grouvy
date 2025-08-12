@@ -1,5 +1,9 @@
 package com.example.grouvy.user.controller;
 
+import com.example.grouvy.message.mapper.MessageMapper;
+import com.example.grouvy.message.service.MessageQueryService;
+import com.example.grouvy.message.vo.MessageReceiver;
+import com.example.grouvy.notification.mapper.NotificationMapper;
 import com.example.grouvy.security.SecurityUser;
 import com.example.grouvy.user.dto.ProfileRequest;
 import com.example.grouvy.user.exception.UserRegisterException;
@@ -16,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +28,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -33,8 +39,22 @@ public class UserController {
     private final MailService mailService;
     private final AdminUserService adminUserService;
 
+    // 쪽지 및 알림 관련 서비스/매퍼 주입 추가
+    private final MessageMapper messageMapper;
+    private final NotificationMapper notificationMapper;
+    private final MessageQueryService messageQueryService;
+
     @GetMapping("/")
-    public String home() {
+    public String home(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+        int currentUserId = securityUser.getUser().getUserId();
+
+        int unreadMessageCount = messageMapper.countUnreadReceivedMessages(currentUserId);
+        int unreadNotificationCount = notificationMapper.countTotalNotifications(currentUserId);
+        List<MessageReceiver> unreadMessages = messageQueryService.getUnreadMessagesForDashboard(currentUserId, 5);
+
+        model.addAttribute("unreadMessageCount", unreadMessageCount);
+        model.addAttribute("unreadNotificationCount", unreadNotificationCount);
+        model.addAttribute("unreadMessages", unreadMessages);
         return "home";
     }
 

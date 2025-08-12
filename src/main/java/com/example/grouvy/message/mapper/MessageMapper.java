@@ -38,6 +38,7 @@ public interface MessageMapper {
 
     //받은쪽지
     int countTotalReceivedMessages(@Param("receiverId") int receiverId);
+    List<MessageReceiver> findUnreadMessagesForDashboard(@Param("receiverId") int receiverId, @Param("limit") int limit);
 
     //보낸쪽지
     int countTotalSentMessages(@Param("senderId") int senderId);

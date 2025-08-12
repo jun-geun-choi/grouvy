@@ -33,11 +33,16 @@
                 <small class="text-muted"><sec:authentication property="principal.user.position.positionName"  /></small>
 
                 <div class="icon-group mt-3">
-                    <a href="#" class="text-dark text-decoration-none"> <i
-                            class="bi bi-envelope"></i> <span class="small custom-gap">0</span>
-                    </a> <a href="#" class="text-dark text-decoration-none"> <i
-                        class="bi bi-bell"></i> <span class="small ms-2">0</span>
-                </a>
+                    <%--안 읽은 쪽지 개수 --%>
+                    <a href="<c:url value='/message/inbox'/>" class="text-dark text-decoration-none">
+                        <i class="bi bi-envelope"></i>
+                        <span class="small custom-gap"><c:out value="${unreadMessageCount}"/></span>
+                    </a>
+                    <%--안 읽은 알림 개수 --%>
+                    <a href="<c:url value='/notification/list'/>" class="text-dark text-decoration-none">
+                        <i class="bi bi-bell"></i>
+                        <span class="small ms-2"><c:out value="${unreadNotificationCount}"/></span>
+                    </a>
                 </div>
             </div>
             <div class="card p-3 mb-3">
@@ -111,15 +116,35 @@
                                     <li>전자결재 <span class="float-end">0건</span></li>
                                     <li>업무관리 <span class="float-end">6건</span></li>
                                     <li>일정 <span class="float-end">0건</span></li>
-                                    <li>쪽지 <span class="float-end">0건</span></li>
+                                    <li>쪽지 <span class="float-end"><c:out value="${unreadMessageCount}"/>건</span></li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="col-12">
                             <div class="card p-3 h-100">
-                                <h6 class="fw-bold mb-2">미확인 쪽지</h6>
-                                <div class="text-muted small">해당하는 데이터가 없습니다.</div>
+                                <h6 class="fw-bold mb-2 d-flex justify-content-between">
+                                    <span>미확인 쪽지</span>
+                                    <a href="<c:url value='/message/inbox'/>" class="small text-secondary text-decoration-none">더보기</a>
+                                </h6>
+                                <c:choose>
+                                    <c:when test="${not empty unreadMessages}">
+                                        <ul class="list-group list-group-flush">
+                                            <c:forEach items="${unreadMessages}" var="msg">
+                                                <li class="list-group-item d-flex justify-content-between align-items-center p-1 border-0">
+                                                    <a href="<c:url value='/message/detail?messageId=${msg.messageId}'/>" class="text-decoration-none text-dark small text-truncate" title="<c:out value='${msg.subject}'/>">
+                                                        <strong>[<c:out value="${msg.senderName}"/>]</strong>
+                                                        <c:out value="${msg.subject}"/>
+                                                    </a>
+                                                    <span class="badge bg-light text-muted ms-2"><fmt:formatDate value="${msg.sendDate}" pattern="MM-dd"/></span>
+                                                </li>
+                                            </c:forEach>
+                                        </ul>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="text-muted small h-100 d-flex align-items-center justify-content-center">수신된 쪽지가 없습니다.</div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
                         <div class="col-12">
