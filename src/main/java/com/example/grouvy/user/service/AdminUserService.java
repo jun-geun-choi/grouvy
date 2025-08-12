@@ -23,6 +23,9 @@ public class AdminUserService {
     public List<LoginHistory> getLoginHistories() {
         return adminUserMapper.getLoginHistories();
     }
+    public List<AttendanceHistory> getAttendanceHistories() {
+        return adminUserMapper.getAttendanceHistories();
+    }
 
     public List<User> getAllUsers() {
         return adminUserMapper.getAllUsers();
@@ -37,8 +40,6 @@ public class AdminUserService {
     }
 
     public void registerPendingUser(int userId) {
-//        User newUser = adminUserMapper.getUserById(userId);
-        // TODO : UserApproval 로 넘기는 이유 정리 : selectKey
         UserApproval userRequest = new UserApproval();
         userRequest.setUserId(userId);
         adminUserMapper.insertPendingUser(userRequest);
@@ -50,9 +51,8 @@ public class AdminUserService {
     }
 
     public void approveUser(UserApprovalRequest request) {
-        System.out.println("ㅎㅇ");
         // 사원 정보 업데이트
-        User foundUser = userMapper.findByUserId(request.getUserId());
+        User foundUser = adminUserMapper.getUserById(request.getUserId());
         User updatedUser = foundUser.toBuilder()
                 .employeeNo(request.getEmployeeNo())
                 .positionNo(request.getPositionNo())
@@ -79,7 +79,7 @@ public class AdminUserService {
     }
 
     public void updateUserInfo(UserUpdateRequest request) {
-        User foundUser = userMapper.findByUserId(request.getUserId());
+        User foundUser = adminUserMapper.getUserById(request.getUserId());
         User updatedUser = foundUser.toBuilder()
                 .departmentId(request.getDepartmentId())
                 .positionNo(request.getPositionNo())

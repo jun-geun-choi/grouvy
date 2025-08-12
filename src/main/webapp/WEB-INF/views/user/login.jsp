@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@include file="../common/taglib.jsp"%>
+<%@include file="../common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -16,7 +16,7 @@
     <img src="https://storage.googleapis.com/grouvy-bucket/grouvy_logo.png" alt="GROUVY 로고" class="auth-logo">
     <div class="auth-title">로그인</div>
     <form action="/login" method="post">
-      <!-- TODO : <sec:csrfInput/> -->
+        <!-- TODO : <sec:csrfInput/> -->
         <div class="mb-3">
             <label for="loginEmail" class="form-label small">이메일</label>
             <input type="text" class="form-control" id="loginEmail" name="email" required>

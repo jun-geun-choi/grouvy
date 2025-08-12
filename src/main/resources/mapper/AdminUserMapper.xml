@@ -35,6 +35,59 @@
         ORDER BY L.LOGIN_HISTORY_ID DESC
     </select>
 
+    <!-- List<AttendanceHistory> getAttendanceHistories(); -->
+    <resultMap id="AttendanceHistoryMap" type="AttendanceHistory">
+        <id column="attendance_history_id" property="attendanceHistoryId"/>
+        <result column="user_id" property="userId"/>
+        <result column="status" property="status"/>
+        <result column="attendance_time" property="attendanceDate"/>
+        <result column="latitude" property="latitude"/>
+        <result column="longitude" property="longitude"/>
+        <result column="distance" property="distance"/>
+
+        <association property="user" javaType="User">
+            <id property="userId" column="user_id"/>
+            <result property="name" column="name"/>
+            <result property="employeeNo" column="employee_no"/>
+
+            <association property="department" javaType="Department">
+                <id property="departmentId" column="department_id"/>
+                <result property="departmentName" column="department_name"/>
+            </association>
+
+            <association property="position" javaType="Position">
+                <id property="positionNo" column="position_no"/>
+                <result property="positionName" column="position_name"/>
+            </association>
+
+        </association>
+
+    </resultMap>
+
+    <select id="getAttendanceHistories" resultMap="AttendanceHistoryMap">
+        SELECT A.ATTENDANCE_HISTORY_ID
+             , A.USER_ID
+             , A.STATUS
+             , A.ATTENDANCE_TIME
+             , A.LATITUDE
+             , A.LONGITUDE
+             , A.DISTANCE
+
+             , U.EMPLOYEE_NO
+             , U.NAME
+
+             , D.DEPARTMENT_ID
+             , D.DEPARTMENT_NAME
+
+             , P.POSITION_NO
+             , P.POSITION_NAME
+        FROM GROUVY_ATTENDANCE_HISTORY A
+                 LEFT JOIN GROUVY_USERS U ON U.USER_ID = A.USER_ID
+                 LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+                 LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        ORDER BY A.ATTENDANCE_HISTORY_ID DESC
+    </select>
+
     <!--  List<User> getAllUsers();  -->
     <select id="getAllUsers" resultMap="com.example.grouvy.user.mapper.UserMapper.UserResultMapWithRoleNames">
         SELECT U.USER_ID,
@@ -222,7 +275,7 @@
 
     </insert>
 
-
+    <!-- List<UserApproval> getAllApprovedUsers(); -->
     <select id="getAllApprovedUsers" resultMap="UserApprovalWithUserResultMap">
         SELECT A.APPROVAL_ID,
                A.STATUS,
