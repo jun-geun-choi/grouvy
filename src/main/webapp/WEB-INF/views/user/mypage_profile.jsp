@@ -66,7 +66,6 @@
                                 </c:when>
                                 <c:otherwise>
                                     <li>
-                                            <%-- TODO : 프로필 이미지 삭제 --%>
                                         <button id="deleteProfileBtn" type="submit" class="dropdown-item">프로필 삭제
                                         </button>
                                     </li>
