@@ -1,9 +1,13 @@
 package com.example.grouvy.user.service;
 
+import com.example.grouvy.user.dto.AttendanceStatusDto;
 import com.example.grouvy.user.dto.ProfileRequest;
+import com.example.grouvy.user.dto.UserAttendanceRequest;
 import com.example.grouvy.user.exception.UserRegisterException;
 import com.example.grouvy.user.form.UserRegisterForm;
 import com.example.grouvy.user.mapper.UserMapper;
+import com.example.grouvy.user.vo.AttendanceHistory;
+import com.example.grouvy.user.vo.LoginHistory;
 import com.example.grouvy.user.vo.User;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -15,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -45,15 +50,14 @@ public class UserService {
 
         User user = modelMapper.map(form, User.class);
         user.setPassword(passwordEncoder.encode(form.getPassword()));
-//        System.out.println(user.getUserId());
 
         userMapper.insertUser(user);
 
-//        System.out.println(user.getUserId());
-        // <selectKey keyProperty="userId" resultType="int" order="BEFORE"> : insert 전에 userId가 객체에 미리 세팅된다는 뜻
-        // userId가 insert 전에 미리 채워지고, user 객체의 setUserId(...)가 내부적으로 호출됨.
-
         return user.getUserId();
+    }
+
+    public User findByUserId(int userId) {
+        return userMapper.findByUserId(userId);
     }
 
     @Value("${spring.cloud.gcp.storage.bucket}")
@@ -62,7 +66,6 @@ public class UserService {
     public void updateProfileImg(ProfileRequest dto) throws IOException {
         User foundUser = userMapper.findByUserId(dto.getUserId());
         String oldProfilePath = foundUser.getProfileImgPath();
-//        System.out.println(oldProfilePath);
         if (oldProfilePath != null) {
             storage.delete(bucketName, oldProfilePath);
         }
@@ -79,6 +82,18 @@ public class UserService {
         userMapper.updateUserProfile(foundUser.getUserId(), uuid);
     }
 
+    public void clearProfileImage(int userId) {
+        User foundUser = userMapper.findByUserId(userId);
+        if (foundUser.getProfileImgPath() != null) {
+            storage.delete(bucketName, foundUser.getProfileImgPath());
+        }
+        userMapper.deleteProfileImage(userId);
+    }
+
+    public void updateProfileInfo(User user) {
+        userMapper.updateProfileInfo(user.getUserId(), user.getAddress());
+    }
+
     public void recordLogin(String email, String ip) {
         User foundUser = userMapper.findUserByEmail(email);
         userMapper.insertLoginLog(foundUser.getUserId(), ip);
@@ -88,5 +103,23 @@ public class UserService {
         User foundUser = userMapper.findUserByEmail(email);
         userMapper.insertLogoutLog(foundUser.getUserId(), ip);
     }
+
+    public void recordAttendance(UserAttendanceRequest dto) {
+
+        userMapper.insertAttendanceLog(dto);
+    }
+
+    public List<LoginHistory> getLoginHistories(int userId) {
+        return userMapper.getLoginHistories(userId);
+    }
+
+    public List<AttendanceHistory> getAttendanceHistories(int userId) {
+        return userMapper.getAttendanceHistories(userId);
+    }
+
+    public AttendanceStatusDto getTodayStatus(int userId) {
+        return userMapper.selectTodayStatus(userId);
+    }
+
 
 }

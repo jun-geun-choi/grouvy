@@ -46,13 +46,14 @@ public class AdminController {
 
     @GetMapping("/admin/user/login-history")
     public String userLoginHistory(Model model) {
-        model.addAttribute("loginHistorys", adminUserService.getLoginHistories());
+        model.addAttribute("loginHistories", adminUserService.getLoginHistories());
 
         return "admin/user/admin_login_history";
     }
 
     @GetMapping("/admin/user/attendance-history")
-    public String userAttendanceHistory() {
+    public String userAttendanceHistory(Model model) {
+        model.addAttribute("attendanceHistories", adminUserService.getAttendanceHistories());
 
         return "admin/user/admin_attendance_history";
     }
@@ -71,10 +72,8 @@ public class AdminController {
     @PostMapping("/admin/handle-user-approval")
     public String approveUser(@ModelAttribute UserApprovalRequest request) {
         if (request.getAction().equals("approve")) {
-            System.out.println("승인");
             adminUserService.approveUser(request);
         } else if (request.getAction().equals("reject")) {
-            System.out.println("거절");
             adminUserService.rejectUser(request);
         }
 

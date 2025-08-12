@@ -74,13 +74,16 @@
 
 .info-grid {
     display: grid;
-    grid-template-columns: 120px auto 120px auto;
-    row-gap: 12px;
-    column-gap: 10px;
+    grid-template-columns: 140px 1fr; /* 왼쪽 라벨, 오른쪽 값 */
+    column-gap: 16px;
+    row-gap: 13px;                   /* 줄 간격 */
     align-items: center;
-    font-size: 14px;
+    font-size: 15px;
 }
-
+.info-grid .fw-bold{               /* 라벨 쪽(왼쪽) 정렬 */
+    text-align: left;
+    color: #333;
+}
 .info-grid div {
     white-space: nowrap;
 }
@@ -88,4 +91,14 @@
 .card-wrapper {
     max-width: 1000px;
     margin: 0 auto;
+}
+
+.info-grid .input-group {
+    height: 32px;       /* 다른 항목 높이에 맞게 조정 */
+}
+.info-grid .input-group .form-control,
+.info-grid .input-group .btn {
+    height: 32px;
+    padding: 0 8px;
+    font-size: 0.9rem;
 }

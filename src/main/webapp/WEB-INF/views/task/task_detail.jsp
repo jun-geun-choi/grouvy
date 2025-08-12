@@ -764,7 +764,7 @@ th, thead, .table thead th, .file-table th, .detail-table th, .feedback-table th
 										<td><fmt:formatDate value="${feedback.updatedDate}" pattern="yyyy-MM-dd HH:mm:ss" /></td>
 									</tr>
 										<tr>
-											<th>진척률</th>
+											<th>진행률</th>
 											<td colspan="3">
 												<div class="btn-group gap-3" role="group" aria-label="진척률 선택">
 													<input
@@ -826,9 +826,6 @@ th, thead, .table thead th, .file-table th, .detail-table th, .feedback-table th
 															<c:if test="${feedback.progressPercent == 100}">checked</c:if>
 													/>
 													<label class="btn btn-outline-success progress-btn" for="progress100">100%(완료)</label>
-												</div>
-												<div class="progress-info mt-2">
-													업무완료(100%) 후에는 업무 내용을 수정할 수 없습니다.
 												</div>
 											</td>
 										</tr>
@@ -960,7 +957,7 @@ th, thead, .table thead th, .file-table th, .detail-table th, .feedback-table th
 			</ul>
 		</div>
 	</div>
-	<footer>© 2025 그룹웨어 Corp.</footer>
+<%@ include file="../common/footer.jsp" %>
 
 	<script>
 		// 1) 파일 한 건을 li 엘리먼트로 만들어 주는 헬퍼
@@ -1051,6 +1048,14 @@ th, thead, .table thead th, .file-table th, .detail-table th, .feedback-table th
 		});
 	</script>
 
-
+<%@include file="../chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+	// 최초 연결
+	connectNoticeSocket();
+</script>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>
 </html>

@@ -13,6 +13,5 @@ public class UserApprovalRequest {
     private Integer employeeNo;
     private Long departmentId;
     private Integer positionNo;
-
     private String action;
 }

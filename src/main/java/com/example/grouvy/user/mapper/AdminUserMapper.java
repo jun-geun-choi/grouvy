@@ -12,11 +12,12 @@ import java.util.List;
 public interface AdminUserMapper {
 
     List<LoginHistory> getLoginHistories();
+    List<AttendanceHistory> getAttendanceHistories();
     List<User> getAllUsers();
     List<Position> getAllPositions();
     List<Department> getAllDepartments();
 
-//    User getUserById(int userId);
+    User getUserById(int userId);
     void insertPendingUser(UserApproval userRequest);
     List<UserApproval> getAllPendingUsers();
     List<UserApproval> getAllApprovedUsers();

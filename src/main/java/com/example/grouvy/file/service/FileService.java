@@ -164,7 +164,7 @@ public class FileService {
         return fileMapper.getDepartmentFilesByDepartmentId(departmentId);
     }
 
-    // 파일 삭제로 변경
+    // 파일 휴지통으로 전달
     @Transactional
     public void deleteFiles(List<Integer> fileIds) {
         // 삭제대상 파일번호 리스트 반복

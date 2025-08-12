@@ -4,14 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.ibatis.type.Alias;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class SocialUserDto {
-    private String email;
-    private String name;
-    private ProviderInfo providerInfo;
-    private String identifier;
+@NoArgsConstructor
+@Alias("AttendanceStatusDto")
+public class AttendanceStatusDto {
+    private String checkInTime;
+    private String checkOutTime;
 }
