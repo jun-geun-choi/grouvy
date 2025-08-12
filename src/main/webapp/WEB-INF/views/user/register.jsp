@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@include file="../common/taglib.jsp"%>
+<%@include file="../common/taglib.jsp" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -39,7 +39,8 @@
         <!-- 이메일 인증 코드 입력 -->
         <div class="mb-2" id="emailCodeDiv">
             <label for="emailCode" class="form-label small">인증 코드</label>
-            <form:input type="text" class="form-control" id="emailCode" path="confirmCode" placeholder="이메일로 전송된 코드를 입력하세요" />
+            <form:input type="text" class="form-control" id="emailCode" path="confirmCode"
+                        placeholder="이메일로 전송된 코드를 입력하세요"/>
             <div class="form-text text-muted">입력 후 자동 인증됩니다.</div>
             <form:errors path="confirmCode" cssClass="text-danger small"/>
         </div>
@@ -68,7 +69,7 @@
     const $emailCodeDiv = $('#emailCodeDiv');
     const $emailCode = $('#emailCode');
 
-    $verifyEmailBtn.click(function() {
+    $verifyEmailBtn.click(function () {
         const email = $signupEmail.val();
         if (!email) {
             alert("이메일을 입력해주세요.");
@@ -78,8 +79,8 @@
         $.ajax({
             type: "POST",
             url: "/register/check-mail",
-            data: {email : email},
-            success:function (isAvailable) {
+            data: {email: email},
+            success: function (isAvailable) {
                 if (!isAvailable) {
                     alert("이미 가입된 이메일입니다.")
                     return;
@@ -90,21 +91,21 @@
                 $.ajax({
                     type: "POST",
                     url: "/register/mailConfirm",
-                    data: { email: email },
-                    success: function(data) {
+                    data: {email: email},
+                    success: function (data) {
                         // $emailCodeDiv.show(); // 인증 코드 입력칸 보이기
 
                         $emailCode.on("keyup", function () {
                             if (data !== $emailCode.val()) {
                                 $("#emailCodeDiv .form-text").html("인증번호가 잘못되었습니다")
-                                    .css({ color: "#e6002d", fontWeight: "bold" });
+                                    .css({color: "#e6002d", fontWeight: "bold"});
                             } else {
                                 $("#emailCodeDiv .form-text").html("인증 완료되었습니다")
-                                    .css({ color: "#0D6EFD", fontWeight: "bold" });
+                                    .css({color: "#0D6EFD", fontWeight: "bold"});
                             }
                         });
                     },
-                    error: function() {
+                    error: function () {
                         alert("이메일 전송 실패. 서버 확인 필요.");
                     }
                 });

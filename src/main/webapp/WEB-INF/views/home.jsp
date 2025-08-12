@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@include file="common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -29,9 +29,9 @@
                     </c:otherwise>
                 </c:choose>
 
-                <h5 class="mt-2 mb-1"><sec:authentication property="principal.user.name"/> <sec:authentication property="principal.user.position.positionName"  />님</h5>
-                <small class="text-muted"><sec:authentication property="principal.user.position.positionName"  /></small>
-
+                <h5 class="mt-2 mb-1"><sec:authentication property="principal.user.name"/> <sec:authentication
+                        property="principal.user.position.positionName"/>님</h5>
+                <small class="text-muted"><sec:authentication property="principal.user.position.positionName"/></small>
                 <div class="icon-group mt-3">
                     <a href="#" class="text-dark text-decoration-none"> <i
                             class="bi bi-envelope"></i> <span class="small custom-gap">0</span>
@@ -148,22 +148,28 @@
                             <div class="card p-3 h-100">
                                 <h6 class="fw-bold mb-2">근태관리</h6>
                                 <div class="mb-2 text-secondary small">
-                                    2025년 07월 07일 (월) 15:39:35 <span
-                                        class="badge bg-white border text-primary ms-2"
-                                        style="font-size: 0.8rem; font-weight: 500;">휴가</span>
+                                    <span id="currentTime"></span>
+<%--                                    <span--%>
+<%--                                            class="badge bg-white border text-primary ms-2"--%>
+<%--                                            style="font-size: 0.8rem; font-weight: 500;">휴가</span>--%>
                                 </div>
+                                <div id="locationStatus" class="text-secondary small mb-2"></div>
                                 <div
                                         class="bg-light rounded-3 py-2 px-2 mb-2 d-flex align-items-center justify-content-between flex-wrap">
                                     <div class="text-center flex-fill">
                                         <div class="text-secondary mb-1 small">출근 시간</div>
-                                        <div class="fw-bold" style="font-size: 1.1rem;">08:37:16</div>
+                                        <div class="fw-bold" style="font-size: 1.1rem;">
+                                            <span id="checkInTimeText">--:--:--</span>
+                                        </div>
                                     </div>
                                     <div class="text-center flex-fill">
                                         <span class="text-secondary" style="font-size: 1.2rem;">→</span>
                                     </div>
                                     <div class="text-center flex-fill">
                                         <div class="text-secondary mb-1 small">퇴근 시간</div>
-                                        <div class="fw-bold" style="font-size: 1.1rem;">15:39:20</div>
+                                        <div class="fw-bold" style="font-size: 1.1rem;">
+                                            <span id="checkOutTimeText">--:--:--</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mb-1">
@@ -185,8 +191,12 @@
                                           style="top: 16px; font-size: 0.8rem; color: #aaa;">52h</span>
                                 </div>
                                 <div class="d-flex gap-2 mb-2">
-                                    <button class="btn btn-light flex-fill border py-1 px-1 small">출근하기</button>
-                                    <button class="btn btn-light flex-fill border py-1 px-1 small">퇴근하기</button>
+                                    <button id="checkInBtn" class="btn btn-light flex-fill border py-1 px-1 small">
+                                        출근하기
+                                    </button>
+                                    <button id="checkOutBtn" class="btn btn-light flex-fill border py-1 px-1 small">
+                                        퇴근하기
+                                    </button>
                                 </div>
                                 <button class="btn btn-outline-success w-100 py-1 px-1 small"
                                         style="font-weight: 500; border-color: #00c3aa; color: #00c3aa;">
@@ -300,8 +310,207 @@
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script>
-  // 최초 연결
-  connectNoticeSocket();
+    function updateCurrentTime() {
+        const timeEl = document.getElementById("currentTime");
+        const now = new Date();
+
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const date = now.getDate();
+        const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+        const day = dayNames[now.getDay()];
+
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+
+        timeEl.textContent =
+            year + "년 " +
+            month.toString().padStart(2, '0') + "월 " +
+            date.toString().padStart(2, '0') + "일 (" +
+            day + ") " +
+            hours + ":" + minutes + ":" + seconds;
+    }
+
+    // 최초 1번 실행 + 1초마다 갱신
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+</script>
+<script>
+    const companyLat = 37.572955; // 회사 위도
+    const companyLon = 126.992257; // 회사 경도
+    const allowedDistance = 70; // 허용 거리 (미터)
+
+    const status = document.getElementById("locationStatus");
+    const checkInBtn = document.getElementById("checkInBtn");
+    const checkOutBtn = document.getElementById("checkOutBtn");
+
+    function getDistanceFromCompany(lat1, lon1) {
+        const R = 6371000; // 지구 반지름 (미터)
+        const lat1Rad = lat1 * Math.PI / 180;
+        const lat2Rad = companyLat * Math.PI / 180;
+        const deltaLat = (companyLat - lat1) * Math.PI / 180;
+        const deltaLon = (companyLon - lon1) * Math.PI / 180;
+
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+            Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+            Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // 거리 (미터)
+    }
+
+    function isWithinCompany() {
+        return new Promise((resolve, reject) => {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const {latitude, longitude} = position.coords;
+                        const distance = getDistanceFromCompany(latitude, longitude);
+
+                        if (distance <= allowedDistance) {
+                            status.textContent = "회사 내부입니다 (" + distance.toFixed(1) + "m 이내)";
+                            resolve({
+                                withinCompany: distance <= allowedDistance,
+                                latitude,
+                                longitude,
+                                distance
+                            });
+                        } else {
+                            status.textContent = "회사 외부입니다 (" + distance.toFixed(1) + "m). 출퇴근 처리가 제한됩니다.";
+                            resolve({
+                                withinCompany: distance <= allowedDistance,
+                                latitude,
+                                longitude,
+                                distance
+                            });
+                        }
+                    },
+                    (error) => {
+                        status.textContent = "위치 정보를 가져올 수 없습니다: " + error.message;
+                        reject(false);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                status.textContent = "브라우저가 위치 서비스를 지원하지 않습니다.";
+                reject(false);
+            }
+        });
+    }
+
+    // KST 기준 HH:mm:ss로 예쁘게 포맷
+    function formatKST(timeStr) {
+        if (!timeStr) return "--:--:--";
+        // 서버가 "2025-08-11T08:37:16.123+09:00" 같은 ISO를 주면 그대로 파싱됨
+        const d = new Date(timeStr);
+        // 브라우저 로컬시간으로 보이게 하려면 timeZone 제거, KST 고정이면 아래 옵션 유지
+        return d.toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Seoul' });
+    }
+
+    // 시간 표시에만 책임
+    function renderTimes(status) {
+        const inEl = document.getElementById("checkInTimeText");
+        const outEl = document.getElementById("checkOutTimeText");
+        inEl.textContent  = formatKST(status.checkInTime);
+        outEl.textContent = formatKST(status.checkOutTime);
+    }
+
+    function updateButtonsBasedOnStatus(status) {
+        // 먼저 시간 반영
+        renderTimes(status);
+
+        if (status.checkInTime && !status.checkOutTime) {
+            // 출근했지만 퇴근 안함
+            checkInBtn.disabled = true;
+            checkOutBtn.disabled = false;
+        } else if (status.checkInTime && status.checkOutTime) {
+            // 출퇴근 모두 완료
+            checkInBtn.disabled = true;
+            checkOutBtn.disabled = true;
+        } else {
+            // 아무것도 안한 상태
+            checkInBtn.disabled = false;
+            checkOutBtn.disabled = true;
+        }
+    }
+
+    async function refreshTodayStatus() {
+        try {
+            const res = await fetch("/attendance/today-status", {method: "GET"});
+            if (res.ok) {
+                const today = await res.json();
+                updateButtonsBasedOnStatus(today || {});
+            } else {
+                checkInBtn.disabled = true;
+                checkOutBtn.disabled = true;
+                renderTimes({}); // "--:--:--"로 초기화
+            }
+        } catch (e) {
+            console.error(e);
+            checkInBtn.disabled = true;
+            checkOutBtn.disabled = true;
+            renderTimes({}); // "--:--:--"로 초기화
+        }
+    }
+
+    // 페이지 로드 시 위치 확인
+    window.onload = async function () {
+
+        await refreshTodayStatus();
+
+        checkInBtn.addEventListener("click", async () => {
+            const locationResult = await isWithinCompany();
+            if (!locationResult.withinCompany) return alert("회사 외부에서는 출근할 수 없습니다.");
+
+            const res = await fetch("/attendance/checkin", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    status: "출근",
+                    latitude: locationResult.latitude,
+                    longitude: locationResult.longitude,
+                    distance: locationResult.distance
+                })
+            });
+            if (res.ok) {
+                alert("출근 완료!");
+                await refreshTodayStatus();
+            }
+        });
+        checkOutBtn.addEventListener("click", async () => {
+            const locationResult = await isWithinCompany();
+            if (!locationResult.withinCompany) return alert("회사 외부에서는 퇴근할 수 없습니다.");
+
+            const res = await fetch("/attendance/checkout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    status: "퇴근",
+                    latitude: locationResult.latitude,
+                    longitude: locationResult.longitude,
+                    distance: locationResult.distance
+                })
+            });
+            if (res.ok) {
+                alert("퇴근 완료!");
+                await refreshTodayStatus();
+            }
+        });
+    };
+
+</script>
+<script>
+    // 최초 연결
+    connectNoticeSocket();
 </script>
 <%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>

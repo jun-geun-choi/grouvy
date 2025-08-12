@@ -21,17 +21,16 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-//    private final OAuth2Fa
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CustomLoginSuccessHandler customLoginSuccessHandler, CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE).permitAll()
-                        .requestMatchers("/login", "/register", "register/**").permitAll()
+                        .requestMatchers("/login", "/register", "/register/**").permitAll()
                         .requestMatchers("/resources/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().hasAnyRole("USER",  "ADMIN")
+                        .anyRequest().hasAnyRole("USER", "ADMIN")
                 )
                 .formLogin(formLogin -> formLogin
                         .usernameParameter("email")
@@ -43,9 +42,6 @@ public class SecurityConfig {
                         .permitAll()
                         .failureUrl("/login?failed")
                 )
-//                .oauth2Login(customConfigurer ->customConfigurer
-//                        .successHandler(succesHandler)
-//                        .failureHandler(fa))
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
