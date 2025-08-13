@@ -20,7 +20,7 @@
                 <li><a href="/mypage/profile">개인 정보</a></li>
                 <li><a href="/mypage/attendance">근태 관리</a></li>
                 <li><a href="/mypage/login-history">로그인 기록</a></li>
-                <li><a href="/mypage/setting">페이지 설정</a></li>
+<%--                <li><a href="/mypage/setting">페이지 설정</a></li>--%>
             </ul>
         </div>
 
@@ -30,7 +30,7 @@
             <div class="card card-custom mb-4 card-wrapper">
 
                 <div class="d-flex align-items-center mb-4 position-relative">
-<%--                     프로필 이미지 --%>
+                    <%--                     프로필 이미지 --%>
                     <div class="position-relative">
                         <c:set var="profilePath">
                             <sec:authentication property="principal.user.profileImgPath"/>
@@ -66,10 +66,8 @@
                                 </c:when>
                                 <c:otherwise>
                                     <li>
-<%--                                        TODO : 프로필 이미지 삭제 --%>
-                                        <form action="/user/delete/profile-image" method="post">
-                                            <button type="submit" class="dropdown-item">프로필 삭제</button>
-                                        </form>
+                                        <button id="deleteProfileBtn" type="submit" class="dropdown-item">프로필 삭제
+                                        </button>
                                     </li>
                                     <li>
                                         <label class="dropdown-item" for="imageUploadInput">프로필 변경</label>
@@ -79,40 +77,72 @@
                         </ul>
                     </div>
 
+
                     <!-- 숨겨진 input & form -->
-                    <form action="/mypage/update/profile/image" method="post" enctype="multipart/form-data" class="ms-4">
+                    <form action="/mypage/update/profile/image" method="post" enctype="multipart/form-data"
+                          class="ms-4">
                         <input type="file" id="imageUploadInput" name="image" class="d-none"
                                onchange="this.form.submit()">
                         <input type="hidden" name="userId"
                                value="<sec:authentication property='principal.user.userId' />">
                     </form>
+                    <h4 class="mb-0 fw-semibold"><sec:authentication property="principal.user.name"/></h4>
                 </div>
 
+
+                <%-- 정보 수정 --%>
                 <form action="/mypage/update/profile/info" method="post">
                     <div class="info-grid">
                         <div class="fw-bold">이름</div>
-                        <div><sec:authentication property="principal.user.name" /></div>
+                        <div><sec:authentication property="principal.user.name"/></div>
                         <div class="fw-bold">사원번호</div>
-                        <div><sec:authentication property="principal.user.employeeNo" /></div>
-
-                        <div class="fw-bold">직급</div>
-                        <div><sec:authentication property="principal.user.position.positionName" /></div>
-<%--                        TODO : 상위 부서 표시--%>
-                        <div class="fw-bold">부서</div>
-                        <div><sec:authentication property="principal.user.department.departmentName" /></div>
-
-                        <div class="fw-bold">생년월일</div>
-                        <div><input type="date" name="birthDate" class="form-control" value="1990-01-01"></div>
-                        <div class="fw-bold">전화번호</div>
-                        <div><sec:authentication property="principal.user.phoneNumber" /></div>
-                        <div class="fw-bold">주소</div>
-                        <div><sec:authentication property="principal.user.address" /></div>
-
+                        <div><sec:authentication property="principal.user.employeeNo"/></div>
                         <div class="fw-bold">이메일</div>
-                        <div><sec:authentication property="principal.username" /> (<sec:authentication property="principal.user.loginProvider"  />)</div>
+                        <div><sec:authentication property="principal.username"/> (<sec:authentication
+                                property="principal.user.loginProvider"/>)
+                        </div>
+                        <%--                        TODO : 상위 부서 표시--%>
+                        <div class="fw-bold">부서</div>
+                        <div><sec:authentication property="principal.user.department.departmentName"/></div>
+                        <div class="fw-bold">직급</div>
+                        <div><sec:authentication property="principal.user.position.positionName"/></div>
+
+                        <div class="fw-bold">전화번호</div>
+                        <div><sec:authentication property="principal.user.phoneNumber"/></div>
+
 
                         <div class="fw-bold">입사일</div>
                         <div><fmt:formatDate value="${joinDate}" pattern="yyyy-MM-dd"/></div>
+
+                        <c:set var="address">
+                            <sec:authentication property="principal.user.address"/>
+                        </c:set>
+
+                        <div class="fw-bold">주소</div>
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text"
+                                       id="roadFullAddr"
+                                       class="form-control"
+                                       name="address"
+                                       placeholder="도로명 주소를 입력하세요"
+                                       value="${empty address or address eq 'null' ? '' : address}" readonly>
+                                <button type="button"
+                                        class="btn btn-outline-primary"
+                                        id="btnSearchAddress"
+                                        onclick="goPopup()">
+                                    <i class="bi bi-search"></i> 주소검색
+                                </button>
+                            </div>
+                            <!-- 필요시 안내문 -->
+                            <!-- <div class="form-text">검색 버튼을 눌러 도로명주소를 선택하세요.</div> -->
+                        </div>
+
+                    </div>
+
+                    <div class="text-end mt-4">
+                        <button type="button" id="btnCancel" class="border border-primary-subtle btn btn-light">취소</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
                     </div>
                 </form>
             </div>
@@ -135,5 +165,50 @@
     </div>
 </main>
 <%@include file="../common/footer.jsp" %>
+<script>
+    document.getElementById("deleteProfileBtn").addEventListener("click", async () => {
+        if (!confirm("프로필 이미지를 삭제하시겠습니까?")) return;
+
+        try {
+            const res = await fetch("/user/delete/profile-image", {
+                method: "DELETE"
+            });
+
+            if (res.ok) {
+                alert("프로필 이미지가 삭제되었습니다.");
+                location.reload(); // 페이지 새로고침해서 반영
+            } else {
+                alert("삭제 실패");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("오류 발생");
+        }
+    });
+</script>
+
+<%-- 주소 입력 --%>
+<script language="javascript">
+
+    function goPopup() {
+        // 호출된 페이지(jusopopup.jsp)에서 실제 주소검색URL(https://business.juso.go.kr/addrlink/addrLinkUrl.do)를 호출하게 됩니다.
+        var pop = window.open("/popup/jusoPopup", "pop", "width=570,height=420, scrollbars=yes, resizable=yes");
+    }
+
+    function jusoCallBack(roadFullAddr) {
+        const input = document.getElementById("roadFullAddr");
+        if (input) input.value = roadFullAddr || "";
+    }
+
+    // 취소
+    document.getElementById("btnCancel").addEventListener("click", function () {
+        const input = document.getElementById("roadFullAddr");
+        if (input) {
+            const original = input.getAttribute("data-original") || "";
+            input.value = original;
+            // location.reload(); // 새로고침 방식
+        }
+    });
+</script>
 </body>
 </html>

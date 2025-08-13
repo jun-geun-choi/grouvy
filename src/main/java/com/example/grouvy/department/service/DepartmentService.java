@@ -27,6 +27,18 @@ public class DepartmentService {
     public List<DepartmentTreeDto> getDepartmentTree() {
         List<Department> allDepts = departmentMapper.findAllDeptsTree();
 
+        if (allDepts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> deptIds = allDepts.stream()
+                .map(Department::getDepartmentId)
+                .collect(Collectors.toList());
+
+        List<User> allUsers = userMapper.findAllUsersByDeptIds(deptIds);
+        Map<Long, List<User>> usersByDeptIdMap = allUsers.stream()
+                .collect(Collectors.groupingBy(User::getDepartmentId));
+
         Map<Long, DepartmentTreeDto> deptTreeMap = allDepts.stream()
                 .map(dept -> {
                     DepartmentTreeDto deptDto = new DepartmentTreeDto(
@@ -36,26 +48,26 @@ public class DepartmentService {
                             dept.getDepartmentOrder(),
                             dept.getLevel()
                     );
-                    List<User> userInDept = userMapper.findUsersByDeptId(dept.getDepartmentId());
-                    deptDto.setUsers(userInDept);
+                    List<User> usersForThisDept = usersByDeptIdMap.getOrDefault(dept.getDepartmentId(), new ArrayList<>());
+                    deptDto.setUsers(usersForThisDept);
                     return deptDto;
                 })
                 .collect(Collectors.toMap(DepartmentTreeDto::getDepartmentId, deptDto -> deptDto));
 
         List<DepartmentTreeDto> rootDepts = new ArrayList<>();
-
         deptTreeMap.values().forEach(deptTreeDto -> {
-           if (deptTreeDto.getParentDepartmentId() == null) {
-               rootDepts.add(deptTreeDto);
-           } else {
-               DepartmentTreeDto parentDept = deptTreeMap.get(deptTreeDto.getParentDepartmentId());
-               if (parentDept != null) {
-                   parentDept.getChildren().add(deptTreeDto);
-                   parentDept.getChildren().sort(Comparator.comparing(DepartmentTreeDto::getDepartmentOrder));
-               }
-           }
+            if (deptTreeDto.getParentDepartmentId() == null) {
+                rootDepts.add(deptTreeDto);
+            } else {
+                DepartmentTreeDto parentDept = deptTreeMap.get(deptTreeDto.getParentDepartmentId());
+                if (parentDept != null) {
+                    parentDept.getChildren().add(deptTreeDto);
+                    parentDept.getChildren().sort(Comparator.comparing(DepartmentTreeDto::getDepartmentOrder));
+                }
+            }
         });
         rootDepts.sort(Comparator.comparing(DepartmentTreeDto::getDepartmentOrder));
+
         return rootDepts;
     }
 

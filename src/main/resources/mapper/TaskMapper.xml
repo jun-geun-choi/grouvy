@@ -283,4 +283,110 @@
         WHERE
             FILE_ID = #{fileId}
     </select>
+
+    <!--List<TaskListItem> getTaskListItemByWriterId(@Param("userId") int userId, @Param("type") String type);-->
+    <select id="getTaskListItemByWriterId" resultType="TaskListItem">
+        SELECT
+            T.TASK_ID                 AS taskId
+             , T.TITLE                   AS title
+             , T.WRITER_ID               AS writerId
+             , U1.NAME                   AS writerName
+             , P1.POSITION_NAME          AS writerPositionName
+             , U2.USER_ID                AS receiveUserId
+             , U2.NAME                   AS receiveUserName
+             , P2.POSITION_NAME          AS receiveUserPositionName
+             , T.DUE_DATE                AS dueDate
+             , T.STATUS                  AS status
+             , T.CREATED_DATE            AS createdDate
+        FROM GROUVY_TASKS T
+             JOIN GROUVY_TASK_RECEIVERS R
+                  ON T.TASK_ID    = R.TASK_ID
+                  AND R.ROLE = 'receive'
+             JOIN GROUVY_USERS U1
+                  ON T.WRITER_ID  = U1.USER_ID
+             JOIN GROUVY_POSITIONS P1
+                  ON U1.POSITION_NO = P1.POSITION_NO
+             JOIN GROUVY_USERS U2
+                  ON R.TARGET_USER_ID = U2.USER_ID
+             JOIN GROUVY_POSITIONS P2
+                  ON U2.POSITION_NO = P2.POSITION_NO
+        WHERE
+            T.WRITER_ID = #{userId}
+            AND T.TYPE = #{type}
+            AND T.IS_DELETED = 'N'
+        ORDER BY
+            T.CREATED_DATE DESC
+    </select>
+
+    <!--List<TaskListItem> getTaskListItemByReceiveUserId(@Param("userId") int userId, @Param("type") String type);-->
+    <select id="getTaskListItemByReceiveUserId" resultType="TaskListItem">
+        SELECT
+            T.TASK_ID                 AS taskId
+             , T.TITLE                   AS title
+             , T.WRITER_ID               AS writerId
+             , U1.NAME                   AS writerName
+             , P1.POSITION_NAME          AS writerPositionName
+             , U2.USER_ID                AS receiveUserId
+             , U2.NAME                   AS receiveUserName
+             , P2.POSITION_NAME          AS receiveUserPositionName
+             , T.DUE_DATE                AS dueDate
+             , T.STATUS                  AS status
+             , T.CREATED_DATE            AS createdDate
+        FROM GROUVY_TASKS T
+                 JOIN GROUVY_TASK_RECEIVERS R
+                      ON T.TASK_ID    = R.TASK_ID
+                          AND R.ROLE = 'receive'
+                 JOIN GROUVY_USERS U1
+                      ON T.WRITER_ID  = U1.USER_ID
+                 JOIN GROUVY_POSITIONS P1
+                      ON U1.POSITION_NO = P1.POSITION_NO
+                 JOIN GROUVY_USERS U2
+                      ON R.TARGET_USER_ID = U2.USER_ID
+                 JOIN GROUVY_POSITIONS P2
+                      ON U2.POSITION_NO = P2.POSITION_NO
+        WHERE
+            R.TARGET_USER_ID = #{userId}
+            AND T.TYPE = #{type}
+            AND T.IS_DELETED = 'N'
+        ORDER BY
+            T.CREATED_DATE DESC
+    </select>
+
+    <!--List<TaskListItem> getTaskListItemByCcId(@Param("userId") int userId, @Param("type") String type);-->
+    <select id="getTaskListItemByCcId" resultType="TaskListItem">
+        SELECT
+            T.TASK_ID                 AS taskId
+             , T.TITLE                   AS title
+             , T.WRITER_ID               AS writerId
+             , U1.NAME                   AS writerName
+             , P1.POSITION_NAME          AS writerPositionName
+             , U2.USER_ID                AS receiveUserId
+             , U2.NAME                   AS receiveUserName
+             , P2.POSITION_NAME          AS receiveUserPositionName
+             , T.DUE_DATE                AS dueDate
+             , T.STATUS                  AS status
+             , T.CREATED_DATE            AS createdDate
+        FROM GROUVY_TASKS T
+                 JOIN GROUVY_TASK_RECEIVERS R_RCV
+                      ON T.TASK_ID    = R_RCV.TASK_ID
+                          AND R_RCV.ROLE = 'receive'
+                 JOIN GROUVY_TASK_RECEIVERS R_CC
+                      ON R_CC.TASK_ID = T.TASK_ID
+                          AND R_CC.ROLE = 'cc'
+                          AND R_CC.TARGET_USER_ID = #{userId}
+                 JOIN GROUVY_USERS U1
+                      ON T.WRITER_ID  = U1.USER_ID
+                 JOIN GROUVY_POSITIONS P1
+                      ON U1.POSITION_NO = P1.POSITION_NO
+                 JOIN GROUVY_USERS U2
+                      ON R_RCV.TARGET_USER_ID = U2.USER_ID
+                 JOIN GROUVY_POSITIONS P2
+                      ON U2.POSITION_NO = P2.POSITION_NO
+        WHERE
+            T.TYPE = #{type}
+            AND T.IS_DELETED = 'N'
+        ORDER BY
+            T.CREATED_DATE DESC
+    </select>
+
 </mapper>

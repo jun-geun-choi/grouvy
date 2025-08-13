@@ -2,6 +2,8 @@ package com.example.grouvy.task.service;
 
 import com.example.grouvy.file.mapper.FileMapper;
 import com.example.grouvy.file.vo.FileVo;
+import com.example.grouvy.notification.service.NotificationService;
+import com.example.grouvy.notification.vo.Notification;
 import com.example.grouvy.task.dto.request.Feedback;
 import com.example.grouvy.task.dto.request.TaskForm;
 import com.example.grouvy.task.dto.response.*;
@@ -10,7 +12,12 @@ import com.example.grouvy.task.vo.TaskFile;
 import com.example.grouvy.task.vo.TaskReceiver;
 import com.example.grouvy.task.vo.TaskVo;
 import com.example.grouvy.user.exception.AppException;
+import com.example.grouvy.user.mapper.UserMapper;
 import com.example.grouvy.user.vo.User;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,8 +48,20 @@ public class TaskService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private Storage storage;
+
     @Value("${app.file.save-directory}")
     private String saveDirectory;
+
+    @Value("${spring.cloud.gcp.storage.bucket}")
+    private String bucketName;
+
+    //알림조회의존성
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    private UserMapper userMapper;
 
     // 로그인 유저의 개인/부서 파일 모두 가져오기
     public List<ModalFile> getFiles(int userId) {
@@ -87,15 +108,6 @@ public class TaskService {
             }
         }
 
-        String taskDir = saveDirectory + "/task/";
-        // 디렉터리 확인 및 생성
-        Path taskPath = Paths.get(taskDir);
-        try {
-            Files.createDirectories(taskPath);
-        } catch (IOException e) {
-            throw new RuntimeException("Task 디렉터리 생성 실패: " + taskDir, e);
-        }
-
         // 로컬파일 저장
         if (localFiles != null && !localFiles.isEmpty()) {
 
@@ -114,8 +126,13 @@ public class TaskService {
                     taskFile.setOriginalName(originalFileName);
                     taskFile.setStoredName(fileName);
 
-                    File dest = new File(saveDirectory + "/task", fileName);
-                    localFile.transferTo(dest);
+                    BlobInfo blobInfo = storage.create(
+                            BlobInfo.newBuilder(bucketName, fileName)
+                                    .setContentType(localFile.getContentType())
+                                    .build(),
+                            localFile.getInputStream()
+                    );
+
                 } catch (Exception e) {
                     throw new RuntimeException("로컬 첨부파일 저장오류", e);
                 }
@@ -134,34 +151,93 @@ public class TaskService {
             for (Integer existingFileId : existingFileIds) {
                 // 문서함에 저장되어 있는 파일정보 객체 가져오기
                 FileVo originalFile = fileMapper.getFileByFileId(existingFileId);
-                String originalDir = saveDirectory + "/" + originalFile.getOwnerType() + "/";
 
-                try {
-                    // 파일 복사 및 저장
-                    Path source = Paths.get(originalDir, originalFile.getStoredName());
-                    String newStoredName = UUID.randomUUID().toString() + originalFile.getOriginalName();
-                    TaskFile taskFile = modelMapper.map(originalFile, TaskFile.class);
-                    Path target = Paths.get(taskDir, newStoredName);
-                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-                    
-                    taskFile.setStoredName(newStoredName);
-                    taskFile.setOriginalName(originalFile.getOriginalName());
-                    taskFile.setExtension(originalFile.getExtension());
-                    taskFile.setSize(originalFile.getSize());
-                    taskFile.setTaskId(task.getTaskId());
-                    taskFile.setUploadUserId(task.getWriterId());
+                // 새로 저장할 파일 이름
+                String newStoredName = UUID.randomUUID().toString() + originalFile.getOriginalName();
 
-                    // 데이터베이스에 저장
-                    taskMapper.insertTaskFile(taskFile);
-                } catch (Exception e) {
-                    throw new RuntimeException("문서함 첨부파일 저장오류", e);
+                // 확장자로부터 contentType 추정
+                String contentType = URLConnection.guessContentTypeFromName(originalFile.getOriginalName());
+                if (contentType == null) {
+                    // 기본값 지정
+                    contentType = "application/octet-stream";
                 }
+
+                BlobId sourceBlobId = BlobId.of(bucketName, originalFile.getStoredName());
+                BlobInfo targetBlobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, newStoredName))
+                        .setContentType(contentType)
+                        .build();
+
+                storage.copy(
+                        Storage.CopyRequest.newBuilder()
+                                .setSource(sourceBlobId)
+                                .setTarget(targetBlobInfo)
+                                .build()
+                );
+
+                TaskFile taskFile = modelMapper.map(originalFile, TaskFile.class);
+
+                taskFile.setStoredName(newStoredName);
+                taskFile.setOriginalName(originalFile.getOriginalName());
+                taskFile.setExtension(originalFile.getExtension());
+                taskFile.setSize(originalFile.getSize());
+                taskFile.setTaskId(task.getTaskId());
+                taskFile.setUploadUserId(task.getWriterId());
+
+                // 데이터베이스에 저장
+                taskMapper.insertTaskFile(taskFile);
+            }
+        }
+
+        //알림 로직.
+        User writer = userMapper.findByUserId(taskForm.getWriterId());
+        String taskTitle = taskForm.getTitle();
+        String targetUrl = "/task/detail/" + task.getTaskId();
+
+        //수신자에게 알림 발송
+        if (receiveUserId != 0 && receiveUserId != writer.getUserId()) {
+            Notification notificationToReceiver = Notification.builder()
+                    .userId(receiveUserId)
+                    .notificationType("신규업무")
+                    .notificationContent(writer.getName() + "님이 새로운 업무 '" + taskTitle + "'를 등록했습니다.")
+                    .targetUrl(targetUrl)
+                    .isRead("N")
+                    .build();
+            notificationService.createNotification(notificationToReceiver);
+        }
+
+        //참조자 알림발송
+        if (ccUserIds != null && !ccUserIds.isEmpty()) {
+            String contentForCc = writer.getName() + "님이 '" + taskTitle + "' 업무에 당신을 참조자로 지정했습니다.";
+            for (Integer ccUserId : ccUserIds) {
+                if (ccUserId.equals(taskForm.getWriterId())) continue;
+
+                Notification notificationToCc = Notification.builder()
+                        .userId(ccUserId)
+                        .notificationType("업무참조")
+                        .notificationContent(contentForCc)
+                        .targetUrl(targetUrl)
+                        .isRead("N")
+                        .build();
+                notificationService.createNotification(notificationToCc);
             }
         }
     }
 
+    // 타입 및 역할 별 업무 리스트 가져오기
     public List<TaskListItem> getRequestAndReport(int userId, String type, String role) {
-        return taskMapper.getTaskByUserIdAndTypeAndRole(userId, type, role);
+        List<TaskListItem> taskListItems = new ArrayList<TaskListItem>();
+
+        // 역할별 매퍼 적용
+        if (role.equals("writer")) {
+            taskListItems = taskMapper.getTaskListItemByWriterId(userId, type);
+        } else if (role.equals("receive")) {
+            taskListItems = taskMapper.getTaskListItemByReceiveUserId(userId, type);
+        } else if (role.equals("cc")) {
+            taskListItems = taskMapper.getTaskListItemByCcId(userId, type);
+        }
+
+        // 역할별로 나누고 쿼리문에서 타입나눠서 가져오기
+        return taskListItems;
     }
 
     // 할일리스트 가져오기
@@ -254,8 +330,14 @@ public class TaskService {
                     taskFile.setOriginalName(originalFileName);
                     taskFile.setStoredName(fileName);
 
-                    File dest = new File(saveDirectory + "/task", fileName);
-                    localFile.transferTo(dest);
+                    BlobInfo blobInfo = storage.create(
+                            BlobInfo.newBuilder(bucketName, fileName)
+                                    .setContentType(localFile.getContentType())
+                                    .build(),
+                            localFile.getInputStream()
+                    );
+
+
                 } catch (Exception e) {
                     throw new RuntimeException("로컬 첨부파일 저장오류", e);
                 }
@@ -274,29 +356,43 @@ public class TaskService {
             for (Integer existingFileId : existingFileIds) {
                 // 문서함에 저장되어 있는 파일정보 객체 가져오기
                 FileVo originalFile = fileMapper.getFileByFileId(existingFileId);
-                String originalDir = saveDirectory + "/" + originalFile.getOwnerType() + "/";
 
-                try {
-                    // 파일 복사 및 저장
-                    Path source = Paths.get(originalDir, originalFile.getStoredName());
-                    String newStoredName = UUID.randomUUID().toString() + originalFile.getOriginalName();
-                    TaskFile taskFile = modelMapper.map(originalFile, TaskFile.class);
-                    Path target = Paths.get(taskDir, newStoredName);
-                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                // 새로 저장할 파일 이름
+                String newStoredName = UUID.randomUUID().toString() + originalFile.getOriginalName();
 
-                    taskFile.setStoredName(newStoredName);
-                    taskFile.setOriginalName(originalFile.getOriginalName());
-                    taskFile.setExtension(originalFile.getExtension());
-                    taskFile.setSize(originalFile.getSize());
-                    taskFile.setTaskId(feedback.getTaskId());
-                    taskFile.setUploadUserId(feedback.getReceiveUserId());
-
-                    // 데이터베이스에 저장
-                    taskMapper.insertTaskFile(taskFile);
-                } catch (Exception e) {
-                    throw new RuntimeException("문서함 첨부파일 저장오류", e);
+                // 확장자로부터 contentType 추정
+                String contentType = URLConnection.guessContentTypeFromName(originalFile.getOriginalName());
+                if (contentType == null) {
+                    // 기본값 지정
+                    contentType = "application/octet-stream";
                 }
+
+                BlobId sourceBlobId = BlobId.of(bucketName, originalFile.getStoredName());
+                BlobInfo targetBlobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, newStoredName))
+                        .setContentType(contentType)
+                        .build();
+
+                storage.copy(
+                        Storage.CopyRequest.newBuilder()
+                                .setSource(sourceBlobId)
+                                .setTarget(targetBlobInfo)
+                                .build()
+                );
+
+                TaskFile taskFile = modelMapper.map(originalFile, TaskFile.class);
+
+                taskFile.setStoredName(newStoredName);
+                taskFile.setOriginalName(originalFile.getOriginalName());
+                taskFile.setExtension(originalFile.getExtension());
+                taskFile.setSize(originalFile.getSize());
+                taskFile.setTaskId(feedback.getTaskId());
+                taskFile.setUploadUserId(feedback.getReceiveUserId());
+
+                // 데이터베이스에 저장
+                taskMapper.insertTaskFile(taskFile);
+
             }
+
         }
 
         taskMapper.updateReceivers(feedback);
@@ -329,8 +425,32 @@ public class TaskService {
             }
         }
 
+
         taskMapper.updateTask(task);
 
+        //알림로직.
+        User receiver = userMapper.findByUserId(feedback.getReceiveUserId());
+        String taskTitle = task.getTitle();
+        String targetUrl = "/task/detail/" + task.getTaskId();
+        String notificationContent;
+
+        // 진행률 알림 메시지 생성
+        if (feedback.getProgressPercent() == 100) {
+            String completeMessage = task.getType().equals("request") ? "처리를 완료했습니다." : "검토를 완료했습니다.";
+            notificationContent = receiver.getName() + "님이 '" + taskTitle + "' 업무의 " + completeMessage;
+        } else {
+            notificationContent = receiver.getName() + "님이 '" + taskTitle + "' 업무에 대한 피드백을 등록했습니다.";
+        }
+
+        //알림 발송
+        Notification notification = Notification.builder()
+                .userId(task.getWriterId())
+                .notificationType("업무검토")
+                .notificationContent(notificationContent)
+                .targetUrl(targetUrl)
+                .isRead("N")
+                .build();
+        notificationService.createNotification(notification);
     }
 
     // 업무반려에 따른 업무 업데이트
@@ -345,11 +465,35 @@ public class TaskService {
         // 수신자 업데이트
         feedback.setProgressPercent(0);
         taskMapper.updateReceivers(feedback);
+
+        //알림로직.
+        User receiver = userMapper.findByUserId(feedback.getReceiveUserId());
+        String taskTitle = task.getTitle();
+        String targetUrl = "/task/detail/" + task.getTaskId();
+
+        //알림 메시지 생성
+        String notificationContent = receiver.getName() + "님이 '" + taskTitle + "' 업무를 반려했습니다.";
+
+        //알림 발송
+        Notification notification = Notification.builder()
+                .userId(task.getWriterId())
+                .notificationType("업무반려")
+                .notificationContent(notificationContent)
+                .targetUrl(targetUrl)
+                .isRead("N")
+                .build();
+        notificationService.createNotification(notification);
     }
 
     // 할일 디테일 가져오기
     public TaskDetail getTodoDetail(int taskId) {
         TaskDetail taskDetail = taskMapper.getTodoDetailByTaskId(taskId);
+
+        /*
+            파일목록
+         */
+        List<TaskFile> writerFiles = taskMapper.getWriterFilesByTaskId(taskId);
+        taskDetail.setWriterFiles(writerFiles);
 
         return taskDetail;
     }
@@ -375,15 +519,25 @@ public class TaskService {
     @Transactional
     public File getDownloadFile(int fileId) {
         TaskFile taskFile = taskMapper.getTaskFileByFileId(fileId);
-        String filename = taskFile.getStoredName();
+        String storedName = taskFile.getStoredName();
+        String originalName = taskFile.getOriginalName();
 
-        String fileDirectory = saveDirectory + "/task";
+        // 2) 임시파일 경로 준비
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        File file = new File(tmpDir + storedName);
 
-        File file = new File(fileDirectory, filename);
-        if (!file.exists()) {
-            throw new AppException("파일이 존재하지 않습니다");
+        // 3) 클라우드에서 내려받아 임시 저장
+        Blob blob = storage.get(bucketName, storedName);
+        if (blob == null) {
+            throw new AppException("파일이 없습니다" + storedName);
         }
+        blob.downloadTo(file.toPath());
 
+        // 4) 파일명 변경
+//        File originalNamed = new File(tmpDir, originalName);
+//        if (file.renameTo(originalNamed)) {
+//            return originalNamed;
+//        }
         return file;
     }
 }

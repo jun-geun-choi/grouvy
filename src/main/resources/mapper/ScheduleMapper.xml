@@ -3,7 +3,7 @@
 <mapper namespace="com.example.grouvy.schedule.mapper.ScheduleMapper">
  <!-- 샘플 mapper 입니다. -->
 
- <select id="getHolidayById" resultType="Holiday">
+ <select id="getHolidayl" resultType="Holiday">
     SELECT
         HOLIDAY_TITLE       AS holidayTitle
         ,HOLIDAY_ID
@@ -41,11 +41,48 @@
              ,S.SCHEDULE_STARTTIME  AS "start"
              ,S.SCHEDULE_ENDTIME    AS "end"
              ,C.CATEGORY_COLOR    AS color
+             ,S.USER_ID AS userId
+             ,C.CATEGORY_TITLE AS categoryName
+             ,S.SCHEDULE_CONTENT AS extendedProps
+             ,S.SCHEDULE_LOCATION AS location
         FROM
             GROUVY_SCHEDULES S, GROUVY_SCHEDULES_CATEGORIES C
         WHERE
-            S.CATEGORY_ID = C.CATEGORY_ID
+            S.CATEGORY_ID = C.CATEGORY_ID AND (S.USER_ID = #{no} OR (S.DEPARTMENT_ID = #{departmentId} AND S.CATEGORY_ID = 2) OR S.CATEGORY_ID = 3)
     </select>
+
+    <select id="getConferenceRoomReservation" resultType="SimpleReservation">
+        SELECT
+            RESERVATION_DATE AS reservationDate,
+            RESERVATION_STARTTIME AS reservationStarttime,
+            RESERVATION_ENDTIME AS reservationEndtime,
+            CONFERENCE_ROOM_ID AS conferenceRoomId
+        FROM
+            GROUVY_CONFERENCE_ROOMS_RESERVATIONS
+    </select>
+
+
+    <select id="getHoliday" resultType="Holiday">
+        SELECT
+            HOLIDAY_TITLE   AS holidayTitle
+            ,HOLIDAY_DATE    AS holidayDate
+            ,HOLIDAY_ID      AS holidayId
+        FROM
+            GROUVY_HOLIDAYS
+    </select>
+
+    <insert id="insertHoliday" parameterType="Holiday">
+        <selectKey keyProperty="holidayId" resultType="int" order="BEFORE">
+            SELECT HOLIDAYS_HOLIDAY_ID_SEQ.nextval FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_HOLIDAYS
+            (HOLIDAY_ID,
+             HOLIDAY_TITLE,
+             HOLIDAY_DATE)
+        VALUES
+            (#{holidayId},#{holidayTitle}, #{holidayDate})
+
+    </insert>
 
  <insert id="insertSchedule" parameterType="Schedule">
      <selectKey keyProperty="scheduleId" resultType="int" order="BEFORE">
@@ -64,13 +101,127 @@
      ,SCHEDULE_LOCATION
      ,CATEGORY_ID)
      values
-     (#{scheduleId},4,100001, '2025-07-01', #{scheduleStarttime},#{scheduleEndtime},
+     (#{scheduleId},4,#{userId}, '2025-07-01', #{scheduleStarttime},#{scheduleEndtime},
       #{scheduleTitle},
-     #{scheduleContent},1,#{scheduleLocation},#{categoryId})
+     #{scheduleContent},#{departmentId},#{scheduleLocation},#{categoryId})
 
 
 
  </insert>
 
+    <select id="getScheduleCategory" resultType="ScheduleCategory">
+        SELECT
+            CATEGORY_ID        AS categoryId
+            ,CATEGORY_TITLE    AS categoryTitle
+            ,CATEGORY_COLOR    AS categoryColor
+        FROM
+            GROUVY_SCHEDULES_CATEGORIES
+    </select>
+
+    <update id="updateCategory" parameterType="Category">
+        UPDATE GROUVY_SCHEDULES_CATEGORIES
+            SET
+                CATEGORY_COLOR  = #{categoryColor}
+            WHERE
+                CATEGORY_ID = #{categoryId}
+    </update>
+
+    <update id="deleteScheduleByUserNo" parameterType="Schedule">
+        UPDATE GROUVY_SCHEDULES
+            SET
+                IS_DELETED = "T"
+            WHERE
+                SCHEDULE_ID = #{scheduleId}
+    </update>
+
+    <delete id="deleteHolidayById" parameterType="int">
+        DELETE FROM GROUVY_HOLIDAYS
+        WHERE
+                HOLIDAY_ID = #{holidayId}
+    </delete>
+
+    <delete id="deleteMeetingroomById" parameterType="int">
+        DELETE FROM GROUVY_CONFERENCE_ROOMS
+        WHERE
+                CONFERENCE_ROOM_ID = #{conferenceRoomId}
+    </delete>
+
+    <insert id="insertConferenceRoom" parameterType="ConferenceRoom">
+        <selectKey keyProperty="conferenceRoomId" resultType="int" order="BEFORE">
+            SELECT CONFERENCE_ROOMS_CONFERENCE_ROOM_ID_SEQ.nextval FROM DUAL
+        </selectKey>
+            INSERT INTO GROUVY_CONFERENCE_ROOMS
+            (CONFERENCE_ROOM_ID,
+             CONFERENCE_ROOM_TITLE,
+             CONFERENCE_ROOM_LOCATION,
+             CONFERENCE_ROOM_EXPLANATION,
+             CONFERENCE_ROOM_LIMIT,
+             CONFERENCE_ROOM_EQUIPMENT,
+             SCHEDULE_ID)
+                VALUES
+        (#{conferenceRoomId},#{conferenceRoomTitle},#{conferenceRoomLocation},#{conferenceRoomExplanation},#{conferenceRoomLimit},#{conferenceRoomEquipment},4)
+
+
+    </insert>
+
+    <select id="getConferenceRoom" parameterType="ConferenceRoom">
+        SELECT
+            CONFERENCE_ROOM_ID AS conferenceRoomId,
+            CONFERENCE_ROOM_TITLE AS conferenceRoomTitle,
+            CONFERENCE_ROOM_LOCATION AS conferenceRoomLocation,
+            CONFERENCE_ROOM_EXPLANATION AS conferenceRoomExplanation,
+            CONFERENCE_ROOM_LIMIT AS conferenceRoomLimit,
+            CONFERENCE_ROOM_EQUIPMENT AS conferenceRoomEquipment
+        FROM
+            GROUVY_CONFERENCE_ROOMS
+    </select>
+
+    <update id="deleteScheduleAllResigned" parameterType="Schedule">
+        UPDATE GROUVY_SCHEDULES S
+        SET
+            S.IS_DELETED = 'Y'
+        WHERE EXISTS(
+            SELECT
+                0
+            FROM GROUVY_USERS U
+            WHERE
+                S.USER_ID = U.USER_ID AND U.EMPLOYMENT_STATUS = '퇴사')
+    </update>
+
+    <insert id="insertHistory" parameterType="DeleteHistory">
+        <selectKey keyProperty="deleteId" resultType="int" order="BEFORE">
+            SELECT SCHEDULES_DELETE_HISTORY_DELETE_ID_SEQ.nextval FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_SCHEDULES_DELETE_HISTORY
+        (DELETE_ID
+        ,USER_ID
+        )
+        VALUES
+        (#{deleteId}, 1)
+    </insert>
+
+    <select id="getHistory" parameterType="DeleteHistory">
+        SELECT
+            DELETE_ID AS deleteId,
+            CREATED_DATE AS createdDate
+        FROM
+            GROUVY_SCHEDULES_DELETE_HISTORY
+    </select>
+
+    <insert id="insertReservation" parameterType="ConferenceRoomReservation">
+        <selectKey keyProperty="reservationId" resultType="int" order="BEFORE">
+            SELECT CONFERENCE_ROOMS_RESERVATION_RESERVATION_ID_SEQ.nextval FROM DUAL
+        </selectKey>
+        INSERT INTO GROUVY_CONFERENCE_ROOMS_RESERVATIONS
+        (RESERVATION_ID
+        ,RESERVATION_DATE
+        ,RESERVATION_STARTTIME
+        ,RESERVATION_ENDTIME
+        ,CONFERENCE_ROOM_ID
+        ,USER_ID
+        )
+        VALUES
+        (#{reservationId}, #{reservationDate}, #{reservationStarttime}, #{reservationEndtime}, #{conferenceRoomId}, #{userId})
+    </insert>
 
 </mapper>

@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@include file="../../common/taglib.jsp"%>
+<%@include file="../../common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -22,21 +22,20 @@
                 <th>사원명</th>
                 <th>사원번호</th>
                 <th>부서</th>
-                <th>출근 시각</th>
-                <th>퇴근 시각</th>
-                <th>근무 시간</th>
+                <th>시각</th>
+                <th>출근/퇴근</th>
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>홍길순</td>
-                <td>20250001</td>
-                <td>영업팀</td>
-                <td>2025-07-07 08:37:16</td>
-                <td>2025-07-07 15:39:20</td>
-                <td>7시간 2분</td>
-            </tr>
-            <!-- 추가 행 -->
+            <c:forEach var="attendanceHistory" items="${attendanceHistories }" varStatus="loop">
+                <tr>
+                    <td>${attendanceHistory.user.name}</td>
+                    <td>${attendanceHistory.user.employeeNo}</td>
+                    <td>${attendanceHistory.user.department.departmentName}</td>
+                    <td><fmt:formatDate value="${attendanceHistory.attendanceDate}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+                    <td>${attendanceHistory.status}</td>
+                </tr>
+            </c:forEach>
             </tbody>
         </table>
     </div>

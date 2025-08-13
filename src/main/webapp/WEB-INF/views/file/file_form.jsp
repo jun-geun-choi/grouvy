@@ -1,8 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
+<%@ page language="java" contentType="text/html;charset=UTF-8"
 pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ include file="../common/taglib.jsp" %>
+
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -576,33 +575,7 @@ footer {
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html"> 
-                <span class="logo-crop"> 
-                    <img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
-                </span>
-            </a>
-            <ul class="navbar-nav mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="#">전자결재</a></li>
-                <li class="nav-item"><a class="nav-link active" href="#">업무문서함</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-                <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-            </ul>
-            <div class="d-flex align-items-center">
-                <a href="mypage.html" >
-                    <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-                            alt="프로필" class="rounded-circle" width="36" height="36">
-                </a>
-                <a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
-            </div>
-        </div>
-    </nav>
-
+<%@ include file="../common/nav.jsp" %>
     <main>
         <div class="container">
             <div class="sidebar">
@@ -633,15 +606,6 @@ footer {
             <!-- 기능 페이지 -->
             <div class="main-content">
                 <h2>파일 업로드</h2>
-                <!-- 여기에 부서·이름·직급 표시 -->
-                <sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
-                <sec:authentication property="principal.user.name"           var="name"/>
-                <sec:authentication property="principal.user.position.positionName"   var="positionName"/>
-
-                <div class="user-info"
-                     style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
-                    ${departmentName}  ${name}  ${positionName}
-                </div>
                 
                 <form method="post" action="/file/form" class="upload-form" enctype="multipart/form-data">
                     <div class="form-group box-type-group">
@@ -713,7 +677,7 @@ footer {
         </div>
     </div>
 
-    <footer>© 2025 그룹웨어 Corp.</footer>
+    <%@ include file="../common/footer.jsp" %>
 
     <sec:authentication property="principal.user.userId" var="uploadUserId"/>
 
@@ -869,22 +833,29 @@ $('#share-target-list').on('click', '.remove-assignee-btn', function() {
 });
 function uploadFiles() {
     const form = document.querySelector('.upload-form');
-    // 1) 카테고리: required 속성으로도 걸리지만, 추가로 JS에서 확인 가능
-    const category = form.querySelector('#category');
-    if (!category.value) {
-        alert('카테고리를 선택해주세요.');
-        category.focus();
+    // 0) 문서함 선택 필수
+    const ownerType = form.querySelector('input[name="ownerType"]:checked');
+    if (!ownerType) {
+        alert('문서함을 선택해주세요.');
+        const firstRadio = form.querySelector('input[name="ownerType"]');
+        if (firstRadio) firstRadio.focus();
         return;
     }
 
-    // 2) 파일 선택: required 속성이 있으나, 호환성을 위해 JS 검증
+    // 1) 파일 선택: required 속성이 있으나, 호환성을 위해 JS 검증
     const fileInput = form.querySelector('input[name="file"]');
     if (!fileInput.files || fileInput.files.length === 0) {
         alert('업로드할 파일을 선택해주세요.');
         fileInput.focus();
         return;
     }
-
+    // 2) 카테고리: required 속성으로도 걸리지만, 추가로 JS에서 확인 가능
+    const category = form.querySelector('#category');
+    if (!category.value) {
+        alert('카테고리를 선택해주세요.');
+        category.focus();
+        return;
+    }
     // 3) 공유함 체크 시 공유 대상 최소 1명
     const shareCheck = document.getElementById('share-check');
     if (shareCheck.checked) {
@@ -899,6 +870,14 @@ function uploadFiles() {
     form.submit();
 }
     </script>
-
+<%@include file="../chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    // 최초 연결
+    connectNoticeSocket();
+</script>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>
 </html> 

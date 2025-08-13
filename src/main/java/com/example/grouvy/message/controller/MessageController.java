@@ -143,7 +143,7 @@ public class MessageController {
     }
 
     @GetMapping("/detail")
-    public String messageDetail(@RequestParam("messageId") Long messageId, @RequestParam("currentPage") String currentPage, Model model, @AuthenticationPrincipal SecurityUser securityUser) {
+    public String messageDetail(@RequestParam("messageId") Long messageId, @RequestParam(value = "currentPage", required = false, defaultValue = "inbox") String currentPage, Model model, @AuthenticationPrincipal SecurityUser securityUser) {
         if (securityUser == null) {
             model.addAttribute("errorMessage", "로그인이 필요합니다.");
             return "redirect:/login";

@@ -58,6 +58,7 @@ public class MessageQueryService {
         detailDto.setMessageContent(message.getMessageContent());
         detailDto.setSendDate(message.getSendDate());
         detailDto.setRecallAble(message.getRecallAble());
+        detailDto.setSendId(message.getSendId());
 
         detailDto.setReceiveId(currentUserReceiver != null ? currentUserReceiver.getReceiveId() : null);
         detailDto.setInboxStatus(currentUserReceiver != null ? currentUserReceiver.getInboxStatus() : null);
@@ -204,5 +205,11 @@ public class MessageQueryService {
         forwardDto.setMessageContent(contentBuilder.toString());
 
         return forwardDto;
+    }
+
+    //메인페이지 쪽지조회.
+    @Transactional(readOnly = true)
+    public List<MessageReceiver> getUnreadMessagesForDashboard(int userId, int limit) {
+        return messageMapper.findUnreadMessagesForDashboard(userId, limit);
     }
 }

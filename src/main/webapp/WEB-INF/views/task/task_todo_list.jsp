@@ -1,8 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"%>
+
+<%@ include file="../common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -475,38 +473,31 @@ button:hover,
 	background: #27ae60;  /* 짙은 초록 계열 */
 	color: #fff;
 }
+.filters {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 20px;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+
+	background: #fff;                          /* 흰 배경 */
+	border-radius: 8px;                        /* 둥근 모서리 */
+	box-shadow: 0 2px 8px rgba(0,0,0,0.1);     /* 은은한 그림자 */
+	padding: 16px;                             /* 안쪽 여백 */
+	margin-bottom: 20px;
+}
+.filter-box {
+	                     /* 아래 마진 */
+}
 </style>
 </head>
 <body>
 
-	<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-		<div class="container-fluid">
-			<a class="navbar-brand d-flex align-items-center" href="index.html"> 
-				<span class="logo-crop"> 
-					<img src="grouvy_logo.jpg" alt="GROUVY 로고" class="logo-img">
-				</span>
-			</a>
-			<ul class="navbar-nav mb-2 mb-lg-0">
-				<li class="nav-item"><a class="nav-link" href="#">전자결재</a></li>
-				<li class="nav-item"><a class="nav-link" href="/file/personal">업무문서함</a></li>
-				<li class="nav-item"><a class="nav-link active" href="#">업무 관리</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-				<li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-			</ul>
-			<div class="d-flex align-items-center">
-				<a href="mypage.html" >
-					<img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-							alt="프로필" class="rounded-circle" width="36" height="36">
-				</a>
-				<a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
-			</div>
-		</div>
-	</nav>
+<%@ include file="../common/nav.jsp" %>
 
-	<main>
+
+<main>
 		<div class="container">
 			<div class="sidebar">
 				<h3>업무관리</h3>
@@ -537,27 +528,30 @@ button:hover,
 			<!-- 기능 페이지 -->
 			<div class="main-content">
 				<h2>나의 할 일 목록</h2>
-				<!-- 여기에 부서·이름·직급 표시 -->
-				<sec:authentication property="principal.user.department.departmentName" var="departmentName"/>
-				<sec:authentication property="principal.user.name"           var="name"/>
-				<sec:authentication property="principal.user.position.positionName"   var="positionName"/>
 
-				<div class="user-info"
-					 style="width:100%; text-align:left; margin-bottom:1.5rem; color:#555;">
-					${departmentName}  ${name}  ${positionName}
-				</div>
-				<div class="filters">
-					<label><input type="checkbox" checked> 등록됨</label>
-					<label><input type="checkbox" checked> 완료</label>
-					<select>
-						<option>등록일</option>
-						<option>마감일</option>
-					</select>
-					<input type="date" value="2025-04-08"> ~
-					<input type="date" value="2025-07-07">
-					<input type="text" placeholder="제목">
-					<button class="search-btn">검색</button>
-				</div>
+				<%-- 업무 목록 검색 폼 --%>
+<%--				<form method="get" action="<c:url value='/task/todo'/>">--%>
+<%--					<div class="filters">--%>
+<%--						<strong>상태</strong>--%>
+<%--						<label><input type="checkbox" name="statuses" value="등록됨" checked/> 등록됨</label>--%>
+<%--						<label><input type="checkbox" name="statuses" value="완료" checked/> 완료</label>--%>
+<%--						<!-- 줄 바꿈용 빈 요소 (flex 컨테이너에서 강제 개행) -->--%>
+<%--						<div style="width:100%; height:0;"></div>--%>
+
+<%--						<strong>등록일</strong>--%>
+<%--						<input type="date" name="createdFrom" value="${param.createdFrom}" />--%>
+<%--						<input type="date" name="createdTo"   value="${param.createdTo}"   />--%>
+
+<%--						<strong>마감일</strong>--%>
+<%--						<input type="date" name="dueFrom" value="${param.dueFrom}" />--%>
+<%--						<input type="date" name="dueTo"   value="${param.dueTo}"   />--%>
+<%--						<!-- 줄 바꿈용 빈 요소 (flex 컨테이너에서 강제 개행) -->--%>
+<%--						<div style="width:100%; height:0;"></div>--%>
+
+<%--						<input type="text" name="title" placeholder="제목" value="${param.title}" />--%>
+<%--						<button type="submit" class="search-btn">검색</button>--%>
+<%--					</div>--%>
+<%--				</form>--%>
 				<form method="post" action="/task/delete">
 					<input type="hidden" name="redirectUrl" value="${redirectUrl}" />
 				<table class="task-table">
@@ -634,7 +628,7 @@ button:hover,
 
 	</main>
 
-	<footer>© 2025 그룹웨어 Corp.</footer>
+<%@ include file="../common/footer.jsp" %>
 <script>
 	// DOMContentLoaded 로 감싸서 페이지 로딩 뒤 실행
 	document.addEventListener('DOMContentLoaded', function() {
@@ -680,5 +674,14 @@ button:hover,
 		});
 	});
 </script>
+<%@include file="../chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+	// 최초 연결
+	connectNoticeSocket();
+</script>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>
 </html>

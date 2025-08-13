@@ -102,14 +102,46 @@
   const $fileInput = $('#chat-file-input');                // 파일 첨부 input
   const currentRoomId = $chatTitle.data('room-id');        // data-room-id 추출
   console.log('currentRoomId', currentRoomId);
+  const isGroup ="${isGroup}" == "Y";
+  console.log('isGroup', isGroup);
 
   // 인증된 사용자 정보 가져오기
   let userId;
   <sec:authorize access="isAuthenticated()">
-    <sec:authentication property="principal.user" var="user"/>
-        userId = ${user.userId};
+  <sec:authentication property="principal.user" var="user"/>
+  userId = ${user.userId};
   </sec:authorize>
 
+  // -------------------- 읽음 처리: 클라이언트 상태/유틸 --------------------
+  let lastSentReadUpTo = 0; // 서버로 보낸 마지막 readUpTo(중복 전송 방지)
+
+  function isAtBottom() {
+    const nearBottom = 20; // 허용 오차
+    return $chatBody.scrollTop() + $chatBody.innerHeight() >= $chatBody[0].scrollHeight - nearBottom;
+  }
+
+  function getLastMessageIdInDom() {
+    // unread 배지의 data-message-id 기준으로 가장 큰 ID를 읽음 경계로 사용
+    let maxId = 0;
+    $('#chat-body .chat_unread_count').each(function () {
+      const id = parseInt($(this).data('message-id'));
+      if (!isNaN(id) && id > maxId) maxId = id;
+    });
+    return maxId;
+  }
+
+  /** 현재 DOM 기준 혹은 명시 id 기준으로 읽음 통지(증가분만 전송) */
+  function sendReadIfNeeded(explicitId) {
+    if (!stompClient) return;
+    const readUpTo = explicitId || getLastMessageIdInDom();
+    if (!readUpTo || readUpTo <= lastSentReadUpTo) return;
+
+    stompClient.send("/app/chatRead", {}, JSON.stringify({
+      roomId: currentRoomId,
+      readUpTo: readUpTo
+    }));
+    lastSentReadUpTo = readUpTo;
+  }
 
   //  웹소켓 연결 및 구독처리
   function connectWebSocket() {
@@ -126,15 +158,45 @@
         renderIncomingMessage(chatMessage);
       });
 
-      //이 문장 자체가, 유저 전용 큐 기능을 활용한 것이다. -> 그래서 Spring에서 로그인한 사용자를 자동 바인딩 해준다.
-      //@MassageMapping에서 username을 정확하게 작성해주면 자동으로 그 유저에게 메세지가 전달되도록 한다.
+      // ★ 읽음 이벤트 구독 (다른 사용자가 읽었을 때 내 화면의 배지 감소)
+      stompClient.subscribe(`/topic/chat.read?roomId=\${currentRoomId}`, function (message) {
+        const { readerId, readUpTo } = JSON.parse(message.body);
+        if (readerId === userId) return; // 내가 보낸 읽음이면 패스
+
+        // readUpTo 이하 메시지의 배지 감소
+        $('#chat-body .chat_unread_count').each(function () {
+          const $badge = $(this);
+          const msgId = parseInt($badge.data('message-id'));
+          if (msgId <= readUpTo) {
+            const n = parseInt($badge.text() || '0');
+            const next = Math.max(0, n - 1);
+            $badge.text(next);
+            if (next === 0) $badge.hide();
+          }
+        });
+      });
+
+      // 유저 전용 큐 (네 기존 코드 유지)
       stompClient.subscribe('/user/queue/messages', function (message) {
         const personalMessage = JSON.parse(message.body);
-
-
       });
     });
   } // end
+
+  //화면의 안 읽은 카운트를 실시간으로 업데이트 하는 함수 (네 기존 코드 그대로 유지)
+  function updateUnreadCountOnScreen() {
+    $('.chat-unread-count').each(function() {
+      const $this = $(this);
+      let currentCount = parseInt($this.text());
+      if (currentCount > 0) {
+        currentCount--;
+        $this.text(currentCount);
+        if (currentCount === 0) {
+          $this.hide();
+        }
+      }
+    });
+  }
 
   //과거 메세지 이력 가져오기
   function loadMessageThisRoom() {
@@ -157,7 +219,7 @@
         if (isMe) {
           $wrapper.addClass('me');
         }
-
+        // 본인이 아니라면, 프로필 이미지와 이름을 HTML 요소에 추가한다.
         if (!isMe) {
           let $profile = null;
 
@@ -182,7 +244,12 @@
           $senderInfo.append($profile).append($name);
           $wrapper.append($senderInfo);
         }
+        if(message.unreadCnt > 0 && (isGroup || isMe)){
+          const $unreaderCnt = $(`<div class="chat_unread_count" data-message-id="\${message.chatMessageId}"></div>`).text(message.unreadCnt);
+          $wrapper.append($unreaderCnt);
+        }
 
+        //메세지 내용을 이 메세지 div 요소에 넣고, 자기 아이디의 메세지이면 me 클래스를 추가한다.
         const $message = $('<div class="chat_message"></div>').text(message.content);
         if (isMe) $message.addClass('me');
 
@@ -194,6 +261,9 @@
 
       // 메시지 모두 append 후 스크롤 맨 아래로
       $chatBody.scrollTop($chatBody.prop('scrollHeight'));
+
+      // ★ 방 입장 직후: 현재 화면 기준으로 읽음 통지
+      sendReadIfNeeded();
     });
   }
 
@@ -204,7 +274,7 @@
     const $wrapper = $('<div class="chat_message_wrapper"></div>');
 
     if (isMe) {
-        $wrapper.addClass('me');
+      $wrapper.addClass('me');
     }
 
     if (!isMe) {
@@ -232,6 +302,11 @@
       $wrapper.append($senderInfo);
     }
 
+    if(chatMessage.unreadCnt > 0 && (isGroup || isMe)) {
+      const $unreaderCnt = $(`<div class="chat_unread_count" data-message-id="\${chatMessage.chatMessageId}"></div>`).text(chatMessage.unreadCnt);
+      $wrapper.append($unreaderCnt);
+    }
+
     const $message = $('<div class="chat_message"></div>').text(chatMessage.content);
     if (isMe) $message.addClass('me');
 
@@ -241,7 +316,32 @@
     $wrapper.append($message).append($timestamp);
     $chatBody.append($wrapper);
     $chatBody.scrollTop($chatBody.prop('scrollHeight'));
+
+    // ★ 내가 지금 바닥에 있으면 새 메시지도 즉시 읽음 처리
+    if (isAtBottom()) {
+      // 서버가 chatMessageId를 넣어주고 있으니 그걸 경계로 보냄
+      sendReadIfNeeded(chatMessage.chatMessageId);
+    }
   }
+
+  // -------------------- 스크롤/포커스 시점에 읽음 통지 --------------------
+  let readDebounce;
+  $chatBody.on('scroll', function () {
+    if (readDebounce) clearTimeout(readDebounce);
+    readDebounce = setTimeout(() => {
+      if (isAtBottom()) sendReadIfNeeded();
+    }, 120);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isAtBottom()) {
+      sendReadIfNeeded();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (isAtBottom()) sendReadIfNeeded();
+  });
 
   //  메시지 전송 이벤트 설정
   $chatForm.on('submit', function (e) {
@@ -264,14 +364,14 @@
   // 팝업 오픈 함수
   function openChatPopup(groupChatRoomId,groupChatRoomName) {
     window.open(
-        `/chat/groupChatting?roomId=\${groupChatRoomId}&roomName=\${groupChatRoomName}`,
+        `/chat/chatting?roomId=\${groupChatRoomId}`,
         '_blank',
         'width=420,height=650,resizable=no,scrollbars=no'
     );
   }
 
-  let groupUserId = ${userIds};                     // 본인 또는 지정된 사용자의 아이디를 model에 담은 것을 이 변수에 할당.
-                                                    // 이는 선택된 사용자의 아이디를 담거나, 본인 및 이미 지정된 사용자를 선택하지 못하도록 하기 위함이다.
+  let groupUserId = ${userIds}; // 기존 주석 유지
+
   // "대화 상대 추가" 버튼 클릭 시, 모달창 열기
   $("#add-participant").click(function (e) {
     console.log(groupUserId);
@@ -280,7 +380,7 @@
 
     $("#user-list-container").empty();
 
-    $.getJSON(`/api/chat/allUser`, function (data) {
+    $.getJSON(`/api/chat/allUser?roomId=\${currentRoomId}`, function (data) {
       let allDeptAndUsers = data.data;
       console.log("allDeptAndUsers:",allDeptAndUsers);
 
@@ -307,25 +407,24 @@
           </li>
           `;
         }
-          htmlContent += `</ul></div>`;
+        htmlContent += `</ul></div>`;
         $("#user-list-container").html(htmlContent);
       }
 
-    $("#add-participant-modal").modal('show');
+      $("#add-participant-modal").modal('show');
     });
   });
 
   // 채팅방 이름 입력 및 직원 선택 후 제출 버튼 눌렀을 때 이벤트
   $("#submit-group-room").click(function (e) {
     e.preventDefault();
-    console.log("groupUserId:",groupUserId);                           // 하나씩 들어온 것을 알 수 있다.
+    console.log("groupUserId:",groupUserId);
 
     $("input[name='userId']:checked").each(function () {
-
       let selectedUserId = parseInt($(this).val());
       groupUserId.push(parseInt($(this).val()));
     });
-    console.log("groupUserId:",groupUserId);                    // 다 들어온 것도 확인할 수 있다.!!
+    console.log("groupUserId:",groupUserId);
 
     let groupRoomName = $("#group-room-name").val().trim();
 
@@ -341,7 +440,7 @@
 
     $.ajax({
       type: "POST",
-      url: "/api/chat/groups",
+      url: "/api/chat",
       contentType: "application/json",
       data: JSON.stringify(groupData),
       dataType: "json",
@@ -350,7 +449,7 @@
         console.log("groupChatRoom:", groupChatRoom);
         let groupChatRoomId = groupChatRoom.roomId;
         let groupChatRoomName = groupChatRoom.roomName;
-        openChatPopup(groupChatRoomId,groupChatRoomName);
+        openChatPopup(groupChatRoomId);
       }
     });
     $("#add-participant-modal").modal('hide');
@@ -381,20 +480,19 @@
     return;
   });
 
-  // 파일 첨부 이벤트 노션에 있음.
-
   // 연결 시작
   $(function () {
     loadMessageThisRoom();
     connectWebSocket();
 
-    localStorage.setItem("currentRoomId",currentRoomId);      // 알림 기능을 위해서 localStorage에 현재 채팅방 ID를 넣는다.
-    window.onbeforeunload = function () {                     // 채팅 브라우저 창이 닫히면 현재 채팅창 번호를 null로 변경한다.
+    localStorage.setItem("currentRoomId",currentRoomId);
+    window.onbeforeunload = function () {
       localStorage.removeItem("currentRoomId");
     }
   });
 
   //$(function() {..}) 이 문장 자체가 이 jsp 페이지의 HTML 요소, 스크립트 문장을 전부 로딩이 된 후, 실행 하겠다는 뜻!
 </script>
+
 </body>
 </html>

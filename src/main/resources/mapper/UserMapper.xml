@@ -12,9 +12,10 @@
         </selectKey>
 
         INSERT INTO GROUVY_USERS
-        (USER_ID, NAME, EMAIL, PASSWORD, LOGIN_PROVIDER, PHONE_NUMBER, EMAIL_VERIFIED)
+        (USER_ID, NAME, EMAIL, PASSWORD, LOGIN_PROVIDER, PHONE_NUMBER, EMAIL_VERIFIED, CREATED_DATE, UPDATED_DATE)
         VALUES
-        (#{userId}, #{name}, #{email}, #{password}, 'local', #{phoneNumber}, 'Y')
+        (#{userId}, #{name}, #{email}, #{password}, 'local', #{phoneNumber}, 'Y', SYSTIMESTAMP AT TIME ZONE
+        'Asia/Seoul', SYSTIMESTAMP AT TIME ZONE 'Asia/Seoul')
     </insert>
 
     <!--  List<String> findRoleNamesByUserId(int userId);  -->
@@ -41,8 +42,8 @@
         <result column="email_verified" property="emailVerified"/>
         <result column="position_no" property="positionNo"/>
         <result column="resign_date" property="resignDate"/>
-        <result column="employment_status" property="employmentStatus" />
-        <result column="approval_status" property="approvalStatus" />
+        <result column="employment_status" property="employmentStatus"/>
+        <result column="approval_status" property="approvalStatus"/>
 
         <!-- 부서 정보 매핑 -->
         <association property="department" javaType="Department">
@@ -186,6 +187,30 @@
                  U.NAME ASC
     </select>
 
+    <!-- findAllUsersByDeptIds: 모든 부서 ID로 모든 사용자 목록을 조회합니다. -->
+    <select id="findAllUsersByDeptIds" parameterType="java.util.List" resultMap="UserResultMapWithRoleNames">
+        SELECT U.USER_ID,
+        U.DEPARTMENT_ID,
+        U.EMPLOYEE_NO,
+        U.NAME,
+        U.EMAIL,
+        U.PHONE_NUMBER,
+        U.POSITION_NO,
+        D.DEPARTMENT_NAME,
+        P.POSITION_NAME
+        FROM GROUVY_USERS U
+        LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
+        LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
+        WHERE U.DEPARTMENT_ID IN
+        <foreach item="deptId" collection="list" open="(" separator="," close=")">
+            #{deptId}
+        </foreach>
+        AND U.APPROVAL_STATUS = 'APPROVED'
+        ORDER BY U.DEPARTMENT_ID ASC,
+        P.POSITION_NO ASC,
+        U.NAME ASC
+    </select>
+
     <!-- findUserNameByUserId: 특정 사용자 ID로 사용자 이름(NAME)만 조회합니다. -->
     <select id="findUserNameByUserId" parameterType="int" resultType="string">
         SELECT NAME
@@ -206,11 +231,27 @@
     <update id="updateUserProfile">
         UPDATE GROUVY_USERS
         SET PROFILE_IMG_PATH = #{imageUrl}
+          , UPDATED_DATE     = SYSTIMESTAMP AT TIME ZONE 'Asia/Seoul'
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!-- void deleteProfileImage(int userId); -->
+    <update id="deleteProfileImage" parameterType="int">
+        UPDATE GROUVY_USERS
+        SET PROFILE_IMG_PATH = NULL
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!-- void updateProfileInfo(@Param("userId") int userId, @Param("address") String address); -->
+    <update id="updateProfileInfo">
+        UPDATE GROUVY_USERS
+        SET ADDRESS      = #{address}
+          , UPDATED_DATE = SYSTIMESTAMP AT TIME ZONE 'Asia/Seoul'
         WHERE USER_ID = #{userId}
     </update>
 
     <!--  void insertLoginLog(@Param("userId") int userId, @Param("ip") String ip);-->
-    <insert id="insertLoginLog" >
+    <insert id="insertLoginLog">
         <selectKey keyProperty="loginHistoryId"
                    resultType="int"
                    order="BEFORE">
@@ -218,14 +259,14 @@
             FROM DUAL
         </selectKey>
         INSERT INTO GROUVY_LOGIN_HISTORY
-        (LOGIN_HISTORY_ID, USER_ID, IP_ADDRESS, LOGIN_STATUS)
+        (LOGIN_HISTORY_ID, USER_ID, IP_ADDRESS, LOGIN_TIME, LOGIN_STATUS)
         VALUES
-        (#{loginHistoryId}, #{userId}, #{ip}, 'login')
+        (#{loginHistoryId}, #{userId}, #{ip}, SYSTIMESTAMP AT TIME ZONE 'Asia/Seoul', 'login')
 
     </insert>
 
     <!--  void insertLogoutLog(@Param("userId") int userId, @Param("ip") String ip);-->
-    <insert id="insertLogoutLog" >
+    <insert id="insertLogoutLog">
         <selectKey keyProperty="loginHistoryId"
                    resultType="int"
                    order="BEFORE">
@@ -233,20 +274,24 @@
             FROM DUAL
         </selectKey>
         INSERT INTO GROUVY_LOGIN_HISTORY
-        (LOGIN_HISTORY_ID, USER_ID, IP_ADDRESS, LOGIN_STATUS)
+        (LOGIN_HISTORY_ID, USER_ID, IP_ADDRESS, LOGIN_TIME, LOGIN_STATUS)
         VALUES
-        (#{loginHistoryId}, #{userId}, #{ip}, 'logout')
+        (#{loginHistoryId}, #{userId}, #{ip}, SYSTIMESTAMP AT TIME ZONE 'Asia/Seoul', 'logout')
 
     </insert>
 
 
     <!--List<User> searchUsers(@Param("keyword") String keyword); :키워드로 조직과 사용자를 검색합니다.-->
     <select id="searchUsers" parameterType="string" resultMap="UserResultMapWithRoleNames">
-        SELECT
-            U.USER_ID, U.NAME, U.EMAIL, U.PROFILE_IMG_PATH, U.PHONE_NUMBER,
-            D.DEPARTMENT_ID, D.DEPARTMENT_NAME,
-            P.POSITION_NO,
-            P.POSITION_NAME
+        SELECT U.USER_ID,
+               U.NAME,
+               U.EMAIL,
+               U.PROFILE_IMG_PATH,
+               U.PHONE_NUMBER,
+               D.DEPARTMENT_ID,
+               D.DEPARTMENT_NAME,
+               P.POSITION_NO,
+               P.POSITION_NAME
         FROM GROUVY_USERS U
                  LEFT JOIN GROUVY_DEPARTMENTS D ON U.DEPARTMENT_ID = D.DEPARTMENT_ID
                  LEFT JOIN GROUVY_POSITIONS P ON U.POSITION_NO = P.POSITION_NO
@@ -257,4 +302,111 @@
             )
         ORDER BY U.NAME ASC
     </select>
+
+    <!-- void insertAttendanceLog(UserAttendanceRequest userAttendanceRequest); -->
+    <insert id="insertAttendanceLog" parameterType="com.example.grouvy.user.dto.UserAttendanceRequest">
+        <selectKey keyProperty="attendanceId"
+                   resultType="int"
+                   order="BEFORE">
+            SELECT ATTENDANCE_HISTORY_ATTENDANCE_HISTORY_ID_SEQ.NEXTVAL
+            FROM DUAL
+        </selectKey>
+
+        INSERT INTO GROUVY_ATTENDANCE_HISTORY
+        (ATTENDANCE_HISTORY_ID, USER_ID, STATUS, ATTENDANCE_TIME, LATITUDE, LONGITUDE, DISTANCE)
+        VALUES
+        (#{attendanceId}, #{userId}, #{status}, SYSTIMESTAMP AT TIME ZONE 'Asia/Seoul', #{latitude}, #{longitude},
+        #{distance})
+    </insert>
+
+    <resultMap id="LoginHistoryMap" type="LoginHistory">
+        <id column="login_history_id" property="loginHistoryId"/>
+        <result column="user_id" property="userId"/>
+        <result column="ip_address" property="ipAddress"/>
+        <result column="login_time" property="loginTime"/>
+        <result column="login_status" property="loginStatus"/>
+
+        <association property="user" javaType="User">
+            <id column="user_id" property="userId"/>
+            <result column="employee_no" property="employeeNo"/>
+            <result column="name" property="name"/>
+            <result column="email" property="email"/>
+
+        </association>
+
+    </resultMap>
+    <!--  List<LoginHistory> getLoginHistories(int userId);  -->
+    <select id="getLoginHistories" parameterType="int" resultMap="LoginHistoryMap">
+        SELECT L.LOGIN_HISTORY_ID
+             , L.USER_ID
+             , L.IP_ADDRESS
+             , L.LOGIN_TIME
+             , L.LOGIN_STATUS
+
+             , U.EMPLOYEE_NO
+             , U.NAME
+             , U.EMAIL
+        FROM GROUVY_LOGIN_HISTORY L
+                 LEFT JOIN GROUVY_USERS U ON U.USER_ID = L.USER_ID
+        WHERE U.USER_ID = #{userId}
+        ORDER BY L.LOGIN_HISTORY_ID DESC
+    </select>
+
+    <!-- List<AttendanceHistory> getAttendanceHistories(); -->
+    <resultMap id="AttendanceHistoryMap" type="AttendanceHistory">
+        <id column="attendance_history_id" property="attendanceHistoryId"/>
+        <result column="user_id" property="userId"/>
+        <result column="status" property="status"/>
+        <result column="attendance_time" property="attendanceDate"/>
+        <result column="latitude" property="latitude"/>
+        <result column="longitude" property="longitude"/>
+        <result column="distance" property="distance"/>
+
+        <association property="user" javaType="User">
+            <id property="userId" column="user_id"/>
+            <result property="name" column="name"/>
+            <result property="employeeNo" column="employee_no"/>
+
+        </association>
+
+    </resultMap>
+
+    <select id="getAttendanceHistories" parameterType="int" resultMap="AttendanceHistoryMap">
+        SELECT A.ATTENDANCE_HISTORY_ID
+             , A.USER_ID
+             , A.STATUS
+             , A.ATTENDANCE_TIME
+             , A.LATITUDE
+             , A.LONGITUDE
+             , A.DISTANCE
+
+             , U.EMPLOYEE_NO
+             , U.NAME
+        FROM GROUVY_ATTENDANCE_HISTORY A
+                 LEFT JOIN GROUVY_USERS U ON U.USER_ID = A.USER_ID
+        WHERE A.USER_ID = #{userId}
+        ORDER BY A.ATTENDANCE_HISTORY_ID DESC
+    </select>
+
+    <!-- AttendanceStatusDto selectTodayStatus(int userId); -->
+    <select id="selectTodayStatus" parameterType="int" resultType="com.example.grouvy.user.dto.AttendanceStatusDto">
+        SELECT MAX(CASE
+                       WHEN STATUS = '출근'
+                           THEN TO_CHAR(CAST(ATTENDANCE_TIME AS TIMESTAMP) AT TIME ZONE 'Asia/Seoul',
+                                        'YYYY-MM-DD"T"HH24:MI:SS.FF3TZH:TZM') END) AS checkInTime,
+               MAX(CASE
+                       WHEN STATUS = '퇴근'
+                           THEN TO_CHAR(CAST(ATTENDANCE_TIME AS TIMESTAMP) AT TIME ZONE 'Asia/Seoul',
+                                        'YYYY-MM-DD"T"HH24:MI:SS.FF3TZH:TZM') END) AS checkOutTime
+        FROM GROUVY_ATTENDANCE_HISTORY
+        WHERE USER_ID = #{userId}
+          AND TRUNC(
+                      CAST((CAST(ATTENDANCE_TIME AS TIMESTAMP) AT TIME ZONE 'Asia/Seoul') AS DATE)
+              )
+            =
+              TRUNC(
+                      CAST((SYSTIMESTAMP AT TIME ZONE 'Asia/Seoul') AS DATE)
+              )
+    </select>
+
 </mapper>

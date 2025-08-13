@@ -61,7 +61,7 @@
       </tr>
       </thead>
       <tbody>
-      <c:forEach var="loginHistory" items="${loginHistorys }" varStatus="loop">
+      <c:forEach var="loginHistory" items="${loginHistories }" varStatus="loop">
         <tr>
           <td>${loginHistory.user.name}</td>
           <td>${loginHistory.user.employeeNo}</td>
