@@ -19,6 +19,7 @@ public class ChatMessage {
   private String content;
   private Date createdDate;
   private String messageType;
+  private int unreadCnt;
 
   private ChatRoom chatRoom;
   private User user;

@@ -6,10 +6,10 @@ import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
 import com.example.grouvy.chat.vo.ChatRoomUser;
 import com.example.grouvy.security.SecurityUser;
-import com.example.grouvy.user.vo.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -89,6 +89,7 @@ public class ChatController {
     String json = mapper.writeValueAsString(userIds);
     model.addAttribute("userIds",json);
     model.addAttribute("roomId", roomId);
+    model.addAttribute("isGroup", chatRoom.getIsGroup());
     return "chat/chatting";
   }
 
@@ -127,29 +128,50 @@ public class ChatController {
 
     // 메세지 DB에 등록. - roomId,content, messageType은 이 메소드 호출하면서 자동 바인딩.
     int userId = securityUser.getUser().getUserId();
-    User user = chatService.getUserByUserId(userId);
     message.setSenderId(userId);
-    message.setUser(user);
-    chatService.insertChatMessage(message);
-    long messageId = message.getChatMessageId();
-    ChatMessageDto chatMessage = chatService.getChatMessage(messageId);
 
-    simpMessagingTemplate.convertAndSend("/topic/chatting?roomId=" + message.getRoomId(),
-        chatMessage);       // 브로드 캐스트
+    // 메세지를 DB에 등록 -> 마지막 메세지도 채팅방 테이블에 등록 -> 메세지 DTO 객체에 바인딩 시켜 반환.
+    ChatMessageDto dto = chatService.addMessageService(message);
+
+    simpMessagingTemplate.convertAndSend("/topic/chatting?roomId=" + dto.getRoomId(),
+        dto);       // 브로드 캐스트
 
     String userName = null;
-    List<ChatRoomUser> users = chatService.getChatRoomUserByRoomId(message.getRoomId());
+    List<ChatRoomUser> users = chatService.getChatRoomUserByRoomId(dto.getRoomId());
 
     for(ChatRoomUser user1: users) {
       System.out.println(user1.getUser().getName());
       if(user1.getUserId() != userId) {
         userName = user1.getUser().getEmail();
         simpMessagingTemplate.convertAndSendToUser(userName, "/queue/messages",
-            chatMessage);
+            dto);
         //여기서 userName 스프링 시큐리티에서 username을 집어 넣어야 한다.
       }
     }
-
-
   }
+  // ChatController.java 안에 ★ ADD
+  @MessageMapping("/chatRead")
+  public void chatRead(@Payload Map<String, Object> payload, Authentication authentication) {
+    if (authentication == null || !authentication.isAuthenticated()) return;
+    SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+    if (securityUser == null) return;
+
+    // payload: { roomId: number, readUpTo: number }
+    int roomId = ((Number) payload.get("roomId")).intValue();
+    long readUpTo = ((Number) payload.get("readUpTo")).longValue();
+    int userId = securityUser.getUser().getUserId();
+
+    // DB 갱신 (Service에 방금 추가한 메서드 호출)
+    chatService.markRead(roomId, readUpTo, userId);
+
+    // 같은 방에 브로드캐스트 (네 JSP가 이미 구독 중인 경로)
+    Map<String, Object> out = new java.util.HashMap<>();
+    out.put("roomId", roomId);
+    out.put("readerId", userId);
+    out.put("readUpTo", readUpTo);
+    simpMessagingTemplate.convertAndSend("/topic/chat.read?roomId=" + roomId, out);
+  }
+
+
+
 }

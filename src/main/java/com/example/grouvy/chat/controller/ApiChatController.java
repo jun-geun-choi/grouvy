@@ -2,6 +2,7 @@ package com.example.grouvy.chat.controller;
 
 import com.example.grouvy.chat.dto.ApiResponse;
 import com.example.grouvy.chat.dto.ChatMessageDto;
+import com.example.grouvy.chat.dto.ChatRoomDto;
 import com.example.grouvy.chat.dto.ChatUserInfo;
 import com.example.grouvy.chat.dto.DeptAndUserDto;
 import com.example.grouvy.chat.dto.ParentDeptDto;
@@ -74,21 +75,14 @@ public class ApiChatController {
     return ResponseEntityUtils.ok(chatRoom);
   }
 
-  // 그룹 채팅방을 반환한다.
-/*  @PostMapping("/groups")
-  public ResponseEntity<ApiResponse<ChatRoom>> getGroupRoomByUserData(@RequestBody Map<String, Object> groupData) {
-    String roomName =  groupData.get("name").toString();
-    List<Integer> userIds = (List<Integer>) groupData.get("id");
-    ChatRoom chatRoom = chatService.getOrCreateGroupChatRoomByUserIds(userIds, roomName);
-    return  ResponseEntityUtils.ok(chatRoom);
-  }*/
 
   // roomId로 그 채팅방의 메세지들을 조회한다.
   @GetMapping("/loadMessage")
   public ResponseEntity<ApiResponse<List<ChatMessageDto>>> loadMessage(@RequestParam("roomId") int roomId,
                                                                        @AuthenticationPrincipal SecurityUser securityUser) {
     int userId = securityUser.getUser().getUserId();
-    List<ChatMessageDto> messages = chatService.getChatMessageByRoomId(roomId,userId);
+//    List<ChatMessageDto> messages = chatService.getChatMessageByRoomId(roomId,userId);
+    List<ChatMessageDto> messages = chatService.getChatMessageByRoomId(roomId, userId);
     return  ResponseEntityUtils.ok(messages);
   }
 
@@ -109,11 +103,17 @@ public class ApiChatController {
     return ResponseEntityUtils.ok("삭제되었습니다.");
   }
 
+  @GetMapping("/chattingRoom")
+  public ResponseEntity<ApiResponse<List<ChatRoomDto>>> getChatRoomList(@AuthenticationPrincipal SecurityUser securityUser) {
+    int userId = securityUser.getUser().getUserId();
+    List<ChatRoomDto> list = chatService.getChatRoomList(userId);
+    return ResponseEntityUtils.ok(list);
+  }
+
   @GetMapping("/organizations")
   public ResponseEntity<ApiResponse<List<ParentDeptDto>>> getOrganization() {
     List<ParentDeptDto> parentDeptDtos = chatService.getOrganization();
     return  ResponseEntityUtils.ok(parentDeptDtos);
-
   }
 
   @PostMapping("/wisiList")

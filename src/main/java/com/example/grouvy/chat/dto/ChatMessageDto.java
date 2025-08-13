@@ -10,19 +10,17 @@ import lombok.Getter;
 public class ChatMessageDto {
 
   private long chatMessageId;
-  private long roomId;
+  private int roomId;
   private int senderId;
   private String content;
   private Date createdDate;
   private String messgaeType;
+  private int unreadCnt;
 
   //User 정보
   private String name;
   private String profileImgPath;
 
-  //채팅방 정보도 같이 불러온다.
-  private String roomName;
-  private String isGroup;
 
   // 날짜 및 시간 데이터
   private String formattedDate;
@@ -37,8 +35,7 @@ public class ChatMessageDto {
     this.messgaeType = chatMessage.getMessageType();
     this.name = chatMessage.getUser().getName();
     this.profileImgPath = chatMessage.getUser().getProfileImgPath();
-    this.roomName = chatMessage.getChatRoom().getRoomName();
-    this.isGroup = chatMessage.getChatRoom().getIsGroup();
+    this.unreadCnt = chatMessage.getUnreadCnt();
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월 dd일");
     SimpleDateFormat timeFormat = new SimpleDateFormat("a h시 mm분", Locale.KOREAN);

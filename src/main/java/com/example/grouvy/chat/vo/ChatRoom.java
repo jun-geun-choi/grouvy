@@ -13,9 +13,11 @@ import org.apache.ibatis.type.Alias;
 public class ChatRoom {
 
   private int roomId;
-  private String roomName;
   private String isGroup;
   private Date createDate;
   private Date updatedDate;
   private String isDeletd;
+  private String roomName;
+  private Date lastMessageDate;
+  private String lastMessageContent;
 }

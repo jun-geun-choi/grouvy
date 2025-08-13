@@ -1,5 +1,6 @@
 package com.example.grouvy.chat.mapper;
 
+import com.example.grouvy.chat.dto.ChatRoomDto;
 import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
 import com.example.grouvy.chat.vo.ChatRoomUser;
@@ -113,9 +114,6 @@ public interface ChatMapper {
    */
   public List<ChatMessage> getChatMessageByRoomId(int roomId,int userId);
 
-
-
-
   /**
    * ChatRoomUser의 상태를 변경한다.
    * @param chatRoomUser
@@ -139,5 +137,50 @@ public interface ChatMapper {
    */
   public void insertChatWishList(List<ChatWishList> chatWishList);
 
+  /**
+   * 이 유저의 위시리스트를 가져온다.
+   * @param userId
+   * @return
+   */
   public List<User> getMyWishListByUserId(int userId);
+
+  /**
+   * 메세지를 등록할 때마다 이 유저의 채팅방의 마지막 메세지를 저장한다.
+   * @param chatRoom
+   */
+  public void updateChatRoom(ChatRoom chatRoom);
+
+  /**
+   * 이 채팅방의 마지막 메세지 ID를 조회해온다.
+   * @param roomId
+   * @return
+   */
+  public long  getLastestMessageIdByRoomId(int roomId);
+
+  /**
+   * 채팅방 참여자 테이블의 마지막 메세지 아이디를 변경한다.
+   * @param messageId
+   */
+  public void updateLastReadMessageId(long messageId, int  roomId,  int userId);
+
+  /**
+   * 채팅방의 메세지의 읽음&안 읽음 로직에 사용할 채팅 참여자의 userId, lastReadMsgId를 조회
+   * @param roomId
+   * @return
+   */
+  public List<ChatRoomUser> getUserIdAndLastReadMsgIdByRoomId(int roomId);
+
+  /**
+   * 메세지의 안 읽은 수를 업데이트 한다.
+   * @param roomId
+   * @param userId
+   */
+  public void updateUnreadCnt(int roomId, int userId);
+
+  /**
+   * 로그인한 사용자가 참여한 채팅방 리스트를 가져온다.
+   * @param userId
+   * @return
+   */
+  public List<ChatRoomDto> getChatRoomList(int userId);
 }

@@ -130,27 +130,29 @@
 
               //유저 데이터 가져오기
               for(let member of  members) {
-                let profileImg = member.imgPath
-                        ? `https://storage.googleapis.com/grouvy-bucket/\${member.imgPath}`
-                        : `https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg`;
-                htmlContent += `
-                  <div class="chat_list_item align-items-center"
-                       data-member-id="\${member.id}">
-                    <input type="checkbox"
-                           class="form-check-input org-member-checkbox me-2"
-                           data-member-name="\${member.userName}"
-                           data-member-id="\${member.id}">
-                    <div class="chat_avatar">
-                      <img src="\${profileImg}"
-                             alt="프로필 이미지"
-                             class="rounded-circle profile-photo"
-                             style="width: 40px; height: 40px; object-fit: cover;">
-                     </div>
-                    <div class="chat_info">
-                      <div class="chat_name">\${member.userName}</div>
+                if(member.id != userId) {
+                  let profileImg = member.imgPath
+                          ? `https://storage.googleapis.com/grouvy-bucket/\${member.imgPath}`
+                          : `https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg`;
+                  htmlContent += `
+                    <div class="chat_list_item align-items-center"
+                         data-member-id="\${member.id}">
+                      <input type="checkbox"
+                             class="form-check-input org-member-checkbox me-2"
+                             data-member-name="\${member.userName}"
+                             data-member-id="\${member.id}">
+                      <div class="chat_avatar">
+                        <img src="\${profileImg}"
+                               alt="프로필 이미지"
+                               class="rounded-circle profile-photo"
+                               style="width: 40px; height: 40px; object-fit: cover;">
+                       </div>
+                      <div class="chat_info">
+                        <div class="chat_name">\${member.userName}</div>
+                      </div>
                     </div>
-                  </div>
-            `;
+              `;
+                }
               }
               htmlContent += `</div></div></div>`; // 부서 아코디언 닫기
             }
