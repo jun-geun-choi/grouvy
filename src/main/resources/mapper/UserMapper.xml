@@ -415,5 +415,4 @@
         FROM GROUVY_USERS
         WHERE EMPLOYEE_NO = #{employeeNo}
     </select>
-
 </mapper>

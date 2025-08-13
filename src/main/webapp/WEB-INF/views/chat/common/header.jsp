@@ -6,15 +6,18 @@
 <sec:authentication property="principal.user" var="user"/>
 <div class="sidebar_header">
     <%-- 나중에 DB에서 값을 가져오는 것으로 한다. --%>
+    <c:set var="profilePath">
+              <sec:authentication property="principal.user.profileImgPath"/>
+            </c:set>
     <c:choose>
-        <c:when test="${empty user.profileImgPath or profileImgPath eq 'null'}">
+        <c:when test="${empty profilePath or profilePath eq 'null'}">
             <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg"
                  alt="기본 프로필"
                  class="rounded-circle profile-photo"
                  style="width: 70px; height: 70px; object-fit: cover;">
         </c:when>
         <c:otherwise>
-             <img src="https://storage.googleapis.com/grouvy-bucket/${user.profilePath}"
+             <img src="https://storage.googleapis.com/grouvy-bucket/${profilePath}"
                   alt="사용자 프로필"
                   class="rounded-circle profile-photo"
                   style="width: 70px; height: 70px; object-fit: cover;">

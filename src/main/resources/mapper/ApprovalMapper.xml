@@ -11,6 +11,7 @@
              , department_name      departmentName
              , parent_department_id parentDepartmentId
         from grouvy_departments
+        where is_deleted = 'N'
     </select>
 
     <!--
