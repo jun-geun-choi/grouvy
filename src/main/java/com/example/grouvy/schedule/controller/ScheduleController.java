@@ -1,12 +1,11 @@
 package com.example.grouvy.schedule.controller;
 
-import com.example.grouvy.schedule.form.CategoryUpdateForm;
-import com.example.grouvy.schedule.form.ConferenceRoomRegisterForm;
-import com.example.grouvy.schedule.form.HolidayRegisterForm;
-import com.example.grouvy.schedule.form.ScheduleRegisterForm;
+import com.example.grouvy.schedule.form.*;
 import com.example.grouvy.schedule.service.ScheduleService;
 import com.example.grouvy.schedule.vo.*;
+import com.example.grouvy.security.SecurityUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,14 +24,16 @@ public class ScheduleController {
     }
 
     @GetMapping("/schedule")
-    public String ttt(Model model){
+    public String ttt(Model model,@AuthenticationPrincipal SecurityUser loginUser){
 
         //Schedule schedule = scheduleService.getScheduleByUserID(1);
         //model.addAttribute("schedule",schedule);
+        int userId = loginUser.getUser().getUserId();
+        Long departmentId = loginUser.getUser().getDepartmentId();
 
         List<Holiday> holiday = scheduleService.getHolidayList();
         model.addAttribute("holidayList",holiday);
-        String scheduleJson = scheduleService.getSimpleSchedule();
+        String scheduleJson = scheduleService.getSimpleSchedule(userId, departmentId);
         model.addAttribute("scheduleJson",scheduleJson);
         return "schedule/schedule-month";
     }
@@ -53,13 +54,19 @@ public class ScheduleController {
     @PostMapping("/holiday-manage")
     public String holidayInsert(HolidayRegisterForm form){
         scheduleService.insertHoliday(form);
-        return "redirect:/";
+        return "redirect:/holiday-manage";
     }
 
     @PostMapping("/meetingroom-register")
     public String conferenceRoomInsert(ConferenceRoomRegisterForm form){
         scheduleService.insertConferenceRoom(form);
         return "redirect:/";
+    }
+
+    @PostMapping("/meetingroom-reservate")
+    public String reservationInsert(MeetingReservateForm form){
+        scheduleService.insertReservation(form);
+        return "redirect:/meetingroom-reservate";
     }
 
     @GetMapping("/meetingroom-register")
@@ -81,7 +88,7 @@ public class ScheduleController {
     @PostMapping("/category-manage")
     public String categoryUpdate(CategoryUpdateForm form){
         scheduleService.updateCategory(form);
-        return "redirect:/";
+        return "redirect:/category-manage";
     }
 
 
@@ -95,9 +102,18 @@ public class ScheduleController {
     }
 
     @GetMapping("/schedule-delete")
-    public String scheduleDelete(){
-
+    public String scheduleDelete(Model model){
+        List<DeleteHistory> deleteHistory = scheduleService.getDeleteHistoryList();
+        model.addAttribute("deleteHistoryList",deleteHistory);
         return "schedule/schedule-delete";
+    }
+
+    @GetMapping("/schedule-deleteaction")
+    public String scheduleDeleteAll(){
+        scheduleService.deleteScheduleAllResigned();
+        scheduleService.insertDeleteHistory();
+        return "redirect:/schedule-delete";
+
     }
 
     /*@GetMapping("/meetingroom-register")
@@ -110,7 +126,26 @@ public class ScheduleController {
     public String holidayDelete(@RequestParam("no") int no){
         scheduleService.deleteHoliday(no);
 
-        return "redirect:/";
+        return "redirect:/holiday-manage";
+    }
+
+    @GetMapping("/meetingroom-delete")
+    public String meetingroomDelete(@RequestParam("no") int no){
+        scheduleService.deleteMeetingroom(no);
+
+        return "redirect:/meetingroom-register";
+    }
+
+    @GetMapping("/meetingroom-reservate")
+    public String meetingroomReservate(Model model){
+        List<ConferenceRoom> conferenceRoom = scheduleService.getConferenceRoomList();
+        model.addAttribute("conferenceRoomList",conferenceRoom);
+        model.addAttribute("MeetingReservateForm", new MeetingReservateForm());
+
+        String reservationJson = scheduleService.getConferenceRoomReservation();
+        model.addAttribute("reservationJson",reservationJson);
+
+        return "schedule/meetingroom-reservation";
     }
 
     /*@GetMapping("temps")

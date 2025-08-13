@@ -1,13 +1,16 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8"%>
+<%@include file="../common/taglib.jsp" %>
+<%--<%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>--%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>일정 일괄 삭제</title>
+  <%@include file="../common/head.jsp" %>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:400,700&display=swap" rel="stylesheet">
   <style>
@@ -29,10 +32,10 @@
     .navbar-nav .nav-link.active {
       font-weight: bold;
       color: #e6002d !important;
-      border-bottom: 2.5px solid #e6002d;
+      /*border-bottom: 2.5px solid #e6002d;
       background: rgba(230,0,45,0.07);
       border-radius: 0 0 8px 8px;
-      transition: background 0.2s;
+      transition: background 0.2s;*/
     }
     .navbar-nav .nav-link {
       transition: background 0.2s, color 0.2s;
@@ -308,7 +311,8 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+<%@include file="../common/nav.jsp" %>
+  <%--<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
     <div class="container-fluid">
       <a class="navbar-brand d-flex align-items-center" href="index.html">
         <span class="logo-crop">
@@ -333,65 +337,45 @@
         <a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
       </div>
     </div>
-  </nav>
+  </nav>--%>
   <div class="container" style="margin-top:0;">
     <!-- 사이드바 -->
     <nav class="sidebar">
-      <button class="register-btn">일정등록</button>
+      <button class="register-btn" onclick="location.href='/schedule'">나의 일정</button>
       <div class="sidebar-section">
         <div class="sidebar-section-title">My Team</div>
         <ul class="sidebar-list">
-          <li><span class="icon">👥</span>영업팀</li>
+          <li><span class="icon">👥</span><sec:authentication property="principal.user.department.departmentName"  /></li>
         </ul>
         <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;">
         <div class="sidebar-section-title mt-4">세부메뉴</div>
         <ul class="sidebar-list">
-          <li><span class="icon">📅</span>일정등록</li>
-          <li><span class="icon">🏢</span>회의실 예약</li>
+          <li><a href="/schedule-register" style="text-decoration: none;color: inherit;display: block"><span class="icon">📅</span>일정등록</a></li>
+          <li><a href="/meetingroom-reservate" style="text-decoration: none;color: inherit"><span class="icon">🏢</span>회의실 예약</a></li>
+          <sec:authorize access="hasAnyRole('ROLE_ADMIN')">
           <li><span class="icon">⚙️</span>관리자</li>
+          </sec:authorize>
         </ul>
+        <sec:authorize access="hasAnyRole('ROLE_ADMIN')">
         <ul class="sidebar-list" style="background:#f7f8fa;border-left:3px solid #e6002d;margin-left:12px;padding-left:12px;margin-top:2px;">
-          <li><span class="icon">🗂️</span>회의실 관리</li>
-          <li><span class="icon">🎌</span>휴일관리</li>
-          <li><span class="icon">🏷️</span>범주관리</li>
-          <li><span class="icon">🗑️</span>일괄삭제</li>
+          <li><a href="/meetingroom-register" style="text-decoration: none;color: inherit;display: block"><span class="icon">🗂️</span>회의실 관리</a></li>
+          <li><a href="/holiday-manage" style="text-decoration: none;color: inherit;display: block"><span class="icon">🎌</span>휴일관리</a></li>
+          <li><a href="/category-manage" style="text-decoration: none;color: inherit;display: block"><span class="icon">🏷️</span>범주관리</a></li>
+          <li><a href="/schedule-delete" style="text-decoration: none;color: inherit;display: block"><span class="icon">🗑️</span>일괄삭제</a></li>
         </ul>
+        </sec:authorize>
       </div>
     </nav>
     <!-- 메인 컨텐츠 -->
     <div class="main-content">
       <div class="bulkdel-box">
-        <div class="bulkdel-title">일정 일괄 삭제</div>
-        <div class="bulkdel-desc">※ 기준일을 포함한 이전 일정이 일괄 삭제됩니다.</div>
-        <div class="bulkdel-desc"><span class="text-danger">※ 회사 전체 선택시 회사 전체 일정이 삭제되오니 주의하시기 바랍니다.</span></div>
+        <div class="bulkdel-title"> 퇴사자 일정 일괄 삭제</div>
         <div class="bulkdel-desc"><span class="text-danger">※ 삭제된 데이터는 복구할 수 없습니다.</span></div>
         <form>
+
           <div class="bulkdel-form-row">
-            <label>삭제 대상</label>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="delTarget" id="targetUser" checked>
-              <label class="form-check-label" for="targetUser">대상자 지정</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="delTarget" id="targetAll">
-              <label class="form-check-label" for="targetAll">회사 전체</label>
-            </div>
-            <label style="margin-left:32px;">기준일</label>
-            <input type="date" value="2019-01-13">
-          </div>
-          <div class="bulkdel-form-row">
-            <label>대상자</label>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="userType" id="userNormal" checked>
-              <label class="form-check-label" for="userNormal">정상 사용자</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="userType" id="userLeave">
-              <label class="form-check-label" for="userLeave">퇴사자</label>
-            </div>
-            <input type="text" class="form-control" placeholder="사용자" style="max-width:180px;display:inline-block;margin-left:8px;">
-            <button type="button" class="search-btn">🔍</button>
-            <button type="button" class="bulkdel-btn">일괄삭제</button>
+
+            <button type="button" onclick="Delete()" class="bulkdel-btn">일괄삭제</button>
           </div>
         </form>
         <table class="bulkdel-table mt-3">
@@ -400,24 +384,20 @@
               <th style="width:40px;">번호</th>
               <th style="width:60px;">삭제자</th>
               <th style="width:80px;">삭제 대상</th>
-              <th style="width:100px;">기준일</th>
-              <th style="width:120px;">삭제 요청 일시</th>
-              <th>삭제 사유</th>
+              <th style="width:100px;">삭제일</th>
               <th style="width:80px;">상태</th>
-              <th style="width:60px;">취소</th>
             </tr>
           </thead>
           <tbody>
+          <c:forEach var="history" items="${deleteHistoryList }" varStatus="loop">
             <tr>
-              <td>1</td>
-              <td>전*</td>
+              <td>${history.deleteId}</td>
+              <td>관리자</td>
               <td>전체</td>
-              <td>2018.05.21</td>
-              <td>2018.05.21</td>
-              <td>퇴사자 일정 삭제</td>
+              <td>${history.createdDate}</td>
               <td class="status done">삭제 완료</td>
-              <td class="cancel">취소</td>
             </tr>
+          </c:forEach>
           </tbody>
         </table>
         <div class="bulkdel-pagination">
@@ -430,5 +410,21 @@
       </div>
     </div>
   </div>
+  <%@include file="../common/footer.jsp" %>
+
+  <script type="text/javascript">
+    function Delete(){
+      location.href = `/schedule-deleteaction`;
+    }
+  </script>
+<%@include file="../chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+  // 최초 연결
+  connectNoticeSocket();
+</script>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>
 </html> 

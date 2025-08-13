@@ -17,7 +17,7 @@
                               onclick="window.open('/chat/friends', 'messengerPopup', 'width=380,height=650,resizable=no,scrollbars=yes'); return false;">메신저</a>
       </li>
       <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/dept/list">조직도</a></li>
-      <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
+      <li class="nav-item"><a class="nav-link" href="/schedule">일정</a></li>
       <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/notification/list">알림
       <span id="navUnreadNotificationBadge" class="badge bg-danger ms-1" style="display: none;"></span></a></li>
       <sec:authorize access="hasRole('ROLE_ADMIN')">

@@ -3,6 +3,7 @@ package com.example.grouvy.schedule.vo;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.ibatis.type.Alias;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -13,11 +14,13 @@ import java.util.Date;
 public class ConferenceRoomReservation {
 
     private int reservationId;
-    private Date reservationDate;
+    private String reservationDate;
     private LocalDateTime reservationStarttime;
     private LocalDateTime reservationEndtime;
     private Date updatedDate;
     private Date createdDate;
+    private int conferenceRoomId;
+    private int userId;
 
 
 }

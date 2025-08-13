@@ -2,13 +2,11 @@ package com.example.grouvy.schedule.service;
 
 
 import com.example.grouvy.file.vo.Category;
-import com.example.grouvy.schedule.form.CategoryUpdateForm;
-import com.example.grouvy.schedule.form.ConferenceRoomRegisterForm;
-import com.example.grouvy.schedule.form.HolidayRegisterForm;
-import com.example.grouvy.schedule.form.ScheduleRegisterForm;
+import com.example.grouvy.schedule.form.*;
 import com.example.grouvy.schedule.mapper.ScheduleMapper;
 import com.example.grouvy.schedule.vo.*;
 import com.google.gson.Gson;
+import org.apache.ibatis.annotations.Delete;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,8 +27,8 @@ public class ScheduleService {
         return schedule;
     }
 
-    public String getSimpleSchedule(){
-        List<SimpleSchedule> simpleschedule = scheduleMapper.getSimpleSchedule();
+    public String getSimpleSchedule(int userId, Long  departmentId){
+        List<SimpleSchedule> simpleschedule = scheduleMapper.getSimpleSchedule(userId, departmentId);
 
         Gson gson = new Gson();
         String scheduleJson = gson.toJson(simpleschedule);
@@ -40,6 +38,18 @@ public class ScheduleService {
         System.out.println(scheduleJson);
         return scheduleJson;
     }
+
+    public String getConferenceRoomReservation(){
+        List<SimpleReservation> simpleReservations = scheduleMapper.getConferenceRoomReservation();
+
+        Gson gson2 = new Gson();
+        String reservationJson = gson2.toJson(simpleReservations);
+
+        System.out.println(reservationJson);
+        return reservationJson;
+    }
+
+
 
 //    public Holiday getHoliday(int holidayId){
 //        Holiday holiday = scheduleMapper.getHoliday();
@@ -90,11 +100,39 @@ public class ScheduleService {
         scheduleMapper.deleteHolidayById(holidayId);
     }
 
+    public void deleteMeetingroom(int conferenceRoomId){
+
+        scheduleMapper.deleteMeetingroomById(conferenceRoomId);
+    }
+
     public void insertConferenceRoom(ConferenceRoomRegisterForm form) {
 
         ConferenceRoom conferenceRoom = modelMapper.map(form, ConferenceRoom.class);
 
         scheduleMapper.insertConferenceRoom(conferenceRoom);
+    }
+
+    public void deleteScheduleAllResigned(){
+
+        scheduleMapper.deleteScheduleAllResigned();
+    }
+
+    public List<DeleteHistory> getDeleteHistoryList(){
+        List<DeleteHistory> deleteHistory = scheduleMapper.getHistory();
+        return deleteHistory;
+    }
+
+    public void insertDeleteHistory(){
+
+        DeleteHistory deleteHistory = new DeleteHistory();
+        scheduleMapper.insertHistory(deleteHistory);
+    }
+
+    public void insertReservation(MeetingReservateForm form){
+
+        ConferenceRoomReservation conferenceRoomReservation = modelMapper.map(form, ConferenceRoomReservation.class);
+
+        scheduleMapper.insertReservation(conferenceRoomReservation);
     }
 
 

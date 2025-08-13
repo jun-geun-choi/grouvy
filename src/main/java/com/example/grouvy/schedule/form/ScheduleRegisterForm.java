@@ -13,6 +13,7 @@ import java.util.Date;
 @ToString
 public class ScheduleRegisterForm {
 
+    private int userId;
     private String scheduleTitle;
     private Date scheduleDate;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
