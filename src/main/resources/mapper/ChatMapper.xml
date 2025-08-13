@@ -188,7 +188,7 @@
         WHERE R.ROOM_ID = CU.ROOM_ID
           AND U.USER_ID = CU.USER_ID
           AND R.ROOM_ID = #{roomId}
-          <if test="isActive != null and isActive.equals('Y')">
+          <if test='isActive != null and isActive.equals("Y")'>
             AND CU.IS_ACTIVE = 'Y'
           </if>
     </select>
@@ -254,6 +254,7 @@
         </if>
         <if test="joinDate != null">
             ,JOIN_DATE = #{joinDate}
+            ,LEFT_DATE = NULL
         </if>
         WHERE
         USER_ID = #{userId}
@@ -403,52 +404,127 @@
     <!-- public List<ChatRoomDto> getChatRoomList(int userId); -->
     <select id="getChatRoomList"  resultType="com.example.grouvy.chat.dto.ChatRoomDto">
         SELECT
-        R.ROOM_ID                                   AS roomId,
-        R.LAST_MESSAGE_DATE                         AS lastMessageDate,
-        R.IS_GROUP                                  AS isGroup,
+            roomId,
+            isGroup,
+            roomName,
+            profileImgPath,
+            lastMessage,
+            lastMessageDate,
+            (
+                SELECT COUNT(1)
+                FROM GROUVY_CHAT_MESSAGES M
+                WHERE M.ROOM_ID = base.roomId
+                  AND M.SENDER_ID != #{userId}
+            AND M.CHAT_MESSAGE_ID > NVL(base.lastReadMessageId, 0)
+            ) AS unreadCnt
 
-        CASE
-        WHEN R.LAST_MESSAGE_DATE > MY_INFO.JOIN_DATE   THEN R.LAST_MESSAGE_CONTENT
-        ELSE TO_CLOB('채팅을 시작하세요!')
-        END                                         AS lastMessage,
+        FROM (
+            SELECT
+            R.ROOM_ID AS roomId,
+            R.IS_GROUP AS isGroup,
+            CRU.LAST_READ_MESSAGE_ID AS lastReadMessageId,
+            R.LAST_MESSAGE_DATE AS lastMessageDate,
 
-        CASE
-        WHEN R.IS_GROUP = 'Y' THEN R.ROOM_NAME
-        ELSE OTHER_USER.NAME
-        END                                         AS roomName,
+            CASE
+            WHEN R.LAST_MESSAGE_DATE >= CRU.JOIN_DATE
+            THEN DBMS_LOB.SUBSTR(R.LAST_MESSAGE_CONTENT, 4000, 1)
+            ELSE '채팅을 시작하세요!'
+            END AS lastMessage,
 
-        CASE
-        WHEN R.IS_GROUP = 'Y' THEN '그룹'
-        ELSE OTHER_USER.PROFILE_IMG_PATH
-        END                                         AS profileImgPath,
+            CASE
+            WHEN R.IS_GROUP = 'Y' THEN R.ROOM_NAME
+            ELSE (
+            SELECT U.NAME
+            FROM GROUVY_CHAT_ROOM_USERS RU
+            JOIN GROUVY_USERS U ON RU.USER_ID = U.USER_ID
+            WHERE RU.ROOM_ID = R.ROOM_ID
+            AND RU.USER_ID != #{userId}
+            AND R.IS_GROUP = 'N'
+            AND ROWNUM = 1
+            )
+            END AS roomName,
 
-        (
-        SELECT COUNT(M.CHAT_MESSAGE_ID)
-        FROM GROUVY_CHAT_MESSAGES M
-        WHERE M.ROOM_ID = R.ROOM_ID
-        AND M.SENDER_ID != #{userId}
-        AND M.CHAT_MESSAGE_ID > NVL(MY_INFO.LAST_READ_MESSAGE_ID, 0)
-        )                                           AS unreadCnt
+            CASE
+            WHEN R.IS_GROUP = 'Y' THEN '/resources/img/group_logo.png'
+            ELSE (
+            SELECT U.PROFILE_IMG_PATH
+            FROM GROUVY_CHAT_ROOM_USERS RU
+            JOIN GROUVY_USERS U ON RU.USER_ID = U.USER_ID
+            WHERE RU.ROOM_ID = R.ROOM_ID
+            AND RU.USER_ID != #{userId}
+            AND R.IS_GROUP = 'N'
+            AND ROWNUM = 1
+            )
+            END AS profileImgPath
+
+            FROM GROUVY_CHAT_ROOM_USERS CRU
+            JOIN GROUVY_CHAT_ROOMS R ON CRU.ROOM_ID = R.ROOM_ID
+
+            WHERE CRU.USER_ID = #{userId}
+            AND CRU.IS_ACTIVE = 'Y'
+            ) base
+
+        ORDER BY base.lastMessageDate DESC NULLS LAST
+
+
+    </select>
+
+    <!--
+        public List<ChatRoomDto2> getChatRoomListNoProfileAndRoomNameByuserId(int userId);
+        - 사용자가 참여한 채팅방의 정보를 가져온다. -
+    -->
+    <select id="getChatRoomListNoProfileAndRoomNameByUserId" resultType="com.example.grouvy.chat.dto.ChatRoomDto2">
+        SELECT
+              R.ROOM_ID                                                                    AS roomId
+             ,R.IS_GROUP                                                                   AS isGroup
+             ,R.LAST_MESSAGE_DATE                                                          AS lastMessageDate
+             ,R.ROOM_NAME                                                                  AS roomName
+             ,CASE
+                  WHEN R.LAST_MESSAGE_DATE >= CU.JOIN_DATE   THEN R.LAST_MESSAGE_CONTENT
+                  ELSE TO_CLOB('채팅을 시작하세요!')
+            END                                                                            AS lastMessage
+             ,
+            (SELECT COUNT(M.CHAT_MESSAGE_ID)
+             FROM GROUVY_CHAT_MESSAGES M
+             WHERE M.ROOM_ID = R.ROOM_ID
+               AND M.SENDER_ID != #{userId}
+            AND M.CHAT_MESSAGE_ID > NVL(CU.LAST_READ_MESSAGE_ID, 0))                       AS unreadCnt
+
 
         FROM
-        GROUVY_CHAT_ROOM_USERS MY_INFO,
-        GROUVY_CHAT_ROOMS R,
-        GROUVY_CHAT_ROOM_USERS OTHER_INFO,
-        GROUVY_USERS OTHER_USER
-
+            GROUVY_CHAT_ROOMS R
+          ,GROUVY_CHAT_ROOM_USERS CU
         WHERE
-        MY_INFO.ROOM_ID = R.ROOM_ID
+            R.ROOM_ID = CU.ROOM_ID
+          AND CU.USER_ID = #{userId}
+          AND CU.IS_ACTIVE = 'Y'
+        ORDER BY R.LAST_MESSAGE_DATE DESC NULLS LAST
+    </select>
 
-        AND R.ROOM_ID = OTHER_INFO.ROOM_ID(+)
-        AND MY_INFO.USER_ID != OTHER_INFO.USER_ID(+)
+    <!--public List<ChatRoomUser> getChatRoomListAddProfileAndNameByUserId(int userId);-->
+    <select id="getChatRoomListAddProfileAndNameByUserId" resultType="ChatRoomUser">
+        SELECT DISTINCT
+            R.ROOM_ID                           AS roomId
+            ,OTHER_USER.NAME                    AS "user.name"
+            ,OTHER_USER.PROFILE_IMG_PATH        AS "user.profileImgPath"
+        FROM
+            GROUVY_CHAT_ROOM_USERS MY_INFO,
+            GROUVY_CHAT_ROOM_USERS OTHER_INFO,
+            GROUVY_USERS OTHER_USER,
+            GROUVY_CHAT_ROOMS R
+        WHERE
+            R.ROOM_ID = MY_INFO.ROOM_ID
+          AND R.IS_GROUP = 'N'
+          AND MY_INFO.USER_ID = #{userId}
+          AND MY_INFO.IS_ACTIVE = 'Y'
 
-        AND OTHER_INFO.USER_ID = OTHER_USER.USER_ID(+)
+          AND MY_INFO.ROOM_ID = OTHER_INFO.ROOM_ID
+          AND MY_INFO.USER_ID != OTHER_INFO.USER_ID
 
-        AND MY_INFO.USER_ID = #{userId}
-        AND MY_INFO.IS_ACTIVE = 'Y'
+  AND OTHER_INFO.USER_ID = OTHER_USER.USER_ID
 
         ORDER BY
-        R.LAST_MESSAGE_DATE DESC NULLS LAST
+            OTHER_USER.NAME
     </select>
 
 

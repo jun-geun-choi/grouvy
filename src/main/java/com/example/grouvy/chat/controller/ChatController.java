@@ -48,7 +48,7 @@ public class ChatController {
 
 
   /**
-   * 채팅방으로 이동을 하는 메소드.
+   * 채팅방으로 이동!
    * 1:1 채팅방인 경우, Model 객체에 상대방 사용자 이름으로한 roomName, roomId, userIds
    * 그룹채팅방의 경우, Model 객체에 DB에서 가져온 roomName, roomId, userIds
    * @param roomId
@@ -90,6 +90,7 @@ public class ChatController {
     model.addAttribute("userIds",json);
     model.addAttribute("roomId", roomId);
     model.addAttribute("isGroup", chatRoom.getIsGroup());
+
     return "chat/chatting";
   }
 
