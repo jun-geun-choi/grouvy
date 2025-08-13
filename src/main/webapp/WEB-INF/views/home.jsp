@@ -83,7 +83,7 @@
                         </tr>
                         <!-- 필요에 따라 추가 -->
                     </table>
-                    <button class="btn btn-sm btn-outline-primary w-100">오늘
+                    <button class="btn btn-sm btn-outline-primary w-100" onclick="location.href='/schedule-register'">오늘
                         일정 등록
                     </button>
                 </div>

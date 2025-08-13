@@ -34,6 +34,8 @@ public interface ScheduleMapper {
 
     void deleteScheduleByUserNo(int no);
 
+    void deleteScheduleById(int no);
+
     void deleteHolidayById(int no);
 
     void deleteMeetingroomById(int no);
