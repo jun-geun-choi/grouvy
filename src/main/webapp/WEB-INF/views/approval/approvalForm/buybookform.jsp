@@ -171,71 +171,10 @@
 </head>
 <body>
 <sec:authentication property="principal.user" var="user"/>
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="index.html">
-        <span class="logo-crop">
-          <img src="${pageContext.request.contextPath}/resources/image/grouvy_logo.png" alt="GROUVY 로고" class="logo-img">
-        </span>
-        </a>
-        <ul class="navbar-nav mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link active" href="#">전자결재</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">업무문서함</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-            <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-        </ul>
-        <div class="d-flex align-items-center">
-            <a href="mypage.html" >
-                <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-                     alt="프로필" class="rounded-circle" width="36" height="36">
-            </a>
-            <a href="mypage.html" class="ms-2 text-decoration-none text-dark">${user.name}</a>
-        </div>
-    </div>
-</nav>
+<jsp:include page="/WEB-INF/views/common/nav.jsp" />
 <main>
     <div class="container">
-        <div class="sidebar">
-            <h3>전자결재</h3>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">기안</div>
-                <ul class="sidebar-list">
-                    <li><a href="/approval/main/draft" style="text-decoration: none; color: inherit;">기안문작성</a></li>
-                    <li><a href="request.jsp" style="text-decoration: none; color: inherit;">결재요청함</a></li>
-                    <li><a href="temp.jsp" style="text-decoration: none; color: inherit;">임시저장함</a></li>
-                </ul>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title red">결재</div>
-                <ul class="sidebar-list">
-                    <li><a href="/approval/main/wait" style="text-decoration: none; color: inherit;">결재대기함 <span class="badge">0</span></a></li>
-                    <li><a href="progress.jsp" style="text-decoration: none; color: inherit;">결재진행함 <span class="badge orange">3</span></a></li>
-                    <li><a href="complete.jsp" style="text-decoration: none; color: inherit;">완료문서함</a></li>
-                    <li><a href="reject.jsp" style="text-decoration: none; color: inherit;">반려문서함 <span class="badge">0</span></a></li>
-                    <li><a href="receive.jsp" style="text-decoration: none; color: inherit;">참조/열람문서함 <span class="badge gray">0</span></a></li>
-                </ul>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">발신/수신</div>
-                <ul class="sidebar-list">
-                    <li><a href="receive.jsp" style="text-decoration: none; color: inherit;">부서수신함 <span class="badge">0</span></a></li>
-                </ul>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">개인보관함</div>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">환경설정</div>
-                <ul class="sidebar-list">
-                    <li><a href="/approval/main/delegatee" style="text-decoration: none; color: inherit;">위임관리</a></li>
-                    <li>개인보관함관리</li>
-                </ul>
-            </div>
-        </div>
+        <jsp:include page="/WEB-INF/views/approval/common/sidebar.jsp" />
         <div class="main-content">
             <h2>도서구입 신청서</h2>
             <div class="row mb-4 justify-content-end">
@@ -384,8 +323,8 @@
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <button class="btn btn-primary" id="openApprovalLine">결재선</button>
                     <button type="submit" class="btn btn-primary">결재요청</button>
-                    <button class="btn btn-outline-secondary">임시저장</button>
-                    <button class="btn btn-outline-secondary">취소</button>
+<%--                    <button class="btn btn-outline-secondary">임시저장</button>--%>
+                    <a href="/approval/main/draft" class="btn btn-outline-secondary">취소</a>
                 </div>
             </form>
         </div>

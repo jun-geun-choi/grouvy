@@ -388,7 +388,8 @@
                 if (node.children && node.children.length > 0) {
                     childWrap = document.createElement('div');
                     childWrap.className = 'org-children';
-                    childWrap.style.display = 'none';
+                    childWrap.style.display = (depth === 0) ? '' : 'none';
+                    toggle.innerHTML = (depth === 0) ? '▼' : '▶';
                     renderOrgTree(childWrap, node.children, depth + 1);
                     container.appendChild(childWrap);
                     toggle.onclick = function(e) {
@@ -415,30 +416,74 @@
         const response1 = await fetch('depts');
         const depts = await response1.json();
 
+        const response2 = await fetch('emps');
+        const emps = await response2.json();
+
+        console.log(depts);
+        console.log(emps);
+
+        let specialEmps = [];
+
+        for (let emp of emps) {
+            if (emp.departmentId === 1) {
+                specialEmps.push(emp);
+            } else if (emp.departmentId === 2) {
+                specialEmps.push(emp);
+            } else if (emp.departmentId === 3) {
+                specialEmps.push(emp);
+            } else if (emp.departmentId === 4) {
+                specialEmps.push(emp);
+            } else if (emp.departmentId === 5) {
+                specialEmps.push(emp);
+            }
+        }
+
+
+        console.log(specialEmps);
+
         for (let dept of depts) {
             let foundNode = getParentNode(orgTreeData[0].children, dept.parentDepartmentId);
+            let node = {
+                no: dept.departmentId,
+                name: dept.departmentName,
+                pno: dept.parentDepartmentId,
+                children: []
+            };
+
+            let specialEmp = specialEmps.find(emp => emp.departmentId === dept.departmentId);
+            if (specialEmp) {
+                node.children.push({
+                    no: specialEmp.empNo,
+                    name: specialEmp.name,
+                    icon: '🌱',
+                    color: '#28a745',
+                    positionName: specialEmp.positionName,
+                    type: 'user'
+                });
+            }
+
             if (foundNode == null) {
-                let node = {no:dept.departmentId, name:dept.departmentName, pno:dept.parentDepartmentId, children:[]};
                 orgTreeData[0].children.push(node);
             } else {
-                let node = {no:dept.departmentId, name:dept.departmentName, pno:dept.parentDepartmentId, children:[]};
                 foundNode.children.push(node);
             }
         }
 
-        const response2 = await fetch('emps');
-        const emps = await response2.json();
 
         for (let emp of emps) {
+            // specialEmps에 이미 추가된 사람은 제외
+            if ([1, 2, 3, 4, 5].includes(emp.departmentId)) continue;
+
             let foundNode = getParentNode(orgTreeData[0].children, emp.departmentId);
             if (foundNode != null) {
                 let node = {
-                    no:emp.empNo,
-                    name:emp.name,
+                    no: emp.empNo,
+                    name: emp.name,
                     icon: '🌱',
                     color: '#28a745',
                     positionName: emp.positionName,
-                    type:'user'};
+                    type: 'user'
+                };
                 foundNode.children.push(node);
             }
         }

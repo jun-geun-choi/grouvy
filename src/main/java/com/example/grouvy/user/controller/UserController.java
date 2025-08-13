@@ -1,11 +1,15 @@
 package com.example.grouvy.user.controller;
 
 
+import com.example.grouvy.approval.dto.ApprovalWait;
+import com.example.grouvy.approval.dto.MyRequestApproval;
+import com.example.grouvy.approval.service.ApprovalService;
 import com.example.grouvy.message.mapper.MessageMapper;
 import com.example.grouvy.message.service.MessageQueryService;
 import com.example.grouvy.message.vo.MessageReceiver;
 import com.example.grouvy.notification.mapper.NotificationMapper;
 import com.example.grouvy.file.service.FileService;
+
 import com.example.grouvy.security.SecurityUser;
 import com.example.grouvy.user.dto.AttendanceStatusDto;
 import com.example.grouvy.task.dto.response.TaskListItem;
@@ -44,6 +48,9 @@ public class UserController {
     private final UserMapper userMapper;
     private final MailService mailService;
     private final AdminUserService adminUserService;
+    private final ApprovalService approvalService;
+
+
   
     // 업무관련 의존성입주입
     private final TaskService taskService;
@@ -56,6 +63,12 @@ public class UserController {
     @GetMapping("/")
     public String home(Model model, @AuthenticationPrincipal SecurityUser securityUser) {
         int currentUserId = securityUser.getUser().getUserId();
+      
+        //
+        List<ApprovalWait> approvalsWait = approvalService.getWaitingApprovalsByEmployeeNo(securityUser.getUser().getEmployeeNo());
+        List<MyRequestApproval> myRequestApprovals = approvalService.getMyRequestedApprovals(securityUser.getUser().getEmployeeNo());
+        model.addAttribute("approvalsWait", approvalsWait);
+        model.addAttribute("myRequestApprovals", myRequestApprovals);
 
         //쪽지,o
         int unreadMessageCount = messageMapper.countUnreadReceivedMessages(currentUserId);

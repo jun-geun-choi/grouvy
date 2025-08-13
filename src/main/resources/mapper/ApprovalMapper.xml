@@ -52,7 +52,7 @@
         WHERE A.APPROVAL_NO = B.APPROVAL_NO
           AND B.APPROVER_ID = #{employeeNo}
           AND B.STATUS = '진행중'
-          AND B.DELEGATEE_ID = NULL
+          AND B.DELEGATEE_ID IS NULL
         ORDER BY ASSIGNED_DATE DESC
     </select>
 
@@ -106,6 +106,7 @@
              , A.DECISION_DATE    approvedDate
              , A.ASSIGNED_DATE    assignedDate
              , P.POSITION_NAME    positionName
+             , A.OPINION          opinion
         FROM GROUVY_APPROVER A, GROUVY_USERS U, GROUVY_POSITIONS P
         WHERE A.APPROVER_ID = U.EMPLOYEE_NO
           AND U.POSITION_NO = P.POSITION_NO
@@ -135,7 +136,7 @@
         <selectKey keyProperty="approvalNo"
                    resultType="int"
                    order="BEFORE">
-            select approval_approval_no_seq.nextval
+            select APPROVAL_APPROVAL_NO_SEQ.nextval
             from dual
         </selectKey>
         insert into grouvy_approval
@@ -154,7 +155,7 @@
         INSERT INTO GROUVY_APPROVER
             (APPROVER_NO, APPROVER_ID, APPROVAL_NO, STEP, STATUS, ASSIGNED_DATE, DELEGATEE_ID)
         VALUES
-            (APPROVER_APPROVER_NO_SEQ.NEXTVAL, #{approverId}, #{approvalNo}, #{step}, #{status}, #{assignedDate}, #{delegateeNo})
+            (APPROVAL_APPROVER_NO_SEQ.NEXTVAL, #{approverId}, #{approvalNo}, #{step}, #{status}, #{assignedDate}, #{delegateeNo})
     </insert>
     
     <!--
@@ -247,11 +248,15 @@
     -->
     <update id="updateApprovalRejectStatus">
         UPDATE
-            GROUVY_APPROVAL
+            GROUVY_APPROVAL A
         SET
-            STATUS = '반려'
+            (A.STATUS, A.COMPLETED_DATE) = (
+                SELECT B.STATUS, B.DECISION_DATE
+                FROM GROUVY_APPROVER B
+                WHERE B.APPROVAL_NO = #{approvalNo}
+                  AND B.STATUS = '반려')
         WHERE
-            APPROVAL_NO = #{approvalNo}
+            A.APPROVAL_NO = #{approvalNo}
     </update>
 
     <!--
@@ -261,7 +266,7 @@
         <selectKey keyProperty="delegationNo"
                 resultType="int"
                 order="BEFORE">
-            SELECT APPROVAL_DELEGATION_SEQ.NEXTVAL
+            SELECT APPROVAL_APPROVAL_DELEGATION_NO_SEQ.NEXTVAL
             FROM DUAL
         </selectKey>
         INSERT INTO GROUVY_APPROVAL_DELEGATION
@@ -277,12 +282,10 @@
         void updateDelegateeNo(Delegation delegation)
     -->
     <update id="updateDelegateeNo">
-        UPDATE
-            GROUVY_APPROVER
-        SET
-            DELEGATEE_ID = #{delegateeNo}
-        WHERE
-            APPROVER_ID = #{delegatorNo}
+        UPDATE GROUVY_APPROVER
+        SET DELEGATEE_ID = #{delegateeNo}
+        WHERE APPROVER_ID = #{delegatorNo}
+          AND (STATUS = '진행중' OR STATUS = '대기중')
     </update>
 
     <!--
@@ -435,5 +438,126 @@
         WHERE
             APPROVER_ID = #{empNo}
     </update>
+
+    <!--
+        String getUserStatus(int delegateeNo);
+    -->
+    <select id="getUserStatus" resultType="String">
+        SELECT
+            EMPLOYMENT_STATUS
+        FROM
+            GROUVY_USERS
+        WHERE
+            EMPLOYEE_NO = #{delegateeNo}
+    </select>
+
+    <!--
+        Boolean getIsUserAlreadyDelegateeByEmpNo(int delegatorNo);
+    -->
+    <select id="getIsUserAlreadyDelegateeByEmpNo" resultType="Boolean">
+        SELECT
+            COUNT(*)
+        FROM
+            GROUVY_APPROVAL_DELEGATION
+        WHERE
+            DELEGATEE_NO = #{delegatorNo}
+    </select>
+
+    <!--
+        void updateApproveCompletedDate(int step,int approvalNo);
+    -->
+    <update id="updateApproveCompletedDate">
+        UPDATE GROUVY_APPROVAL A
+        SET A.COMPLETED_DATE = (
+            SELECT B.DECISION_DATE
+            FROM GROUVY_APPROVER B
+            WHERE B.APPROVAL_NO = #{approvalNo}
+              AND B.STEP = #{step})
+        WHERE
+            A.APPROVAL_NO = #{approvalNo}
+    </update>
+
+    <!--
+        List<MyRequestApproval> getMyRequestApprovals(int empNo);
+    -->
+    <select id="getMyRequestApprovals" resultType="MyRequestApproval">
+        SELECT
+            TITLE               title
+             , CREATED_DATE     createdDate
+             , COMPLETED_DATE   approvedDate
+             , STATUS           status
+             , APPROVAL_NO      approvalNo
+        FROM
+            GROUVY_APPROVAL
+        WHERE
+            WRITER_ID = #{empNo}
+    </select>
+
+    <!--
+        List<ApprovalProgress> getApprovalProgresses(int empNo);
+    -->
+    <select id="getApprovalProgresses" resultType="ApprovalProgress">
+        SELECT DISTINCT
+            A.APPROVAL_NO       approvalNo
+          , A.TITLE             title
+          , A.WRITER_NAME       writerName
+          , A.APPROVAL_DEPARTMENT_NAME  requestDepartmentName
+          , A.CREATED_DATE              createdDate
+          , A.COMPLETED_DATE            completedDate
+        FROM
+            GROUVY_APPROVAL A, GROUVY_APPROVER B
+        WHERE
+            A.APPROVAL_NO = B.APPROVAL_NO
+          AND
+            A.STATUS = '진행중'
+          AND
+            (B.APPROVER_ID = #{empNo} OR B.DELEGATEE_ID = #{empNo})
+        ORDER BY A.APPROVAL_NO ASC
+    </select>
+
+    <!--
+        List<ApprovalProgress> getApprovalCompletes(int empNo);
+    -->
+    <select id="getApprovalCompletes" resultType="ApprovalProgress">
+        SELECT DISTINCT
+            A.APPROVAL_NO                               approvalNo
+                      , A.TITLE                         title
+                      , A.WRITER_NAME                   writerName
+                      , A.APPROVAL_DEPARTMENT_NAME      requestDepartmentName
+                      , A.CREATED_DATE                  createdDate
+                      , A.COMPLETED_DATE                completedDate
+        FROM
+            GROUVY_APPROVAL A, GROUVY_APPROVER B
+        WHERE
+            A.APPROVAL_NO = B.APPROVAL_NO
+          AND
+            A.STATUS = '결재완료'
+          AND
+            (B.APPROVER_ID = #{empNo} OR B.DELEGATEE_ID = #{empNo}
+                OR A.WRITER_ID = #{empNo})
+        ORDER BY A.APPROVAL_NO ASC
+    </select>
+
+    <!--
+        List<ApprovalProgress> getApprovalRejects(int empNo);
+    -->
+    <select id="getApprovalRejects" resultType="ApprovalProgress">
+        SELECT DISTINCT
+            A.APPROVAL_NO                               approvalNo
+                      , A.TITLE                         title
+                      , A.WRITER_NAME                   writerName
+                      , A.APPROVAL_DEPARTMENT_NAME      requestDepartmentName
+                      , A.CREATED_DATE                  createdDate
+                      , A.COMPLETED_DATE                completedDate
+        FROM
+            GROUVY_APPROVAL A, GROUVY_APPROVER B
+        WHERE
+            A.APPROVAL_NO = B.APPROVAL_NO
+          AND
+            A.STATUS = '반려'
+          AND
+            (B.APPROVER_ID = #{empNo} OR A.WRITER_ID = #{empNo})
+        ORDER BY A.COMPLETED_DATE DESC
+    </select>
 
 </mapper>

@@ -150,13 +150,49 @@
                         <div class="col-12">
                             <div class="card p-3 h-100">
                                 <h6 class="fw-bold mb-2">결제요청함</h6>
-                                <div class="text-muted small">해당하는 데이터가 없습니다.</div>
+                                <c:if test="${empty myRequestApprovals}">
+                                    <div class="text-muted small">결재요청 내역이 없습니다.</div>
+                                </c:if>
+                                <div class="approval-request-list">
+                                    <c:forEach var="myRequestApproval" items="${myRequestApprovals }" varStatus="loop">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                                            <div>
+                                                <div class="fw-bold small"><a href="/approval/requestDetail?no=${myRequestApproval.approvalNo}">${myRequestApproval.title}</a></div>
+                                                <div class="text-muted" style="font-size: 0.8rem;"><fmt:formatDate value="${myRequestApproval.createdDate}" pattern="yyyy-MM-dd HH:mm:ss" /></div>
+                                            </div>
+                                            <c:choose>
+                                                <c:when test="${myRequestApproval.status eq '결재완료'}">
+                                                    <span class="badge bg-success text-white">결재완료</span>
+                                                </c:when>
+                                                <c:when test="${myRequestApproval.status eq '진행중'}">
+                                                    <span class="badge bg-info text-white">진행중</span>
+                                                </c:when>
+                                                <c:when test="${myRequestApproval.status eq '반려'}">
+                                                    <span class="badge bg-warning text-dark">반려</span>
+                                                </c:when>
+                                            </c:choose>
+                                        </div>
+                                    </c:forEach>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="card p-3 h-100">
                                 <h6 class="fw-bold mb-2">결제대기함</h6>
-                                <div class="text-muted small">해당하는 데이터가 없습니다.</div>
+                                <c:if test="${empty approvalsWait}">
+                                    <div class="text-muted small">결재대기 내역이 없습니다.</div>
+                                </c:if>
+                                <div class="approval-wait-list">
+                                    <c:forEach var="approvalWait" items="${approvalsWait }" varStatus="loop">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                                            <div>
+                                                <div class="fw-bold small"><a href="/approval/waitDetail?no=${approvalWait.approvalNo}">${approvalWait.title}</a></div>
+                                                <div class="text-muted" style="font-size: 0.8rem;">${approvalWait.writerName} - <fmt:formatDate value="${approvalWait.createdDate}" pattern="yyyy-MM-dd" /></div>
+                                            </div>
+                                            <span class="badge bg-danger text-white">진행중</span>
+                                        </div>
+                                    </c:forEach>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12">

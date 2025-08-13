@@ -10,6 +10,7 @@
   <title>결재대기함 - 도서구입 신청서</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -76,78 +77,34 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand d-flex align-items-center" href="index.html"> 
-        <span class="logo-crop"> 
-          <img src="${pageContext.request.contextPath}/resources/image/grouvy_logo.png" alt="GROUVY 로고" class="logo-img">
-        </span>
-      </a>
-      <ul class="navbar-nav mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link active" href="#">전자결재</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">업무문서함</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-        <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-      </ul>
-      <div class="d-flex align-items-center">
-        <a href="../../../../../../../../../../approval/mypage.html" >
-          <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-              alt="프로필" class="rounded-circle" width="36" height="36">
-        </a>
-        <a href="../../../../../../../../../../approval/mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
-      </div>
-    </div>
-  </nav>
+    <jsp:include page="/WEB-INF/views/common/nav.jsp" />
   <main>
     <div class="container">
-      <div class="sidebar">
-        <h3>전자결재</h3>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">기안</div>
-          <ul class="sidebar-list">
-            <li><a href="/approval/main/draft" style="text-decoration: none; color: inherit;">기안문작성</a></li>
-            <li><a href="request.jsp" style="text-decoration: none; color: inherit;">결재요청함</a></li>
-            <li><a href="temp.jsp" style="text-decoration: none; color: inherit;">임시저장함</a></li>
-          </ul>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title red">결재</div>
-          <ul class="sidebar-list">
-            <li><a href="/approval/main/wait" style="text-decoration: none; color: inherit;">결재대기함 <span class="badge">0</span></a></li>
-            <li><a href="progress.jsp" style="text-decoration: none; color: inherit;">결재진행함 <span class="badge orange">3</span></a></li>
-            <li><a href="complete.jsp" style="text-decoration: none; color: inherit;">완료문서함</a></li>
-            <li><a href="reject.jsp" style="text-decoration: none; color: inherit;">반려문서함 <span class="badge">0</span></a></li>
-            <li><a href="receive.jsp" style="text-decoration: none; color: inherit;">참조/열람문서함 <span class="badge gray">0</span></a></li>
-          </ul>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">발신/수신</div>
-          <ul class="sidebar-list">
-            <li><a href="receive.jsp" style="text-decoration: none; color: inherit;">부서수신함 <span class="badge">0</span></a></li>
-          </ul>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">개인보관함</div>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">환경설정</div>
-          <ul class="sidebar-list">
-            <li><a href="/approval/main/delegatee" style="text-decoration: none; color: inherit;">위임관리</a></li>
-            <li>개인보관함관리</li>
-          </ul>
-        </div>
-      </div>
+        <jsp:include page="/WEB-INF/views/approval/common/sidebar.jsp" />
       <div class="main-content">
-        <div class="d-flex justify-content-end gap-2 mb-3">
-          <button class="btn btn-primary" id="btnApprove">결재</button>
-          <button class="btn btn-outline-secondary" id="btnProgress">진행현황</button>
-          <a href="/approval/main/wait" class="btn btn-outline-secondary">목록</a>
-
-        </div>
+          <div class="d-flex justify-content-end gap-2 mb-3">
+              <c:choose>
+                  <c:when test="${active eq 'wait'}">
+                      <button class="btn btn-primary" id="btnApprove">결재</button>
+                      <a href="/approval/main/wait" class="btn btn-outline-secondary">목록</a>
+                  </c:when>
+                  <c:when test="${active eq 'progress'}">
+                      <a href="/approval/main/progress" class="btn btn-outline-secondary">목록</a>
+                  </c:when>
+                  <c:when test="${active eq 'request'}">
+                      <a href="/approval/main/request" class="btn btn-outline-secondary">목록</a>
+                  </c:when>
+                  <c:when test="${active eq 'complete'}">
+                      <a href="/approval/main/complete" class="btn btn-outline-secondary">목록</a>
+                  </c:when>
+                  <c:when test="${active eq 'reject'}">
+                      <a href="/approval/main/reject" class="btn btn-outline-secondary">목록</a>
+                  </c:when>
+                  <c:otherwise>
+                      <a href="/approval/main" class="btn btn-outline-secondary">목록</a>
+                  </c:otherwise>
+              </c:choose>
+          </div>
         <h2 class="text-center mb-4">도서구입 신청서</h2>
         <div class="row mb-4 justify-content-end">
           <div class="col-md-5">
@@ -243,6 +200,72 @@
             </tr>
           </tbody>
         </table>
+        
+        <!-- 결재의견 표시 -->
+        <div class="approval-comment-section mt-4">
+                     <h4 class="mb-3" style="color: #333; font-weight: bold; border-bottom: 2px solid #e6002d; padding-bottom: 8px;">
+             결재의견
+           </h4>
+          <div class="row">
+            <div class="col-12">
+              <c:choose>
+                <c:when test="${hasAnyOpinion}">
+                  <div class="approval-comments-container">
+                    <c:forEach var="approver" items="${approvers}" varStatus="loop">
+                      <c:if test="${not empty approver.opinion}">
+                                                 <div class="approval-comment-card mb-2" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #e9ecef; border-radius: 12px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease;">
+                           <div class="comment-header d-flex align-items-center mb-2" style="border-bottom: 1px solid #e9ecef; padding-bottom: 8px;">
+                            <div class="approver-avatar me-3" style="width: 40px; height: 40px; background: linear-gradient(135deg, #e6002d, #ff6b6b); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                              ${fn:substring(approver.approverName, 0, 1)}
+                            </div>
+                            <div class="approver-info">
+                                                             <div class="approver-name" style="font-weight: bold; color: #333; font-size: 16px; margin-bottom: 2px;">
+                                 ${approver.approverName}
+                                 <c:if test="${not empty approver.isdelegatee}">
+                                   <span class="badge bg-warning text-dark ms-2" style="font-size: 12px; padding: 4px 8px;">위임중</span>
+                                 </c:if>
+                               </div>
+                              <div class="approver-position" style="color: #6c757d; font-size: 13px;">
+                                ${approver.positionName}
+                              </div>
+                            </div>
+                            <div class="approval-status ms-auto">
+                              <c:choose>
+                                <c:when test="${approver.status eq '결재완료'}">
+                                  <span class="badge bg-success" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-check me-1"></i>결재완료
+                                  </span>
+                                </c:when>
+                                <c:when test="${approver.status eq '반려'}">
+                                  <span class="badge bg-danger" style="font-size: 12px; padding: 6px 12px;">
+                                    <i class="fas fa-times me-1"></i>반려
+                                  </span>
+                                </c:when>
+                              </c:choose>
+                            </div>
+                          </div>
+                          <div class="comment-content">
+                              <div class="comment-text" style="color: #333; line-height: 1.6; font-size: 16px; white-space: pre-wrap; background-color: #ffffff; padding: 1px; border-radius: 8px; border-left: 4px solid #e6002d;">    ${approver.opinion}
+                             </div>
+                          </div>
+                        </div>
+                      </c:if>
+                    </c:forEach>
+                  </div>
+                </c:when>
+                <c:otherwise>
+                  <div class="no-comment-display" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 2px dashed #dee2e6; border-radius: 12px; padding: 40px; text-align: center; min-height: 120px; display: flex; align-items: center; justify-content: center;">
+                    <div class="no-comment-content">
+                      <i class="fas fa-comment-slash" style="font-size: 48px; color: #adb5bd; margin-bottom: 16px; display: block;"></i>
+                      <p style="margin: 0; color: #6c757d; font-size: 16px; font-weight: 500;">등록된 결재의견이 없습니다.</p>
+                      <p style="margin: 8px 0 0 0; color: #adb5bd; font-size: 14px;">결재자가 의견을 등록하면 여기에 표시됩니다.</p>
+                    </div>
+                  </div>
+                </c:otherwise>
+              </c:choose>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </main>

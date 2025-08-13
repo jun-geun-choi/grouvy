@@ -1,4 +1,5 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
@@ -292,6 +293,7 @@
   </style>
 </head>
 <body>
+<sec:authentication property="principal.user.name" var="userName"/>
 <div class="popup-wrap">
   <div class="popup-header">
     <span class="popup-title">결재선지정</span>
@@ -602,10 +604,23 @@
       const no = u.getAttribute('data-empNo');
       const name = u.getAttribute('data-name');
       const position = u.getAttribute('data-position');
-      const label    = `\${name} \${position}`;
+      const label = `\${name} \${position}`;
 
-      if (!approvers.includes(name) && !approvers.includes(position)) {
+      const writerName = "${userName}";
+
+      if(writerName === name) {
+          alert("기안자는 결재선에 추가할 수 없습니다.");
+          return;
+      }
+
+      // 동일인물 중복 체크 (사원번호로 확인)
+      const isDuplicate = approvers.some(approver => approver.no === no);
+      
+      if (!isDuplicate) {
         approvers.push({no, name, position, label});
+      } else {
+        // 중복된 경우 알림 표시
+        alert(`'\${name}'은(는) 이미 결재선에 추가되어 있습니다.`);
       }
     });
     renderApprovers();

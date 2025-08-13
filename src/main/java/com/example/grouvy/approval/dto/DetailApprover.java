@@ -20,4 +20,5 @@ public class DetailApprover {
     private Date assignedDate;
     private String positionName;
     private String Isdelegatee;
+    private String opinion;
 }
