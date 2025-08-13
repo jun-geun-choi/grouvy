@@ -207,6 +207,7 @@
              , M.UNREAD_CNT           AS unreadCnt
              , U.NAME                 AS "user.name"
              , U.PROFILE_IMG_PATH     AS "user.profileImgPath"
+             ,R.IS_GROUP              AS "chatRoom.isGroup"
         FROM GROUVY_CHAT_MESSAGES M,
              GROUVY_USERS U,
              GROUVY_CHAT_ROOMS R
@@ -229,6 +230,7 @@
              , M.CREATED_DATE         AS createdDate
              , U.NAME                 AS "user.name"
              , U.PROFILE_IMG_PATH     AS "user.profileImgPath"
+             , R.IS_GROUP             AS "chatRoom.isGroup"
         FROM GROUVY_CHAT_MESSAGES M,
              GROUVY_USERS U,
              GROUVY_CHAT_ROOMS R
@@ -406,7 +408,7 @@
         R.IS_GROUP                                  AS isGroup,
 
         CASE
-        WHEN R.CREATED_DATE >= MY_INFO.JOIN_DATE  THEN R.LAST_MESSAGE_CONTENT
+        WHEN R.LAST_MESSAGE_DATE > MY_INFO.JOIN_DATE   THEN R.LAST_MESSAGE_CONTENT
         ELSE TO_CLOB('채팅을 시작하세요!')
         END                                         AS lastMessage,
 

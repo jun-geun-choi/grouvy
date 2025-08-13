@@ -506,7 +506,8 @@ public class ChatService {
    * 메세지를 등록시킬 때, @MessageMapping 메소드에서 ChatMessage 객체를 받아와서, 메시지 테이블 등록 -> 마지막 메세지 채팅방 테이블에 등록 ->
    * 다시 DB에 있는 애 꺼내고 -> DTO 객체 바인딩 후 반환
    *
-   * @param chatMessage
+   * 여기서는 unreadCnt,
+   * @param chatMessage : content, roomId, messageType, userId가 자동 바인딩 된 상태.
    * @return
    */
   public ChatMessageDto addMessageService(ChatMessage chatMessage) {
