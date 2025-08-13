@@ -1,13 +1,16 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8"%>
+<%@include file="../common/taglib.jsp" %>
+<%--<%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>--%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>회의실 관리</title>
+  <%@include file="../common/head.jsp" %>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:400,700&display=swap" rel="stylesheet">
   <style>
@@ -29,10 +32,10 @@
     .navbar-nav .nav-link.active {
       font-weight: bold;
       color: #e6002d !important;
-      border-bottom: 2.5px solid #e6002d;
+      /*border-bottom: 2.5px solid #e6002d;
       background: rgba(230,0,45,0.07);
       border-radius: 0 0 8px 8px;
-      transition: background 0.2s;
+      transition: background 0.2s;*/
     }
     .navbar-nav .nav-link {
       transition: background 0.2s, color 0.2s;
@@ -458,7 +461,8 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+<%@include file="../common/nav.jsp" %>
+  <%--<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
     <div class="container-fluid">
       <a class="navbar-brand d-flex align-items-center" href="index.html">
         <span class="logo-crop">
@@ -483,29 +487,33 @@
         <a href="mypage.html" class="ms-2 text-decoration-none text-dark">마이페이지</a>
       </div>
     </div>
-  </nav>
+  </nav>--%>
   <div class="container" style="margin-top:0;">
     <!-- 사이드바 -->
     <nav class="sidebar">
-      <button class="register-btn">일정등록</button>
+      <button class="register-btn" onclick="location.href='/schedule'">나의 일정</button>
       <div class="sidebar-section">
         <div class="sidebar-section-title">My Team</div>
         <ul class="sidebar-list">
-          <li><span class="icon">👥</span>영업팀</li>
+          <li><span class="icon">👥</span><sec:authentication property="principal.user.department.departmentName"  /></li>
         </ul>
         <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;">
         <div class="sidebar-section-title mt-4">세부메뉴</div>
         <ul class="sidebar-list">
-          <li><span class="icon">📅</span>일정등록</li>
-          <li><span class="icon">🏢</span>회의실 예약</li>
+          <li><a href="/schedule-register" style="text-decoration: none;color: inherit;display: block"><span class="icon">📅</span>일정등록</a></li>
+          <li><a href="/meetingroom-reservate" style="text-decoration: none;color: inherit"><span class="icon">🏢</span>회의실 예약</a></li>
+          <sec:authorize access="hasAnyRole('ROLE_ADMIN')">
           <li><span class="icon">⚙️</span>관리자</li>
+          </sec:authorize>
         </ul>
+        <sec:authorize access="hasAnyRole('ROLE_ADMIN')">
         <ul class="sidebar-list" style="background:#f7f8fa;border-left:3px solid #e6002d;margin-left:12px;padding-left:12px;margin-top:2px;">
-          <li><span class="icon">🗂️</span>회의실 관리</li>
-          <li><span class="icon">🎌</span>휴일관리</li>
-          <li><span class="icon">🏷️</span>범주관리</li>
-          <li><span class="icon">🗑️</span>일괄삭제</li>
+          <li><a href="/meetingroom-register" style="text-decoration: none;color: inherit;display: block"><span class="icon">🗂️</span>회의실 관리</a></li>
+          <li><a href="/holiday-manage" style="text-decoration: none;color: inherit;display: block"><span class="icon">🎌</span>휴일관리</a></li>
+          <li><a href="/category-manage" style="text-decoration: none;color: inherit;display: block"><span class="icon">🏷️</span>범주관리</a></li>
+          <li><a href="/schedule-delete" style="text-decoration: none;color: inherit;display: block"><span class="icon">🗑️</span>일괄삭제</a></li>
         </ul>
+        </sec:authorize>
       </div>
     </nav>
     <!-- 메인 컨텐츠 -->
@@ -516,9 +524,9 @@
         <div class="meetingroom-list">
           <div class="meetingroom-list-title">회의실 목록</div>
           <ul>
-            <li class="selected">▶ 회의실 1</li>
+            <%--<li class="selected">▶ 회의실 1</li>--%>
               <c:forEach var="conferenceRoom" items="${conferenceRoomList }" varStatus="loop">
-                  <li>${conferenceRoom.conferenceRoomTitle}</li>
+                  <li onclick="change('${conferenceRoom.conferenceRoomTitle}', '${conferenceRoom.conferenceRoomLocation}', '${conferenceRoom.conferenceRoomExplanation}', '${conferenceRoom.conferenceRoomLimit}', '${conferenceRoom.conferenceRoomEquipment}','${conferenceRoom.conferenceRoomId}')">${conferenceRoom.conferenceRoomTitle}</li>
               </c:forEach>
 
           </ul>
@@ -529,40 +537,31 @@
           <div class="meetingroom-table-info">※ 회의실을 선택하면 상세 정보를 확인할 수 있습니다.</div>
           <div class="meetingroom-info-container">
             <div class="meetingroom-info-header">
-              <h4 class="meetingroom-info-title">${conferenceRoomList[0].conferenceRoomTitle}</h4>
-              <div class="meetingroom-status">
+              <%--<h4 class="meetingroom-info-title">${conferenceRoomList[0].conferenceRoomTitle}</h4>--%>
+              <input type="text" class="form-control" id="box1" value="회의실을 선택하세요!" style="border: none; background: transparent;" disabled>
+              <%--<div class="meetingroom-status">
                 <span class="status-badge status-active">사용중</span>
-              </div>
+              </div>--%>
             </div>
             <div class="meetingroom-info-content">
               <div class="meetingroom-info-section">
                 <div class="info-item">
                   <div class="info-label">📍 위치</div>
-                  <div class="info-value">${conferenceRoomList[0].conferenceRoomLocation}</div>
+                  <%--<div class="info-value">${conferenceRoomList[0].conferenceRoomLocation}</div>--%>
+                  <input type="text" class="form-control" id="box2" value="-" style="border: none; background: transparent;" disabled>
                 </div>
                 <div class="info-item">
                   <div class="info-label">📝 설명</div>
-                  <div class="info-value">일반 회의 및 프레젠테이션용 회의실입니다. 프로젝터와 화이트보드가 구비되어 있습니다.</div>
+                  <input type="text" class="form-control" id="box3" value="-" style="border: none; background: transparent;" disabled>
                 </div>
                 <div class="info-item">
                   <div class="info-label">👥 수용인원</div>
-                  <div class="info-value">최대 12명</div>
+                  <input type="text" class="form-control" id="box4" value="-" style="border: none; background: transparent;" disabled>
                 </div>
                 <div class="info-item">
                   <div class="info-label">🖥️ 설치기자재</div>
-                  <div class="info-value">프로젝터, 화이트보드, 음향시스템, TV모니터</div>
-                </div>
-                <div class="info-item">
-                  <div class="info-label">⏰ 이용시간</div>
-                  <div class="info-value">09:00 ~ 18:00 (평일)</div>
-                </div>
-                <div class="info-item">
-                  <div class="info-label">📅 예약가능기간</div>
-                  <div class="info-value">6개월</div>
-                </div>
-                <div class="info-item">
-                  <div class="info-label">🔄 반복허용</div>
-                  <div class="info-value">허용</div>
+                  <input type="text" class="form-control" id="box5" value="-" style="border: none; background: transparent;" disabled>
+                  <input type="hidden" class="form-control" id="box6" value="0" style="border: none; background: transparent;" disabled>
                 </div>
               </div>
               <div class="meetingroom-info-section">
@@ -582,9 +581,9 @@
             </div>
             <div class="meetingroom-info-footer">
               <div class="meetingroom-actions">
-                <button type="button" class="btn btn-primary btn-sm">수정</button>
-                <button type="button" class="btn btn-outline-danger btn-sm">삭제</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm">예약현황</button>
+                <%--<button type="button" class="btn btn-primary btn-sm">수정</button>--%>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="MeetingroomDelete()">삭제</button>
+                <%--<button type="button" class="btn btn-outline-secondary btn-sm">예약현황</button>--%>
               </div>
             </div>
 
@@ -607,22 +606,26 @@
                 <div class="col-9"><form:input path="conferenceRoomLocation" type="text" class="form-control" /></div>
               </div>
               <div class="mb-3 row align-items-center">
+                <label class="col-3 col-form-label">설명</label>
+                <div class="col-9"><form:input path="conferenceRoomExplanation" type="text" class="form-control" /></div>
+              </div>
+              <div class="mb-3 row align-items-center">
                 <label class="col-3 col-form-label">수용인원</label>
-                <div class="col-9 d-flex align-items-center"><input type="number" class="form-control" style="width:100px;">&nbsp;명</div>
+                <div class="col-9"><form:input path="conferenceRoomLimit" type="text" class="form-control" /></div>
               </div>
               <div class="mb-3 row align-items-center">
                 <label class="col-3 col-form-label">설치기자재</label>
-                <div class="col-9"><input type="text" class="form-control"></div>
+                <div class="col-9"><form:input path="conferenceRoomEquipment" type="text" class="form-control" /></div>
               </div>
-              <div class="mb-3 row align-items-center">
+              <%--<div class="mb-3 row align-items-center">
                 <label class="col-3 col-form-label">이미지</label>
                 <div class="col-9 d-flex gap-2">
                   <input type="file" class="form-control" style="max-width:180px;">
                   <button type="button" class="btn btn-secondary btn-sm">이미지 업로드</button>
-                  <button type="button" class="btn btn-outline-secondary btn-sm">초기화</button>
+                  &lt;%&ndash;<button type="button" class="btn btn-outline-secondary btn-sm">초기화</button>&ndash;%&gt;
                 </div>
-              </div>
-              <div class="mb-3 row align-items-center">
+              </div>--%>
+              <%--<div class="mb-3 row align-items-center">
                 <label class="col-3 col-form-label">사용 여부</label>
                 <div class="col-9 d-flex gap-3">
                   <div class="form-check form-check-inline">
@@ -704,7 +707,7 @@
               <div class="mb-3 row align-items-center">
                 <label class="col-3 col-form-label">사용제한 사유</label>
                 <div class="col-9"><input type="text" class="form-control"></div>
-              </div>
+              </div>--%>
               <div class="d-flex justify-content-end gap-3 mt-4">
                 <button type="submit" class="btn btn-primary" id="modalSaveBtn" style="min-width:90px;">저장</button>
                 <button type="button" class="btn btn-secondary" id="modalCancelBtn" style="min-width:90px;">취소</button>
@@ -715,6 +718,7 @@
       </div>
     </div>
   </div>
+<%@include file="../common/footer.jsp" %>
 <script>
   // 모달 열기/닫기 동작
   const openModalBtn = document.getElementById('openModalBtn');
@@ -739,5 +743,40 @@
     if (e.target === modal) closeModal();
   });
 </script>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script type="text/javascript">
+
+    function change(a, b, c, d, e, f){
+      $("#box1").val(a);
+      $("#box2").val(b);
+      $("#box3").val(c);
+      $("#box4").val(d);
+      $("#box5").val(e);
+      $("#box6").val(f);
+      $(this).addClass("selected");
+    };
+
+    function select(){
+      $('.color-sample').addClass("selected");
+    };
+
+    function MeetingroomDelete(){
+          const value = document.getElementById('box6');
+          console.log(value)
+          location.href = `/meetingroom-delete?no=`+value.value;
+    };
+
+
+  </script>
+<%@include file="../chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+  // 최초 연결
+  connectNoticeSocket();
+</script>
+<%-- 얘는 메신저 알림을 받기 위한, 설정 정보들 입니다. --%>
 </body>
 </html> 

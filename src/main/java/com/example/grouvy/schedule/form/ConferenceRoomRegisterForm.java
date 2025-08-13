@@ -11,4 +11,7 @@ public class ConferenceRoomRegisterForm {
 
     private String conferenceRoomTitle;
     private String conferenceRoomLocation;
+    private String conferenceRoomExplanation;
+    private String conferenceRoomEquipment;
+    private int conferenceRoomLimit;
 }

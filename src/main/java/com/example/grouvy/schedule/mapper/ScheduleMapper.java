@@ -12,7 +12,9 @@ public interface ScheduleMapper {
 
     Schedule getScheduleByUserNo(int no);
 
-    List<SimpleSchedule> getSimpleSchedule();
+    List<SimpleSchedule> getSimpleSchedule(int no, long departmentId);
+
+    List<SimpleReservation> getConferenceRoomReservation();
 
     List<Holiday> getHoliday();
 
@@ -21,6 +23,8 @@ public interface ScheduleMapper {
     List<ConferenceRoom> getMeetingRoom();
 
     List<ConferenceRoom> getConferenceRoom();
+
+    String getUserDepartmentName(int no);
 
     void updateCategory(ScheduleCategory scheduleCategory);
 
@@ -32,6 +36,16 @@ public interface ScheduleMapper {
 
     void deleteHolidayById(int no);
 
+    void deleteMeetingroomById(int no);
+
     void insertConferenceRoom(ConferenceRoom conferenceRoom);
+
+    void deleteScheduleAllResigned();
+
+    void insertHistory(DeleteHistory deleteHistory);
+
+    void insertReservation(ConferenceRoomReservation conferenceRoomReservation);
+
+    List<DeleteHistory> getHistory();
 
 }
