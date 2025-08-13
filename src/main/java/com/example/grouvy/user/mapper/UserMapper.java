@@ -39,4 +39,6 @@ public interface UserMapper {
     List<AttendanceHistory> getAttendanceHistories(int userId);
 
     AttendanceStatusDto selectTodayStatus(int userId);
+
+    int findUserIdWithEmployNo(int employeeNo);
 }
