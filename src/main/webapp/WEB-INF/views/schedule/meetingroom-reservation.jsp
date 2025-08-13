@@ -46,10 +46,10 @@ pageEncoding="UTF-8"%>
       color: #e6002d !important;
     }
     .logo-img {
-      width: 150px;
-      height: 44px;
-      object-fit: contain;
-      object-position: left center;
+      width: 160px;
+      height: 50px;
+      object-fit: cover;
+      object-position: center;
     }
     .navbar .container-fluid {
       padding-right: 2rem;
@@ -72,7 +72,7 @@ pageEncoding="UTF-8"%>
     .sidebar .register-btn {
       margin: 0 0 18px 0;
       padding: 10px 0;
-      background: linear-gradient(90deg, #e6002d 60%, #ff5a36 100%);
+      background: linear-gradient(90deg, #1abc8d 0%, #1abc9c 100%);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -113,8 +113,8 @@ pageEncoding="UTF-8"%>
       border: 1.5px solid transparent;
     }
     .sidebar-list li:hover {
-      background: #fbeaec;
-      color: #e6002d;
+      background: #e0f7f4;
+      color: #1abc9c;
       border: 1.5px solid #ffe5ea;
     }
     .sidebar-list li .icon {
@@ -608,7 +608,7 @@ pageEncoding="UTF-8"%>
             
             <!-- 예약 섹션 -->
             <div class="reservation-section">
-              <div class="reservation-title">📅 예약하기</div>
+              <div class="reservation-title">📅 예약일정 조회</div>
               <input type="text" class="form-control" id="xb" value="-" style="border: none; background: transparent;" disabled>
               <div class="date-picker">
                 <label class="form-label">날짜 선택</label>
@@ -765,11 +765,18 @@ pageEncoding="UTF-8"%>
 
     console.log(finalfilterdata);
 
-    for(let index in finalfilterdata){
-       document.write(finalfilterdata[index].reservationStarttime + '&nbsp;' + finalfilterdata[index].reservationEndtime + '<br>');
-      // document.write(filterdata[index].title + '<br');
-      //console.log(filterdata[index].title + filterdata[index].start);
+    if(finalfilterdata.length == 0 ){
+      alert('예약내역이 없습니다.')
+    } else{
+      let wnd = window.open("", "new window", "width=500,height=700");
+      for(let index in finalfilterdata){
+        wnd.document.write(finalfilterdata[index].reservationStarttime + '&nbsp;' + finalfilterdata[index].reservationEndtime + '<br>');
+        // document.write(filterdata[index].title + '<br');
+        //console.log(filterdata[index].title + filterdata[index].start);
+      }
     }
+
+
     $("#xb").val(filterdata[0].title);
 
 

@@ -20,6 +20,8 @@ public class SimpleSchedule {
     private String extendedProps;
     private String location;
     private String categoryName;
+    private int scheduleId;
+    private int userId;
 
     public void setCategoryColor(int categoryId) {
         ScheduleCategory category = new ScheduleCategory();
