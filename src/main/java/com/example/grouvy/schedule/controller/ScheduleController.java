@@ -33,7 +33,8 @@ public class ScheduleController {
 
         List<Holiday> holiday = scheduleService.getHolidayList();
         model.addAttribute("holidayList",holiday);
-        String scheduleJson = scheduleService.getSimpleSchedule(userId, departmentId);
+        // String scheduleJson = scheduleService.getSimpleSchedule(userId, departmentId);
+        List<SimpleSchedule> scheduleJson = scheduleService.getSimpleSchedule(userId, departmentId);
         model.addAttribute("scheduleJson",scheduleJson);
         return "schedule/schedule-month";
     }
@@ -48,7 +49,7 @@ public class ScheduleController {
     @PostMapping("schedule-register")
     public String insert(ScheduleRegisterForm form){
         scheduleService.insertSchedule(form);
-        return "redirect:/";
+        return "redirect:/schedule";
     }
 
     @PostMapping("/holiday-manage")
@@ -60,7 +61,7 @@ public class ScheduleController {
     @PostMapping("/meetingroom-register")
     public String conferenceRoomInsert(ConferenceRoomRegisterForm form){
         scheduleService.insertConferenceRoom(form);
-        return "redirect:/";
+        return "redirect:/meetingroom-register";
     }
 
     @PostMapping("/meetingroom-reservate")
@@ -121,6 +122,13 @@ public class ScheduleController {
 
         return "schedule/meetingroom-register";
     }*/
+
+    @GetMapping("/scheduleId-delete")
+    public String scheduleDeleteById(@RequestParam("no") int no){
+        scheduleService.deleteScheduleById(no);
+
+        return "redirect:/schedule";
+    }
 
     @GetMapping("/holiday-delete")
     public String holidayDelete(@RequestParam("no") int no){

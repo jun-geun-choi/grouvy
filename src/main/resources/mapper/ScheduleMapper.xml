@@ -45,10 +45,12 @@
              ,C.CATEGORY_TITLE AS categoryName
              ,S.SCHEDULE_CONTENT AS extendedProps
              ,S.SCHEDULE_LOCATION AS location
+             ,S.SCHEDULE_ID AS scheduleId
+
         FROM
             GROUVY_SCHEDULES S, GROUVY_SCHEDULES_CATEGORIES C
         WHERE
-            S.CATEGORY_ID = C.CATEGORY_ID AND (S.USER_ID = #{no} OR (S.DEPARTMENT_ID = #{departmentId} AND S.CATEGORY_ID = 2) OR S.CATEGORY_ID = 3)
+            S.CATEGORY_ID = C.CATEGORY_ID AND (S.USER_ID = #{no} OR (S.DEPARTMENT_ID = #{departmentId} AND S.CATEGORY_ID = 2) OR S.CATEGORY_ID = 3) AND S.IS_DELETED = 'N'
     </select>
 
     <select id="getConferenceRoomReservation" resultType="SimpleReservation">
@@ -132,6 +134,14 @@
                 IS_DELETED = "T"
             WHERE
                 SCHEDULE_ID = #{scheduleId}
+    </update>
+
+    <update id="deleteScheduleById" parameterType="SimpleSchedule">
+        UPDATE GROUVY_SCHEDULES
+        SET
+            IS_DELETED = 'Y'
+        WHERE
+            SCHEDULE_ID = #{scheduleId}
     </update>
 
     <delete id="deleteHolidayById" parameterType="int">

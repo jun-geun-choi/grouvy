@@ -48,10 +48,10 @@
       color: #e6002d !important;
     }
     .logo-img {
-      width: 150px;
-      height: 44px;
-      object-fit: contain;
-      object-position: left center;
+      width: 160px;
+      height: 50px;
+      object-fit: cover;
+      object-position: center;
     }
     .navbar .container-fluid {
       padding-right: 2rem;
@@ -74,7 +74,7 @@
     .sidebar .register-btn {
       margin: 0 0 18px 0;
       padding: 10px 0;
-      background: linear-gradient(90deg, #e6002d 60%, #ff5a36 100%);
+      background: linear-gradient(90deg, #1abc8d 0%, #1abc9c 100%);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -115,8 +115,8 @@
       border: 1.5px solid transparent;
     }
     .sidebar-list li:hover {
-      background: #fbeaec;
-      color: #e6002d;
+      background: #e0f7f4;
+      color: #1abc9c;
       border: 1.5px solid #ffe5ea;
     }
     .sidebar-list li .icon {
@@ -504,11 +504,14 @@
       <%--<div class="info-item">
         <div class="info-label">등록일</div>
         <div class="info-value" id="registerDate">-</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">참가자</div>
-        <div class="info-value" id="participants">-</div>
       </div>--%>
+      <div class="info-item" style="display: none">
+        <div class="info-label">참가자</div>
+        <div class="info-value" id="scheduleId">-</div>
+      </div>
+      <input type="hidden" class="form-control" id="scheduleId" value="0" style="border: none; background: transparent;" disabled>
+      <input type="hidden" class="form-control" id="userId" value="0" style="border: none; background: transparent;" disabled>
+      <sec:authentication property="principal.user.userId" var="userId"  />
       <div class="info-item">
         <div class="info-label">위치</div>
         <div class="info-value" id="location">-</div>
@@ -552,7 +555,18 @@
   function deleteSchedule() {
     // 삭제 기능 구현
     if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {
-      alert('삭제 기능이 구현될 예정입니다.');
+      //alert('삭제 기능이 구현될 예정입니다.');
+      const value1 = document.getElementById('userId');
+      let id = parseInt(value1.value);
+      let id2 = parseInt(${userId});
+      console.log(id, id2);
+      const value = document.getElementById('scheduleId');
+      if (id == id2){
+        let number = parseInt(value.value);
+        location.href = `/scheduleId-delete?no=`+ number;
+      } else{
+        alert("자신이 등록한 일정만 삭제할 수 있습니다.");
+      }
       closeScheduleModal();
     }
   }
@@ -608,16 +622,37 @@
 
   const ttt = [
   <c:forEach var="holiday" items="${holidayList }" varStatus="loop">
+    <fmt:formatDate value="${holiday.holidayDate}" pattern="yyyy-MM-dd" var="realDate"/>
     {
       "title": '${holiday.holidayTitle}',
       "rrule": {
         "freq": 'yearly',
         "interval": 1,
-        "dtstart": '2000-0${holiday.holidayDate.getMonth()+1}-0${holiday.holidayDate.getDate()}',
+        // "dtstart": '2000-0${holiday.holidayDate.getMonth()+1}-0${holiday.holidayDate.getDate()}',
+        "dtstart": '${realDate}',
         "until": '2085-06-01'
       }
     },
   </c:forEach>
+  ];
+
+
+  const realevent = [
+  <c:forEach var="schedule" items="${scheduleJson }" varStatus="loop">
+    {
+      title: '${schedule.title}',
+      start: '${schedule.start}',
+      end: '${schedule.end}',
+      color: '${schedule.color}',
+      extendedProps: {
+        categoryName: '${schedule.categoryName}',
+        content: '${schedule.extendedProps}',
+        location: '${schedule.location}',
+        id: ${schedule.scheduleId},
+        userId: ${schedule.userId}
+      }
+    },
+    </c:forEach>
   ];
 
   // const tmpd =
@@ -637,8 +672,9 @@
 
 
 
-  const data = ${scheduleJson};
-  console.log(data);
+  //const data = ${scheduleJson};
+  console.log(realevent);
+  //console.log(data);
   console.log(ttt);
   // var jsonData = JSON.stringify(data);
   // var word1 = str.substring(0, str.indexOf(','));
@@ -655,7 +691,8 @@
 
         return year + "년 " + month + "월";
       },
-      eventSources: [ {events:data}, ttt],
+      //eventSources: [ {events:data}, ttt],
+      eventSources: [ {events:realevent}, ttt],
       // events:
       //         data,
       //eventClick: function(info){
@@ -666,11 +703,11 @@
         document.getElementById('scheduleName').textContent = info.event.title;
         document.getElementById('startDate').textContent = info.event.start;
         document.getElementById('endDate').textContent = info.event.end;
-        /*document.getElementById('registerDate').textContent = registerDate;
-        document.getElementById('participants').textContent = info.event.;*/
-        // document.getElementById('location').textContent = info.event.location;
-        document.getElementById('content').textContent = info.event.extendedProps.this;
-        // document.getElementById('scheduleCategory').textContent = info.event.categoryName;
+        document.getElementById('userId').value = info.event.extendedProps.userId;
+        document.getElementById('scheduleId').value = info.event.extendedProps.id;
+        document.getElementById('location').textContent = info.event.extendedProps.location;
+        document.getElementById('content').textContent = info.event.extendedProps.content;
+        document.getElementById('scheduleCategory').textContent = info.event.extendedProps.categoryName;
       },
       headerToolbar: {
         start: 'dayGridMonth,timeGridWeek', // headerToolbar에 버튼 추가
