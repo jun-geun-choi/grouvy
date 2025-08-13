@@ -62,7 +62,7 @@ public class ApiChatController {
     return ResponseEntityUtils.ok(chatUserInfo);
   }
 
-  //로그인한 사용자와 지정된 사용자를 이용하여, 이 둘의 채팅방을 반환한다.
+  //채팅방 이동을 하기 위해, 서버로부터 사용자들의 ID를 전달 받아 중복 검사를 진행하고, 서버에 제출.
   @PostMapping
   public ResponseEntity<ApiResponse<ChatRoom>> getRoomIdByUserData
   (@RequestBody Map<String, Object> userData,

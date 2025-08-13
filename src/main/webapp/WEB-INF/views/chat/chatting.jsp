@@ -241,7 +241,7 @@
           }
           else {
             $profile = $(`<div class="chat_avatar">
-                               <img src=""https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}""
+                               <img src="https://storage.googleapis.com/grouvy-bucket/\${message .profileImgPath}"
                                     alt="사용자 프로필 이미지"
                                     class="rounded-circle profile-photo"
                                     style="width: 40px; height: 40px; object-fit: cover;">
@@ -298,7 +298,7 @@
       }
       else {
         $profile = $(`<div class="chat_avatar">
-                               <img src="https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}"
+                               <img src="https://storage.googleapis.com/grouvy-bucket/\${chatMessage.profileImgPath}"
                                     alt="사용자 프로필 이미지"
                                     class="rounded-circle profile-photo"
                                     style="width: 40px; height: 40px; object-fit: cover;">
@@ -452,7 +452,6 @@
         let groupChatRoom = data.data;
         console.log("groupChatRoom:", groupChatRoom);
         let groupChatRoomId = groupChatRoom.roomId;
-        let groupChatRoomName = groupChatRoom.roomName;
         openChatPopup(groupChatRoomId);
       }
     });
@@ -477,6 +476,9 @@
         dataType: "json",
         contentType:  "application/json",
         success: function (data) {
+          if(window.opener && !window.opener.closed){
+            window.opener.renderChatList();
+          }
           window.close();
         }
       });
@@ -491,6 +493,9 @@
 
     localStorage.setItem("currentRoomId",currentRoomId);
     window.onbeforeunload = function () {
+      if(window.opener && !window.opener.closed) {
+        window.opener.renderChatList();
+      }
       localStorage.removeItem("currentRoomId");
     }
   });

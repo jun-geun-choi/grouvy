@@ -142,7 +142,9 @@
 
           $('#leave-chatroom-btn').off('click').on('click', function () {
             closeContextMenu();
-            pendingLeaveData = { userId: userId, roomId: currentRoomId };
+            pendingLeaveData = { userId: userId,
+                                 roomId: currentRoomId };
+            console.log('pendingLeaveData: ', pendingLeaveData);
 
             const modal = new bootstrap.Modal(document.getElementById('leaveRoomModal'));
             modal.show();
