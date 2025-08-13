@@ -1,6 +1,7 @@
 package com.example.grouvy.chat.service;
 
 import com.example.grouvy.chat.dto.ChatMessageDto;
+import com.example.grouvy.chat.dto.ChatRoomDto;
 import com.example.grouvy.chat.dto.ChatUserInfo;
 import com.example.grouvy.chat.dto.DeptAndUserDto;
 import com.example.grouvy.chat.dto.ParentDeptDto;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,8 @@ public class ChatService {
 
   @Autowired
   private ChatMapper chatMapper;
+  @Autowired
+  private SimpMessagingTemplate simpMessagingTemplate;
 
   /**
    * userId롤 유저 1명 정보 반환
@@ -145,23 +149,38 @@ public class ChatService {
     return list;
   }
 
+  public List<ChatRoomDto> getChatRoomList(int userId) {
+    List<ChatRoomDto> list = chatMapper.getChatRoomList(userId);
+    for(ChatRoomDto dto : list) {
+      if(dto.getIsGroup() == "Y") {
+        dto.setProfileImgPath("그룹");
+      }
+      if(dto.getLastMessage() == null) {
+        dto.setLastMessage("채팅을 시작하세요!");
+      }
+    }
+
+    return list;
+  }
+
   /**
    * 나의 위시리스트 목록을 가져온다.
+   *
    * @param userId
    * @return
    */
   public List<DeptAndUserDto> getMyWishListByUserId(int userId) {
     List<DeptAndUserDto> list = new ArrayList<>();
-    Map<String,List<UserDto>> groupping = new LinkedHashMap<>();
+    Map<String, List<UserDto>> groupping = new LinkedHashMap<>();
     List<User> users = chatMapper.getMyWishListByUserId(userId);
 
-    for(User user :  users) {
+    for (User user : users) {
       String deptName = user.getDepartment().getDepartmentName();
-      groupping.computeIfAbsent(deptName,k-> new ArrayList<>())
-               .add(new UserDto(user));
+      groupping.computeIfAbsent(deptName, k -> new ArrayList<>())
+          .add(new UserDto(user));
     }
 
-    for(Map.Entry<String, List<UserDto>> child : groupping.entrySet()) {
+    for (Map.Entry<String, List<UserDto>> child : groupping.entrySet()) {
       list.add(new DeptAndUserDto(child.getKey(), child.getValue()));
     }
 
@@ -272,6 +291,12 @@ public class ChatService {
     return newRoom;
   }*/
 
+  /**
+   * 채팅방 이동할 때, roomId로 그 채팅방에 대한 정보를 반환 한다.
+   *
+   * @param roomId
+   * @return
+   */
   public ChatRoom getChatRoomByRoomId(int roomId) {
     return chatMapper.getChatRoomByRoomId(roomId);
   }
@@ -299,26 +324,24 @@ public class ChatService {
   }
 
   /**
-   * id로 메세지 1개 정보를 반환
-   *
-   * @param chatMessageId
-   * @return
-   */
-  public ChatMessageDto getChatMessage(long chatMessageId) {
-    ChatMessage message = chatMapper.getChatMessage(chatMessageId);
-    ChatMessageDto chatMessageDto = new ChatMessageDto(message);
-
-    return chatMessageDto;
-  }
-
-  /**
-   * roomId로 그 채팅방의 메세지 리스트를 가져오는데 userId의 유저의 입장시간(재입장시간)에 따라 보여지는 메세지가 다르게 나타난다.
-   *
+   * 이 채팅방의 전체 메세지를 가져온다. - roomId, userId 사용
+   * - 먼저 이 채팅방의 가장 최신의 메세지를 가져와서, 로그인한 사용자의 읽은 메세지의 데이터를 변경한다.
+   * - 다음 이 채팅방의 메세지들의 unReadCnt를 전부 변경 한다. - roomId를 사용해서 이 메세지의 unreadCnt의 컬럼값을 변경한다.
    * @param roomId
-   * @param userId
    * @return
    */
-  public List<ChatMessageDto> getChatMessageByRoomId(int roomId, int userId) {
+  public List<ChatMessageDto>  getChatMessageByRoomId(int roomId, int userId) {
+    Long lastestMsgId = chatMapper.getLastestMessageIdByRoomId(roomId);
+    if (lastestMsgId != null) {
+      chatMapper.updateLastReadMessageId(lastestMsgId, roomId, userId);
+      chatMapper.updateUnreadCnt(roomId,userId);
+
+      Map<String, Object> payload = new HashMap<>();
+      payload.put("roomId", roomId);
+      payload.put("readerId", userId);
+      payload.put("readUpTo", lastestMsgId);
+      simpMessagingTemplate.convertAndSend("/topic/chat.read?roomId=" + roomId, payload);
+    }
     List<ChatMessage> messages = chatMapper.getChatMessageByRoomId(roomId, userId);
     List<ChatMessageDto> list = new ArrayList<>();
 
@@ -328,6 +351,16 @@ public class ChatService {
     }
     return list;
   }
+
+  // 공부 필요
+  public void markRead(int roomId, long readUpTo, int userId) {
+    // 1) 이 유저의 last_read_message_id 갱신
+    chatMapper.updateLastReadMessageId(readUpTo, roomId, userId);
+    // 2) 이 유저가 아니라서 남아있던 메시지들의 UNREAD_CNT 감소 (네가 만든 쿼리 재사용)
+    chatMapper.updateUnreadCnt(roomId, userId);
+  }
+
+
 
   /**
    * 대화 상대 추가 버튼을 누르면, 부서별 직원 리스트만 반환 부서별 직원 리스트를  가져와 반환한다. - 단, 해당 채팅방에 포함된 유저들은 이 리스트에서 제외시킨다.
@@ -437,7 +470,8 @@ public class ChatService {
   }
 
   /**
-   *  친구 추가 버튼을 누르면 DB에 등록하는 로직이다.
+   * 친구 추가 버튼을 누르면 DB에 등록하는 로직이다.
+   *
    * @param userIds
    * @param userId
    */
@@ -445,18 +479,18 @@ public class ChatService {
     List<Integer> myWishListIds = chatMapper.getMyWishListIds(userId);
     Set<Integer> myWishListIdsSet = new HashSet<>();
 
-    if(myWishListIds!= null) {
+    if (myWishListIds != null) {
       myWishListIdsSet.addAll(myWishListIds);
     }
 
     List<Integer> insertIds = userIds.stream()
-                                     .filter(id -> !myWishListIdsSet.contains(id))
-                                     .filter(id -> id != userId)
-                                     .collect(Collectors.toList());
+        .filter(id -> !myWishListIdsSet.contains(id))
+        .filter(id -> id != userId)
+        .collect(Collectors.toList());
 
-    if(!insertIds.isEmpty()) {
+    if (!insertIds.isEmpty()) {
       List<ChatWishList> wishList = new ArrayList<>();
-      for(Integer id : insertIds) {
+      for (Integer id : insertIds) {
         ChatWishList chatWishList = new ChatWishList();
         chatWishList.setUserId(userId);
         chatWishList.setSelectedUserId(id);
@@ -466,5 +500,33 @@ public class ChatService {
       chatMapper.insertChatWishList(wishList);
     }
 
+  }
+
+  /**
+   * 메세지를 등록시킬 때, @MessageMapping 메소드에서 ChatMessage 객체를 받아와서, 메시지 테이블 등록 -> 마지막 메세지 채팅방 테이블에 등록 ->
+   * 다시 DB에 있는 애 꺼내고 -> DTO 객체 바인딩 후 반환
+   *
+   * @param chatMessage
+   * @return
+   */
+  public ChatMessageDto addMessageService(ChatMessage chatMessage) {
+    int userId = chatMessage.getSenderId();
+    List<ChatRoomUser> users = chatMapper.getUserIdAndLastReadMsgIdByRoomId(chatMessage.getRoomId());
+
+    int unreadCnt = users.size();
+    User user = chatMapper.getUserInfoByUserId(userId);
+    chatMessage.setUser(user);
+    chatMessage.setUnreadCnt(unreadCnt-1);
+    chatMapper.insertMessage(chatMessage);
+    ChatMessage newChatMessage = chatMapper.getChatMessage(chatMessage.getChatMessageId());
+
+    ChatRoom chatRoom = chatMapper.getChatRoomByRoomId(chatMessage.getRoomId());
+    chatRoom.setLastMessageDate(newChatMessage.getCreatedDate());
+    chatRoom.setLastMessageContent(newChatMessage.getContent());
+    chatMapper.updateChatRoom(chatRoom);
+
+    ChatMessageDto dto = new ChatMessageDto(newChatMessage);
+
+    return dto;
   }
 }

@@ -12,11 +12,12 @@ import org.apache.ibatis.type.Alias;
 @Setter
 @Alias("ChatRoomUser")
 public class ChatRoomUser {
-  private long roomId;
+  private int roomId;
   private int userId;
   private String isActive;
   private LocalDateTime joinDate;
   private LocalDateTime leftDate;
+  private long lastReadMessageId;
 
   private ChatRoom chatRoom;
   private User user;

@@ -56,7 +56,10 @@
           AND U.USER_ID = #{userId}
     </select>
 
-    <!--public ChatRoom getChatRoomByRoomId(int roomId);-->
+    <!--
+        public ChatRoom getChatRoomByRoomId(int roomId);
+        roomId로 채팅방을 반환한다.
+    -->
     <select id="getChatRoomByRoomId" resultType="ChatRoom">
         SELECT
              ROOM_ID                     AS roomId
@@ -156,13 +159,15 @@
         ,ROOM_ID
         ,SENDER_ID
         ,CHAT_MESSAGE_CONTENT
-        ,CHAT_MESSAGE_TYPE)
+        ,CHAT_MESSAGE_TYPE
+        ,UNREAD_CNT)
         VALUES
         (#{chatMessageId}
         ,#{roomId}
         ,#{senderId}
         ,#{content}
-        ,#{messageType})
+        ,#{messageType}
+        ,#{unreadCnt})
 
     </insert>
 
@@ -188,8 +193,10 @@
           </if>
     </select>
 
-
-    <!--public ChatMessage getChatMessage(long chatMessageId);-->
+    <!--
+        public ChatMessage getChatMessage(long chatMessageId);
+        id로 단일의 채팅 메세지를 반환한다.
+    -->
     <select id="getChatMessage" resultType="ChatMessage">
         SELECT M.CHAT_MESSAGE_ID      AS chatMessageId
              , M.ROOM_ID              AS roomId
@@ -197,10 +204,9 @@
              , M.CHAT_MESSAGE_CONTENT AS content
              , M.CHAT_MESSAGE_TYPE    AS messageType
              , M.CREATED_DATE         AS createdDate
+             , M.UNREAD_CNT           AS unreadCnt
              , U.NAME                 AS "user.name"
              , U.PROFILE_IMG_PATH     AS "user.profileImgPath"
-             , R.ROOM_NAME            AS "chatRoom.roomName"
-             , R.IS_GROUP             AS "chatRoom.isGroup"
         FROM GROUVY_CHAT_MESSAGES M,
              GROUVY_USERS U,
              GROUVY_CHAT_ROOMS R
@@ -209,18 +215,20 @@
           AND M.CHAT_MESSAGE_ID = #{chatMessageId}
     </select>
 
-    <!-- public List<ChatMessage> getChatMessageByRoomId(int roomId,int userId); -->
+    <!--
+        public List<ChatMessage> getChatMessageByRoomId(int roomId,int userId);
+        roomId와 userId로 그 채팅방의 메세지를 반환한다.
+    -->
     <select id="getChatMessageByRoomId" resultType="ChatMessage">
         SELECT M.CHAT_MESSAGE_ID      AS chatMessageId
              , M.ROOM_ID              AS roomId
              , M.SENDER_ID            AS senderId
              , M.CHAT_MESSAGE_CONTENT AS content
              , M.CHAT_MESSAGE_TYPE    AS messageType
+             , M.UNREAD_CNT           AS unreadCnt
              , M.CREATED_DATE         AS createdDate
              , U.NAME                 AS "user.name"
              , U.PROFILE_IMG_PATH     AS "user.profileImgPath"
-             , R.ROOM_NAME            AS "chatRoom.roomName"
-             , R.IS_GROUP             AS "chatRoom.isGroup"
         FROM GROUVY_CHAT_MESSAGES M,
              GROUVY_USERS U,
              GROUVY_CHAT_ROOMS R
@@ -324,5 +332,122 @@
           AND W.USER_ID = #{userId}
         ORDER BY D.DEPARTMENT_ID ASC, U.POSITION_NO ASC
     </select>
+
+    <!--
+        public void updateChatRoom(ChatRoom chatRoom);
+        메세지를 등록할 때마다 채팅방의 마지막 메세지가 업데이트 된다.
+    -->
+    <update id="updateChatRoom" parameterType="ChatRoom">
+        UPDATE GROUVY_CHAT_ROOMS
+        SET
+            LAST_MESSAGE_DATE = #{lastMessageDate}
+            ,LAST_MESSAGE_CONTENT = #{lastMessageContent}
+        WHERE
+            ROOM_ID = #{roomId}
+    </update>
+    <!--
+        public long  getLastestMessageIdByRoomId(int roomId);
+        이 채팅방의 마지막 메세지 id를 가져온다.
+    -->
+    <select id="getLastestMessageIdByRoomId" resultType="java.lang.Long">
+        SELECT
+            NVL(MAX(CHAT_MESSAGE_ID),0)
+        FROM
+            GROUVY_CHAT_MESSAGES
+        WHERE
+            ROOM_ID = #{roomId}
+    </select>
+
+    <!--
+        public void updateLastReadMessageId(long messageId, int  roomId,  int userId);
+        roomId, userId로 특정 채팅방에 참여하고 있는 유저의 읽은 메세지를 최신화 한다.
+    -->
+    <update id="updateLastReadMessageId" parameterType="ChatRoomUser">
+        UPDATE
+            GROUVY_CHAT_ROOM_USERS
+        SET
+            LAST_READ_MESSAGE_ID = #{messageId}
+        WHERE
+            ROOM_ID = #{roomId}
+            AND USER_ID = #{userId}
+    </update>
+
+    <!--
+        public List<ChatRoomUser> getUserIdAndLastReadMsgIdByRoomId(int roomId);
+    -->
+    <select id="getUserIdAndLastReadMsgIdByRoomId" resultType="ChatRoomUser">
+        SELECT
+            USER_ID                     AS userId
+           ,LAST_READ_MESSAGE_ID        AS lastReadMessageId
+        FROM
+            GROUVY_CHAT_ROOM_USERS
+        WHERE
+            IS_ACTIVE = 'Y'
+            AND ROOM_ID = #{roomId}
+    </select>
+
+    <!--
+        public void updateUnreadCnt(int roomId, int userId);
+        이 roomId를 가진 채팅 메세지의 unreadCnt 컬럼을 -1 한다.
+    -->
+    <update id="updateUnreadCnt">
+        UPDATE GROUVY_CHAT_MESSAGES
+        SET UNREAD_CNT = UNREAD_CNT - 1
+        WHERE ROOM_ID = #{roomId}
+              AND SENDER_ID != #{userId}
+              AND UNREAD_CNT > 0
+    </update>
+
+    <!-- public List<ChatRoomDto> getChatRoomList(int userId); -->
+    <select id="getChatRoomList"  resultType="com.example.grouvy.chat.dto.ChatRoomDto">
+        SELECT
+        R.ROOM_ID                                   AS roomId,
+        R.LAST_MESSAGE_DATE                         AS lastMessageDate,
+        R.IS_GROUP                                  AS isGroup,
+
+        CASE
+        WHEN R.CREATED_DATE >= MY_INFO.JOIN_DATE  THEN R.LAST_MESSAGE_CONTENT
+        ELSE TO_CLOB('채팅을 시작하세요!')
+        END                                         AS lastMessage,
+
+        CASE
+        WHEN R.IS_GROUP = 'Y' THEN R.ROOM_NAME
+        ELSE OTHER_USER.NAME
+        END                                         AS roomName,
+
+        CASE
+        WHEN R.IS_GROUP = 'Y' THEN '그룹'
+        ELSE OTHER_USER.PROFILE_IMG_PATH
+        END                                         AS profileImgPath,
+
+        (
+        SELECT COUNT(M.CHAT_MESSAGE_ID)
+        FROM GROUVY_CHAT_MESSAGES M
+        WHERE M.ROOM_ID = R.ROOM_ID
+        AND M.SENDER_ID != #{userId}
+        AND M.CHAT_MESSAGE_ID > NVL(MY_INFO.LAST_READ_MESSAGE_ID, 0)
+        )                                           AS unreadCnt
+
+        FROM
+        GROUVY_CHAT_ROOM_USERS MY_INFO,
+        GROUVY_CHAT_ROOMS R,
+        GROUVY_CHAT_ROOM_USERS OTHER_INFO,
+        GROUVY_USERS OTHER_USER
+
+        WHERE
+        MY_INFO.ROOM_ID = R.ROOM_ID
+
+        AND R.ROOM_ID = OTHER_INFO.ROOM_ID(+)
+        AND MY_INFO.USER_ID != OTHER_INFO.USER_ID(+)
+
+        AND OTHER_INFO.USER_ID = OTHER_USER.USER_ID(+)
+
+        AND MY_INFO.USER_ID = #{userId}
+        AND MY_INFO.IS_ACTIVE = 'Y'
+
+        ORDER BY
+        R.LAST_MESSAGE_DATE DESC NULLS LAST
+    </select>
+
 
 </mapper>
