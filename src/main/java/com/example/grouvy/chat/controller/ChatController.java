@@ -131,6 +131,7 @@ public class ChatController {
     message.setSenderId(userId);
 
     // 메세지를 DB에 등록 -> 마지막 메세지도 채팅방 테이블에 등록 -> 메세지 DTO 객체에 바인딩 시켜 반환.
+    //이 메세지에는, 메세지 내용, roomId, 메세지 타입, userId이 들어 있다.
     ChatMessageDto dto = chatService.addMessageService(message);
 
     simpMessagingTemplate.convertAndSend("/topic/chatting?roomId=" + dto.getRoomId(),
@@ -149,7 +150,8 @@ public class ChatController {
       }
     }
   }
-  // ChatController.java 안에 ★ ADD
+
+  // 채팅방의 메세지를 읽기 위한 메소드
   @MessageMapping("/chatRead")
   public void chatRead(@Payload Map<String, Object> payload, Authentication authentication) {
     if (authentication == null || !authentication.isAuthenticated()) return;
