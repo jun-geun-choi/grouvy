@@ -8,7 +8,7 @@
 				</span>
     </a>
     <ul class="navbar-nav mb-2 mb-lg-0">
-      <li class="nav-item"><a class="nav-link active" href="#">전자결재</a></li>
+      <li class="nav-item"><a class="nav-link active" href="${pageContext.request.contextPath}/approval/main/draft">전자결재</a></li>
       <!-- 커서 active-->
       <li class="nav-item"><a class="nav-link" href="/file/personal">업무문서함</a></li>
       <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>

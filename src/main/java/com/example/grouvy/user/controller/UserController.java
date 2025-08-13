@@ -1,5 +1,8 @@
 package com.example.grouvy.user.controller;
 
+import com.example.grouvy.approval.dto.ApprovalWait;
+import com.example.grouvy.approval.dto.MyRequestApproval;
+import com.example.grouvy.approval.service.ApprovalService;
 import com.example.grouvy.security.SecurityUser;
 import com.example.grouvy.user.dto.ProfileRequest;
 import com.example.grouvy.user.exception.UserRegisterException;
@@ -16,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +27,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -32,9 +37,14 @@ public class UserController {
     private final UserMapper userMapper;
     private final MailService mailService;
     private final AdminUserService adminUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/")
-    public String home() {
+    public String home(@AuthenticationPrincipal SecurityUser securityUser, Model model) {
+        List<ApprovalWait> approvalsWait = approvalService.getWaitingApprovalsByEmployeeNo(securityUser.getUser().getEmployeeNo());
+        List<MyRequestApproval> myRequestApprovals = approvalService.getMyRequestedApprovals(securityUser.getUser().getEmployeeNo());
+        model.addAttribute("approvalsWait", approvalsWait);
+        model.addAttribute("myRequestApprovals", myRequestApprovals);
         return "home";
     }
 

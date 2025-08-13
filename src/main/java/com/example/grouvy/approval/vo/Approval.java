@@ -20,4 +20,5 @@ public class Approval {
     private String approvalDepartmentName;
     private String receiverDepartmentName;
     private String formData;
+    private Date completedDate;
 }

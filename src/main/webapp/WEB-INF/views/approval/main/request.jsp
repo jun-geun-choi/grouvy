@@ -1,4 +1,6 @@
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -299,72 +301,10 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand d-flex align-items-center" href="/">
-        <span class="logo-crop"> 
-          <img src="${pageContext.request.contextPath}/resources/image/grouvy_logo.png" alt="GROUVY 로고" class="logo-img">
-        </span>
-      </a>
-      <ul class="navbar-nav mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link active" href="#">전자결재</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">업무문서함</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">업무 관리</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">쪽지</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">메신저</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">조직도</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">일정</a></li>
-        <li class="nav-item"><a class="nav-link" href="admin_dashboard.html">관리자</a></li>
-      </ul>
-      <div class="d-flex align-items-center">
-        <a href="mypage.html" >
-          <img src="https://search.pstatic.net/sunny/?src=https%3A%2F%2Fs3.orbi.kr%2Fdata%2Ffile%2Funited2%2F6cc64e06aa404ac3a176745b9c1d5bfa.jpeg&type=sc960_832"
-              alt="프로필" class="rounded-circle" width="36" height="36">
-        </a>
-        <a href="mypage.html" class="ms-2 text-decoration-none text-dark"><sec:authentication property="principal.user.name"/></a>
-      </div>
-    </div>
-  </nav>
-
+<jsp:include page="/WEB-INF/views/common/nav.jsp" />
   <main>
     <div class="container">
-        <div class="sidebar">
-        <h3>전자결재</h3>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">기안</div>
-          <ul class="sidebar-list">
-            <li><a href="draft.jsp" style="text-decoration: none; color: inherit;">기안문작성</a></li>
-            <li class="active"><a href="request.jsp" style="text-decoration: none; color: inherit;">결재요청함</a></li>
-            <li><a href="temp.jsp" style="text-decoration: none; color: inherit;">임시저장함</a></li>
-          </ul>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title red">결재</div>
-          <ul class="sidebar-list">
-            <li><a href="wait.jsp" style="text-decoration: none; color: inherit;">결재대기함 <span class="badge">0</span></a></li>
-            <li><a href="progress.jsp" style="text-decoration: none; color: inherit;">결재진행함 <span class="badge orange">3</span></a></li>
-            <li><a href="complete.jsp" style="text-decoration: none; color: inherit;">완료문서함</a></li>
-            <li><a href="reject.jsp" style="text-decoration: none; color: inherit;">반려문서함 <span class="badge">0</span></a></li>
-            <li><a href="receive.jsp" style="text-decoration: none; color: inherit;">참조/열람문서함 <span class="badge gray">0</span></a></li>
-          </ul>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">발신/수신</div>
-          <ul class="sidebar-list">
-            <li><a href="receive.jsp" style="text-decoration: none; color: inherit;">부서수신함 <span class="badge">0</span></a></li>
-          </ul>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">개인보관함</div>
-        </div>
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">환경설정</div>
-          <ul class="sidebar-list">
-            <li><a href="delegatee.jsp" style="text-decoration: none; color: inherit;">위임관리</a></li>
-            <li>개인보관함관리</li>
-          </ul>
-        </div>
-      </div>
+        <jsp:include page="/WEB-INF/views/approval/common/sidebar.jsp" />
     <main class="main-content" id="mainContent">
       <!-- 결재요청함 -->
       <div id="requestContent">
@@ -407,33 +347,39 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>25</td><td>공통</td><td>이런건</td><td>2025.07.07 14:48</td><td></td><td><span class="status-icon status-progress">●</span></td></tr>
-              <tr><td>24</td><td>공통</td><td>문서제목</td><td>2025.06.30 17:16</td><td>2025.06.30 17:16</td><td><span class="status-icon status-complete">✔</span></td></tr>
-              <tr><td>23</td><td>공통</td><td>문서제목</td><td>2025.06.30 17:13</td><td></td><td><span class="status-icon status-progress">●</span></td></tr>
-              <tr><td>22</td><td>공통</td><td>휴가신청 취소</td><td>2025.06.12 15:49</td><td>2025.06.12 15:49</td><td><span class="status-icon status-cancel">↺</span></td></tr>
-              <tr><td>21</td><td>공통</td><td>휴가신청</td><td>2025.06.12 14:54</td><td>2025.06.12 14:54</td><td><span class="status-icon status-complete">✔</span></td></tr>
-              <tr><td>20</td><td>공통</td><td>오후반차 결재 테스트</td><td>2025.05.30 13:45</td><td>2025.05.30 13:45</td><td><span class="status-icon status-complete">✔</span></td></tr>
-              <tr><td>19</td><td>공통</td><td>ㅠㅠ ㅣㅣㅣㅣ</td><td>2025.05.30 13:35</td><td>2025.05.30 13:35</td><td><span class="status-icon status-complete">✔</span></td></tr>
-              <tr><td>18</td><td>공통</td><td>기획안 입니다</td><td>2025.05.13 14:24</td><td>2025.05.13 14:24</td><td><span class="status-icon status-complete">✔</span></td></tr>
-              <tr><td>17</td><td>공통</td><td>기획안</td><td>2025.05.13 14:21</td><td>2025.05.13 14:21</td><td><span class="status-icon status-complete">✔</span></td></tr>
-              <tr><td>16</td><td>공통</td><td>기획안</td><td>2025.05.13 14:21</td><td>2025.05.13 14:21</td><td><span class="status-icon status-complete">✔</span></td></tr>
+                <c:forEach var="myRequestApproval" items="${myRequestApprovals }" varStatus="loop">
+                  <tr><td>${loop.count}</td><td>공통</td>
+                      <td><a href="/approval/requestDetail?no=${myRequestApproval.approvalNo}">${myRequestApproval.title}</a></td>
+                      <td><fmt:formatDate value="${myRequestApproval.createdDate}" pattern="yyyy-MM-dd HH:mm:ss" /></td>
+                      <td><fmt:formatDate value="${myRequestApproval.approvedDate}" pattern="yyyy-MM-dd HH:mm:ss" /></td>
+                      <c:choose>
+                          <c:when test="${myRequestApproval.status eq '결재완료'}">
+                              <td><span class="status-icon status-complete">✔</span></td>
+                          </c:when>
+                          <c:when test="${myRequestApproval.status eq '반려'}">
+                              <td><span class="status-icon status-cancel">✖</span></td>
+                          </c:when>
+                          <c:when test="${myRequestApproval.status eq '진행중'}">
+                              <td><span class="status-icon status-progress">↻</span></td>
+                          </c:when>
+                          <c:otherwise>
+                              <!-- 상태값이 지정되지 않은 경우 -->
+                              <td><span>-</span></td>
+                          </c:otherwise>
+                      </c:choose>
+                  </tr>
+                </c:forEach>
             </tbody>
           </table>
-          <div class="pagination">
-            <button class="btn btn-outline-secondary" disabled>&lt;&lt;</button>
-            <button class="btn btn-outline-secondary" disabled>&lt;</button>
-            <button class="btn btn-primary">1</button>
-            <button class="btn btn-outline-secondary">2</button>
-            <button class="btn btn-outline-secondary">3</button>
-            <button class="btn btn-outline-secondary">&gt;</button>
-            <button class="btn btn-outline-secondary">&gt;&gt;</button>
-          </div>
-          <div class="d-flex justify-content-end mt-3">
-            <button class="btn btn-primary">등록</button>
-          </div>
-        </div>
-        <div class="info-text">
-          결재요청 문서는 첫번째 결재(협의)자가 결재처리 전에 결재문서를 상세조회 화면에서 [결재취소] 기능을 이용하여 취소 > 가능함을 안내합니다.
+<%--          <div class="pagination">--%>
+<%--            <button class="btn btn-outline-secondary" disabled>&lt;&lt;</button>--%>
+<%--            <button class="btn btn-outline-secondary" disabled>&lt;</button>--%>
+<%--            <button class="btn btn-primary">1</button>--%>
+<%--            <button class="btn btn-outline-secondary">2</button>--%>
+<%--            <button class="btn btn-outline-secondary">3</button>--%>
+<%--            <button class="btn btn-outline-secondary">&gt;</button>--%>
+<%--            <button class="btn btn-outline-secondary">&gt;&gt;</button>--%>
+<%--          </div>--%>
         </div>
       </div>
     </main>

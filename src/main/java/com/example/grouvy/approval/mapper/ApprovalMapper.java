@@ -37,4 +37,11 @@ public interface ApprovalMapper {
     Delegatee getDelegationByEmpNo(int empNo);
     void deleteDelegation(int delegationNo);
     void updateApprovalDelegatee(int empNo);
+    String getUserStatus(int delegateeNo);
+    Boolean getIsUserAlreadyDelegateeByEmpNo(int delegatorNo);
+    List<MyRequestApproval> getMyRequestApprovals(int empNo);
+    void updateApproveCompletedDate(int step,int approvalNo);
+    List<ApprovalProgress> getApprovalProgresses(int empNo);
+    List<ApprovalProgress> getApprovalCompletes(int empNo);
+    List<ApprovalProgress> getApprovalRejects(int empNo);
 }
