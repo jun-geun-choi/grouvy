@@ -15,7 +15,7 @@
       padding-top: 80px;
     }
 
-    .navbar-brand {	
+    .navbar-brand {
       color: #e6002d !important;
       font-size: 1.5rem;
     }

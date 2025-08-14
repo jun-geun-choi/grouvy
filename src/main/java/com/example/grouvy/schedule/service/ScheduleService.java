@@ -27,8 +27,9 @@ public class ScheduleService {
         return schedule;
     }
 
-    public String getSimpleSchedule(int userId, Long  departmentId){
-        List<SimpleSchedule> simpleschedule = scheduleMapper.getSimpleSchedule(userId, departmentId);
+    //public String getSimpleSchedule(int userId, Long  departmentId){
+        public List<SimpleSchedule> getSimpleSchedule(int userId, Long  departmentId){
+        /*List<SimpleSchedule> simpleschedule = scheduleMapper.getSimpleSchedule(userId, departmentId);
 
         Gson gson = new Gson();
         String scheduleJson = gson.toJson(simpleschedule);
@@ -36,7 +37,11 @@ public class ScheduleService {
 
 
         System.out.println(scheduleJson);
-        return scheduleJson;
+        return scheduleJson;*/
+
+        List<SimpleSchedule> simpleschedule = scheduleMapper.getSimpleSchedule(userId, departmentId);
+        return simpleschedule;
+
     }
 
     public String getConferenceRoomReservation(){
@@ -115,6 +120,11 @@ public class ScheduleService {
     public void deleteScheduleAllResigned(){
 
         scheduleMapper.deleteScheduleAllResigned();
+    }
+
+    public void deleteScheduleById(int scheduleId){
+
+        scheduleMapper.deleteScheduleById(scheduleId);
     }
 
     public List<DeleteHistory> getDeleteHistoryList(){

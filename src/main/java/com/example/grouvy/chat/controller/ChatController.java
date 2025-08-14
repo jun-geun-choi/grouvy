@@ -48,7 +48,7 @@ public class ChatController {
 
 
   /**
-   * 채팅방으로 이동을 하는 메소드.
+   * 채팅방으로 이동!
    * 1:1 채팅방인 경우, Model 객체에 상대방 사용자 이름으로한 roomName, roomId, userIds
    * 그룹채팅방의 경우, Model 객체에 DB에서 가져온 roomName, roomId, userIds
    * @param roomId
@@ -90,6 +90,7 @@ public class ChatController {
     model.addAttribute("userIds",json);
     model.addAttribute("roomId", roomId);
     model.addAttribute("isGroup", chatRoom.getIsGroup());
+
     return "chat/chatting";
   }
 
@@ -131,6 +132,7 @@ public class ChatController {
     message.setSenderId(userId);
 
     // 메세지를 DB에 등록 -> 마지막 메세지도 채팅방 테이블에 등록 -> 메세지 DTO 객체에 바인딩 시켜 반환.
+    //이 메세지에는, 메세지 내용, roomId, 메세지 타입, userId이 들어 있다.
     ChatMessageDto dto = chatService.addMessageService(message);
 
     simpMessagingTemplate.convertAndSend("/topic/chatting?roomId=" + dto.getRoomId(),
@@ -149,7 +151,8 @@ public class ChatController {
       }
     }
   }
-  // ChatController.java 안에 ★ ADD
+
+  // 채팅방의 메세지를 읽기 위한 메소드
   @MessageMapping("/chatRead")
   public void chatRead(@Payload Map<String, Object> payload, Authentication authentication) {
     if (authentication == null || !authentication.isAuthenticated()) return;

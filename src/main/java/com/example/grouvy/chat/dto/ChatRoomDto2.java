@@ -8,15 +8,13 @@ import org.apache.ibatis.type.Alias;
 
 @Getter
 @Setter
-@Alias("ChatRoomDto")
+@Alias("ChatRoomDto2")
 @NoArgsConstructor
-public class ChatRoomDto {
+public class ChatRoomDto2 {
   private int roomId;
   private String lastMessage;
   private Date lastMessageDate;
   private String isGroup;
-  private String roomName;
   private int unreadCnt;         // 채팅방에서 얼마큼 안 읽었는지
-  private String profileImgPath;
+  private String roomName;
 }
-

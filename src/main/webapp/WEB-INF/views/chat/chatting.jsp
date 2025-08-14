@@ -115,11 +115,18 @@
   // -------------------- 읽음 처리: 클라이언트 상태/유틸 --------------------
   let lastSentReadUpTo = 0; // 서버로 보낸 마지막 readUpTo(중복 전송 방지)
 
+
+  /* "현재 채팅창이 바닥에 위치하는 확인하는 함수."
+
+   */
   function isAtBottom() {
     const nearBottom = 20; // 허용 오차
     return $chatBody.scrollTop() + $chatBody.innerHeight() >= $chatBody[0].scrollHeight - nearBottom;
   }
 
+  /* "지금 보고 있는 메세지의 아이디를 가장 최신 아이디로 설정."
+
+   */
   function getLastMessageIdInDom() {
     // unread 배지의 data-message-id 기준으로 가장 큰 ID를 읽음 경계로 사용
     let maxId = 0;
@@ -151,19 +158,19 @@
     stompClient.connect({}, function (frame) {
       console.log('STOMP 연결 성공:', frame);
 
-      //  채팅방 구독 (브로드캐스트)
+      // 이 채널의 채팅방으로 메세지를 수신 받음.
       stompClient.subscribe(`/topic/chatting?roomId=\${currentRoomId}`, function (message) {
         const chatMessage = JSON.parse(message.body);
         console.log("chatMessage: ",chatMessage);
         renderIncomingMessage(chatMessage);
       });
 
-      // ★ 읽음 이벤트 구독 (다른 사용자가 읽었을 때 내 화면의 배지 감소)
+      // "누가 이 채팅방에 들어와서 메세지를 읽었다!" 정보를 이 채널로 받음. -> 이걸로 안 읽음 숫자를 실시간으로 반영.
       stompClient.subscribe(`/topic/chat.read?roomId=\${currentRoomId}`, function (message) {
         const { readerId, readUpTo } = JSON.parse(message.body);
         if (readerId === userId) return; // 내가 보낸 읽음이면 패스
 
-        // readUpTo 이하 메시지의 배지 감소
+        // 안 읽음 숫자 요소들을 반복하여, 그 요소의 메세지id가 readUpTo보다 작으면 숫자를 -1 하거나 0으로 변경한다. 그리고 0이면 안보이게 한다.
         $('#chat-body .chat_unread_count').each(function () {
           const $badge = $(this);
           const msgId = parseInt($badge.data('message-id'));
@@ -176,14 +183,14 @@
         });
       });
 
-      // 유저 전용 큐 (네 기존 코드 유지)
+      // 신경 x
       stompClient.subscribe('/user/queue/messages', function (message) {
         const personalMessage = JSON.parse(message.body);
       });
     });
   } // end
 
-  //화면의 안 읽은 카운트를 실시간으로 업데이트 하는 함수 (네 기존 코드 그대로 유지)
+/*  //화면의 안 읽은 카운트를 실시간으로 업데이트 하는 함수 (네 기존 코드 그대로 유지)
   function updateUnreadCountOnScreen() {
     $('.chat-unread-count').each(function() {
       const $this = $(this);
@@ -196,9 +203,9 @@
         }
       }
     });
-  }
+  }*/
 
-  //과거 메세지 이력 가져오기
+  //과거 메세지 이력 가져오기 - 과거 메세지를 모두 불러오면 스크롤을 맨 아래로 내리고, 읽었다는 신호를 보낸다.
   function loadMessageThisRoom() {
     $.getJSON(`/api/chat/loadMessage?roomId=\${currentRoomId}`, function (messages) {
       let messageInfo = messages.data;
@@ -234,7 +241,7 @@
           }
           else {
             $profile = $(`<div class="chat_avatar">
-                               <img src=""https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}""
+                               <img src="https://storage.googleapis.com/grouvy-bucket/\${message .profileImgPath}"
                                     alt="사용자 프로필 이미지"
                                     class="rounded-circle profile-photo"
                                     style="width: 40px; height: 40px; object-fit: cover;">
@@ -262,7 +269,7 @@
       // 메시지 모두 append 후 스크롤 맨 아래로
       $chatBody.scrollTop($chatBody.prop('scrollHeight'));
 
-      // ★ 방 입장 직후: 현재 화면 기준으로 읽음 통지
+      // 방 입장 직후: 현재 화면 기준으로 읽음 통지
       sendReadIfNeeded();
     });
   }
@@ -291,7 +298,7 @@
       }
       else {
         $profile = $(`<div class="chat_avatar">
-                               <img src="https://storage.googleapis.com/grouvy-bucket/\${friend.profileImgPath}"
+                               <img src="https://storage.googleapis.com/grouvy-bucket/\${chatMessage.profileImgPath}"
                                     alt="사용자 프로필 이미지"
                                     class="rounded-circle profile-photo"
                                     style="width: 40px; height: 40px; object-fit: cover;">
@@ -317,7 +324,7 @@
     $chatBody.append($wrapper);
     $chatBody.scrollTop($chatBody.prop('scrollHeight'));
 
-    // ★ 내가 지금 바닥에 있으면 새 메시지도 즉시 읽음 처리
+    //내가 지금 바닥에 있으면 새 메시지도 즉시 읽음 처리
     if (isAtBottom()) {
       // 서버가 chatMessageId를 넣어주고 있으니 그걸 경계로 보냄
       sendReadIfNeeded(chatMessage.chatMessageId);
@@ -370,9 +377,9 @@
     );
   }
 
-  let groupUserId = ${userIds}; // 기존 주석 유지
+  let groupUserId = ${userIds}; // 그룹 채팅을 하기 위한 직원들의 아이디를 저장하는 배열변수
 
-  // "대화 상대 추가" 버튼 클릭 시, 모달창 열기
+  // "대화 상대 추가" 버튼 클릭 시, 전체 조직도가 띄워진다.
   $("#add-participant").click(function (e) {
     console.log(groupUserId);
     e.preventDefault();
@@ -394,16 +401,13 @@
           `;
 
         for(let userInfo of deptAndUser.members){
-          let isDisabled = groupUserId.includes(userInfo.id) ? "disabled" : "";
-          let muteClass = groupUserId.includes(userInfo.id) ? "text-muted" : "";
           htmlContent += `
           <li class="list-group-item d-flex align-items-center">
             <input type="checkbox"
                    class="form-check-input user-checkbox me-2"
                    name="userId"
-                  value="\${userInfo.id}"
-                  \${isDisabled}>
-            <span class="\${muteClass}">\${userInfo.userName} <small class="text-muted">(\${userInfo.positionName})</small></span>
+                  value="\${userInfo.id}">
+            <span>\${userInfo.userName} <small class="text-muted">(\${userInfo.positionName})</small></span>
           </li>
           `;
         }
@@ -448,7 +452,6 @@
         let groupChatRoom = data.data;
         console.log("groupChatRoom:", groupChatRoom);
         let groupChatRoomId = groupChatRoom.roomId;
-        let groupChatRoomName = groupChatRoom.roomName;
         openChatPopup(groupChatRoomId);
       }
     });
@@ -473,6 +476,9 @@
         dataType: "json",
         contentType:  "application/json",
         success: function (data) {
+          if(window.opener && !window.opener.closed){
+            window.opener.renderChatList();
+          }
           window.close();
         }
       });
@@ -482,12 +488,15 @@
 
   // 연결 시작
   $(function () {
-    loadMessageThisRoom();
     connectWebSocket();
+    loadMessageThisRoom();
 
     localStorage.setItem("currentRoomId",currentRoomId);
     window.onbeforeunload = function () {
       localStorage.removeItem("currentRoomId");
+      if(window.opener && !window.opener.closed) {
+        window.opener.renderChatList();
+      }
     }
   });
 

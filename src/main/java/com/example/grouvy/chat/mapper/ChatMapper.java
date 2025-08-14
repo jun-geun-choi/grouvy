@@ -183,4 +183,5 @@ public interface ChatMapper {
    * @return
    */
   public List<ChatRoomDto> getChatRoomList(int userId);
+
 }

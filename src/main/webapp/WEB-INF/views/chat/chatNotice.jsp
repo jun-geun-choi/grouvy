@@ -182,7 +182,7 @@
     const $msgTime = $("#msg-time");
 
     // 1:1 채팅 또는 그룹 채팅에 따라 이름 설정
-    if (isGroup == "Y") {
+    if ( roomName != null) {
       $msgName.text(roomName);
     } else {
       $msgName.text(userName + "님의 메세지");
@@ -205,7 +205,7 @@
         $popup.addClass("hide");
         setTimeout(() => $popup.hide(), 300);
       }
-    }, 1000); // 5초 (5000ms), 시간은 원하시는 대로 조절 가능합니다.
+    }, 2000); // 5초 (5000ms), 시간은 원하시는 대로 조절 가능합니다.
 
     // 배너 클릭 시 채팅창 열기 (이벤트 중복을 막기 위해 .off().on() 사용)
     $("#notice-body").off('click').on('click', function() {
@@ -214,13 +214,13 @@
 
       if (isGroup == "N") {
         window.open(
-                `/chat/chatting?roomId=${roomId}&selectUserId=${selectUserId}`,
+                `/chat/chatting?roomId=\${roomId}`,
                 '_blank',
                 'width=420,height=650,resizable=no,scrollbars=no'
         );
       } else if (isGroup == "Y") {
         window.open(
-                `/chat/groupChatting?roomId=${roomId}&roomName=${roomName}`,
+                `/chat/chatting?roomId=\${roomId}`,
                 '_blank',
                 'width=420,height=650,resizable=no,scrollbars=no'
         );

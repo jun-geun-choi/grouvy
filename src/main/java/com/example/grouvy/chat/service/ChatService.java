@@ -150,16 +150,13 @@ public class ChatService {
   }
 
   public List<ChatRoomDto> getChatRoomList(int userId) {
-    List<ChatRoomDto> list = chatMapper.getChatRoomList(userId);
+    List<ChatRoomDto> list =  new ArrayList<>();
+    list = chatMapper.getChatRoomList(userId);
     for(ChatRoomDto dto : list) {
-      if(dto.getIsGroup() == "Y") {
-        dto.setProfileImgPath("그룹");
-      }
       if(dto.getLastMessage() == null) {
-        dto.setLastMessage("채팅을 시작하세요!");
+        dto.setLastMessage("새로운 채팅을 시작하세요!");
       }
     }
-
     return list;
   }
 
@@ -201,6 +198,8 @@ public class ChatService {
 
   /**
    * 사용자들의 id와, 그 인원 수로 채팅방을 조회 해보고, 없으면 새로 만든다.
+   * - 1:1 채팅방의 경우, 채팅방을 재활용해야되는 경우도 생각을 해야되기 때문에, isAcvtive = "Y"의 경우는 배제 시킨다.
+   * - 단, 그룹 채팅의 경우 재활용하지 않는다.
    *
    * @param
    * @param
@@ -238,6 +237,7 @@ public class ChatService {
           if (user.getUserId() == userId && "N".equals(user.getIsActive())) {
             user.setIsActive("Y");
             user.setJoinDate(LocalDateTime.now());
+            user.setLeftDate(null);
             chatMapper.updateChatRoomUser(user);
           }
         }
@@ -319,7 +319,7 @@ public class ChatService {
   public List<ChatRoomUser> getChatRoomUserByRoomId(int roomId) {
     Map<String, Object> condition = new HashMap<>();
     condition.put("roomId", roomId);
-    condition.put("isActive", "Y");
+    condition.put("isActive", "N");
     return chatMapper.getChatRoomUserByRoomId(condition);
   }
 
@@ -506,7 +506,8 @@ public class ChatService {
    * 메세지를 등록시킬 때, @MessageMapping 메소드에서 ChatMessage 객체를 받아와서, 메시지 테이블 등록 -> 마지막 메세지 채팅방 테이블에 등록 ->
    * 다시 DB에 있는 애 꺼내고 -> DTO 객체 바인딩 후 반환
    *
-   * @param chatMessage
+   * 여기서는 unreadCnt,
+   * @param chatMessage : content, roomId, messageType, userId가 자동 바인딩 된 상태.
    * @return
    */
   public ChatMessageDto addMessageService(ChatMessage chatMessage) {
