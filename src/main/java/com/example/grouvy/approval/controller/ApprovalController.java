@@ -38,7 +38,7 @@ public class ApprovalController {
     @PostMapping("/create")
     public String create(ApprovalRequest approvalRequest) {
         approvalService.createApproval(approvalRequest);
-        return "redirect:/approval/main/wait";
+        return "redirect:/approval/main/request";
     }
 
     @PostMapping("/createDelegatee")

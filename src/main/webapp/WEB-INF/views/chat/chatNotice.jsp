@@ -1,4 +1,3 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" pageEncoding="UTF-8" %>
 <!-- 알림 배너 컨테이너 -->
 <div class="grouvy-notice-popup hide" id="notice-popup" style="display: none;">

@@ -1,6 +1,6 @@
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.text.SimpleDateFormat, java.util.Date" %>
+<%@ include file="../../common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -171,7 +171,7 @@
 </head>
 <body>
 <sec:authentication property="principal.user" var="user"/>
-<jsp:include page="/WEB-INF/views/common/nav.jsp" />
+<%@include file="../../common/nav.jsp" %>
 <main>
     <div class="container">
         <jsp:include page="/WEB-INF/views/approval/common/sidebar.jsp" />
@@ -412,7 +412,7 @@
     function updateDeleteButtons() {
         const rows = document.querySelectorAll('#bookTableBody tr');
         const deleteButtons = document.querySelectorAll('.deleteBookRow');
-        
+
         if (rows.length === 1) {
             // 책이 한 권만 있으면 삭제 버튼 비활성화
             deleteButtons.forEach(btn => {
@@ -517,7 +517,7 @@ async function renderApprovalLine(approvers) {
 // 결재선이 지정되지 않았을 때 기본값(기안자만)
 document.addEventListener('DOMContentLoaded', function() {
   renderApprovalLine([]);
-  
+
   // 수령희망일 최소값을 오늘로 설정
   const today = new Date().toISOString().split('T')[0];
   document.querySelector('input[name="desiredDate"]').min = today;
@@ -538,7 +538,7 @@ window.setApprovalLine = function(approvers) {
             titleInput.focus();
             return;
         }
-        
+
         // 구입사유 필수 입력 검증
         const reasonTextarea = document.querySelector('textarea');
         if (!reasonTextarea.value.trim()) {
@@ -581,14 +581,14 @@ window.setApprovalLine = function(approvers) {
             const author = row.querySelector('td:nth-child(3) input').value.trim();
             const quantity = row.querySelector('td:nth-child(4) input').value.trim();
             const price = row.querySelector('td:nth-child(5) input').value.trim();
-            
+
             if (!title || !publisher || !author || !quantity || !price) {
                 e.preventDefault();
                 alert(`도서목록의 모든 항목을 입력해주세요.`);
                 return;
             }
         }
-        
+
         // 결재선 필수 입력 검증
         const approversData = document.getElementById('approversData').value;
         if (!approversData.trim()) {
@@ -596,7 +596,7 @@ window.setApprovalLine = function(approvers) {
             alert('결재선을 추가해주세요.');
             return;
         }
-        
+
         const details = {
             requestDept: document.getElementById('requestDept').value,
             desiredDate: document.querySelector('input[name="desiredDate"]').value,
@@ -614,6 +614,14 @@ window.setApprovalLine = function(approvers) {
         document.getElementById('detailsClobInput').value = JSON.stringify(details);
         // (이후 폼은 자동 제출)
     });
+</script>
+<%@include file="/WEB-INF/views/chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+  // 최초 연결
+  connectNoticeSocket();
 </script>
 </body>
 </html>
