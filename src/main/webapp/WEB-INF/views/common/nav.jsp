@@ -34,7 +34,7 @@
               <sec:authentication property="principal.user.profileImgPath"/>
             </c:set>
             <c:choose>
-              <c:when test="${empty profilePath or profilePath eq 'null'}">
+              <c:when test="${(empty profilePath) or (profilePath eq 'null')}">
                 <img src="https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg" alt="기본 프로필"
                      class="rounded-circle" width="36" height="36"/>
               </c:when>

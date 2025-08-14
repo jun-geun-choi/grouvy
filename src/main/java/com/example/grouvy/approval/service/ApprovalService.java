@@ -8,11 +8,13 @@ import com.example.grouvy.approval.vo.Delegation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Transactional
 @Service
 public class ApprovalService {
 
@@ -114,6 +116,7 @@ public class ApprovalService {
                 approvalMapper.updateApprovalApproveStatus(approvalDecisionRequest.getApprovalNo());
                 approvalMapper.updateApproveCompletedDate(step,approvalDecisionRequest.getApprovalNo());
             }
+
           // 결재가 반려라면..
         } else {
             // 결재자의 상태(진행중 -> 반려), decisionDate를 업데이트

@@ -1,5 +1,5 @@
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ include file="../../common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -299,7 +299,7 @@
   </style>
 </head>
 <body>
-  <jsp:include page="/WEB-INF/views/common/nav.jsp" />
+<%@include file="../../common/nav.jsp" %>
   <main>
     <div class="container">
         <jsp:include page="/WEB-INF/views/approval/common/sidebar.jsp" />
@@ -366,5 +366,13 @@
   <footer>© 2025 그룹웨어 Corp.</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<%@include file="/WEB-INF/views/chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+  // 최초 연결
+  connectNoticeSocket();
+</script>
 </body>
 </html> 

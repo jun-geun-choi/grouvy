@@ -1,8 +1,5 @@
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ include file="../../common/taglib.jsp" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -303,7 +300,7 @@
 </head>
 <body>
 <sec:authentication property="principal.user" var="user"/>
-  <jsp:include page="/WEB-INF/views/common/nav.jsp" />
+<%@include file="../../common/nav.jsp" %>
   <main>
     <div class="container">
         <jsp:include page="/WEB-INF/views/approval/common/sidebar.jsp" />
@@ -511,5 +508,13 @@
       });
     });
   </script>
+<%@include file="/WEB-INF/views/chat/chatNotice.jsp" %>
+<script src="<c:url value="/resources/js/chat/chatNoticeSocket.js"/>"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+  // 최초 연결
+  connectNoticeSocket();
+</script>
 </body>
 </html> 

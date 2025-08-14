@@ -11,6 +11,8 @@
              , department_name      departmentName
              , parent_department_id parentDepartmentId
         from grouvy_departments
+        WHERE
+            IS_DELETED = 'N'
     </select>
 
     <!--
@@ -491,6 +493,7 @@
             GROUVY_APPROVAL
         WHERE
             WRITER_ID = #{empNo}
+        ORDER BY CREATED_DATE DESC
     </select>
 
     <!--
