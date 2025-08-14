@@ -270,6 +270,9 @@
                                 <h6 class="fw-bold mb-2 "><a href="/task/request/receive" class="text-decoration-none text-dark">수신 업무 요청</a></h6>
                                 <div class="text-muted small">
                                     <ul class="list-group list-group-flush">
+                                    <c:if test="${empty receiveRequestList}">
+                                        <div class="text-muted small">수신한 업무 요청이 없습니다.</div>
+                                    </c:if>
 
                                         <c:forEach var="request" items="${receiveRequestList}" varStatus="st">
                                           <c:if test="${st.count <= 5}">
@@ -316,13 +319,16 @@
                                 <h6 class="fw-bold mb-2 "><a href="/task/report/receive" class="text-decoration-none text-dark">수신 업무 보고</a></h6>
                                 <div class="text-muted small">
                                     <ul class="list-group list-group-flush">
+                                    <c:if test="${empty receiveReportList}">
+                                        <div class="text-muted small">수신한 업무 보고가 없습니다.</div>
+                                    </c:if>
 
                                         <c:forEach var="report" items="${receiveReportList}" varStatus="st">
                                           <c:if test="${st.count <= 5}">
                                             <li class="list-group-item px-0 py-2">
                                               <div class="d-flex justify-content-between align-items-start">
                                                 <div class="me-2">
-                                                  <a href="/task/request/detail/${report.taskId}" class="text-decoration-none text-dark fw-semibold text-truncate d-block" style="max-width: 400px;">
+                                                  <a href="/task/detail/${report.taskId}" class="text-decoration-none text-dark fw-semibold text-truncate d-block" style="max-width: 400px;">
                                                     ${report.title}
                                                   </a>
                                                   <div class="small text-muted mt-1">
@@ -343,12 +349,6 @@
                                         </c:forEach>
                                       </ul>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card p-3 h-100">
-                                <h6 class="fw-bold mb-2">업무 문서함</h6>
-                                <div class="text-muted small">해당하는 데이터가 없습니다.</div>
                             </div>
                         </div>
                         <div class="col-12">
