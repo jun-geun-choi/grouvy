@@ -488,15 +488,15 @@
 
   // 연결 시작
   $(function () {
-    loadMessageThisRoom();
     connectWebSocket();
+    loadMessageThisRoom();
 
     localStorage.setItem("currentRoomId",currentRoomId);
     window.onbeforeunload = function () {
+      localStorage.removeItem("currentRoomId");
       if(window.opener && !window.opener.closed) {
         window.opener.renderChatList();
       }
-      localStorage.removeItem("currentRoomId");
     }
   });
 

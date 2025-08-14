@@ -183,7 +183,7 @@
     const $msgTime = $("#msg-time");
 
     // 1:1 채팅 또는 그룹 채팅에 따라 이름 설정
-    if (isGroup == "Y") {
+    if ( roomName != null) {
       $msgName.text(roomName);
     } else {
       $msgName.text(userName + "님의 메세지");
