@@ -1,7 +1,6 @@
 package com.example.grouvy.chat.mapper;
 
 import com.example.grouvy.chat.dto.ChatRoomDto;
-import com.example.grouvy.chat.dto.ChatRoomDto2;
 import com.example.grouvy.chat.vo.ChatMessage;
 import com.example.grouvy.chat.vo.ChatRoom;
 import com.example.grouvy.chat.vo.ChatRoomUser;
@@ -185,7 +184,4 @@ public interface ChatMapper {
    */
   public List<ChatRoomDto> getChatRoomList(int userId);
 
-  public List<ChatRoomDto2> getChatRoomListNoProfileAndRoomNameByUserId(int userId);
-
-  public List<ChatRoomUser> getChatRoomListAddProfileAndNameByUserId(int userId);
 }

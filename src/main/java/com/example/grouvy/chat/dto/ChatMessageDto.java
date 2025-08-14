@@ -19,6 +19,7 @@ public class ChatMessageDto {
 
 
   private String isGroup;
+  private String roomName;
 
   //User 정보
   private String name;
@@ -40,6 +41,7 @@ public class ChatMessageDto {
     this.profileImgPath = chatMessage.getUser().getProfileImgPath();
     this.unreadCnt = chatMessage.getUnreadCnt();
     this.isGroup = chatMessage.getChatRoom().getIsGroup();
+    this.roomName = chatMessage.getChatRoom().getRoomName();
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월 dd일");
     SimpleDateFormat timeFormat = new SimpleDateFormat("a h시 mm분", Locale.KOREAN);

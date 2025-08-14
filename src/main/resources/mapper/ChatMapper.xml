@@ -208,6 +208,7 @@
              , U.NAME                 AS "user.name"
              , U.PROFILE_IMG_PATH     AS "user.profileImgPath"
              ,R.IS_GROUP              AS "chatRoom.isGroup"
+             ,R.ROOM_NAME             AS "chatRoom.roomName"
         FROM GROUVY_CHAT_MESSAGES M,
              GROUVY_USERS U,
              GROUVY_CHAT_ROOMS R
@@ -465,67 +466,5 @@
             ) base
 
         ORDER BY base.lastMessageDate DESC NULLS LAST
-
-
     </select>
-
-    <!--
-        public List<ChatRoomDto2> getChatRoomListNoProfileAndRoomNameByuserId(int userId);
-        - 사용자가 참여한 채팅방의 정보를 가져온다. -
-    -->
-    <select id="getChatRoomListNoProfileAndRoomNameByUserId" resultType="com.example.grouvy.chat.dto.ChatRoomDto2">
-        SELECT
-              R.ROOM_ID                                                                    AS roomId
-             ,R.IS_GROUP                                                                   AS isGroup
-             ,R.LAST_MESSAGE_DATE                                                          AS lastMessageDate
-             ,R.ROOM_NAME                                                                  AS roomName
-             ,CASE
-                  WHEN R.LAST_MESSAGE_DATE >= CU.JOIN_DATE   THEN R.LAST_MESSAGE_CONTENT
-                  ELSE TO_CLOB('채팅을 시작하세요!')
-            END                                                                            AS lastMessage
-             ,
-            (SELECT COUNT(M.CHAT_MESSAGE_ID)
-             FROM GROUVY_CHAT_MESSAGES M
-             WHERE M.ROOM_ID = R.ROOM_ID
-               AND M.SENDER_ID != #{userId}
-            AND M.CHAT_MESSAGE_ID > NVL(CU.LAST_READ_MESSAGE_ID, 0))                       AS unreadCnt
-
-
-        FROM
-            GROUVY_CHAT_ROOMS R
-          ,GROUVY_CHAT_ROOM_USERS CU
-        WHERE
-            R.ROOM_ID = CU.ROOM_ID
-          AND CU.USER_ID = #{userId}
-          AND CU.IS_ACTIVE = 'Y'
-        ORDER BY R.LAST_MESSAGE_DATE DESC NULLS LAST
-    </select>
-
-    <!--public List<ChatRoomUser> getChatRoomListAddProfileAndNameByUserId(int userId);-->
-    <select id="getChatRoomListAddProfileAndNameByUserId" resultType="ChatRoomUser">
-        SELECT DISTINCT
-            R.ROOM_ID                           AS roomId
-            ,OTHER_USER.NAME                    AS "user.name"
-            ,OTHER_USER.PROFILE_IMG_PATH        AS "user.profileImgPath"
-        FROM
-            GROUVY_CHAT_ROOM_USERS MY_INFO,
-            GROUVY_CHAT_ROOM_USERS OTHER_INFO,
-            GROUVY_USERS OTHER_USER,
-            GROUVY_CHAT_ROOMS R
-        WHERE
-            R.ROOM_ID = MY_INFO.ROOM_ID
-          AND R.IS_GROUP = 'N'
-          AND MY_INFO.USER_ID = #{userId}
-          AND MY_INFO.IS_ACTIVE = 'Y'
-
-          AND MY_INFO.ROOM_ID = OTHER_INFO.ROOM_ID
-          AND MY_INFO.USER_ID != OTHER_INFO.USER_ID
-
-  AND OTHER_INFO.USER_ID = OTHER_USER.USER_ID
-
-        ORDER BY
-            OTHER_USER.NAME
-    </select>
-
-
 </mapper>
