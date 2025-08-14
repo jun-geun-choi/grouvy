@@ -1,5 +1,5 @@
 <%@ page import="com.example.grouvy.schedule.mapper.ScheduleMapper" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" language="java" pageEncoding="UTF-8"%>
 <%@include file="../common/taglib.jsp" %>
 <%--<%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
