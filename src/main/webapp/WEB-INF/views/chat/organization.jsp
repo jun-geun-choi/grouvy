@@ -168,39 +168,45 @@
     // 조직도 직원 선택 및 하단 버튼 동작
     let orgSelectedMembers = new Set();
 
-    //체크박스, 대화버튼, 친구 추가 버튼 누를 때 이벤트 설정 - 채팅방 열기 ->
+    // ✅ 중복 방지: Set으로 관리
+    let userIds = new Set();           // 선택된 직원 id
+    let userNams = new Set();          // 선택된 직원 이름
+
+    function resetSelectionSetsToSelf() {
+      userIds = new Set([userId]);
+      userNams = new Set([currentUserName]);
+    }
+
+    // 체크박스, 대화버튼, 친구 추가 버튼 이벤트 설정
     function setupOrgMemberSelection() {
       orgSelectedMembers = new Set();
+      resetSelectionSetsToSelf();
       updateOrgSelectedCount();
 
-      let userIds = [userId];           // 그룹 채팅이나, 친구 추가에 사용될, 선택된 직원들 id 목록
-      let userNams =[currentUserName];  // 그룹 채팅에 사용하기 위한 선택된 유저들의 이름들을 모은다.
+      // 체크박스 선택/해제
+      $('#org-list').off('change', '.org-member-checkbox').on('change', '.org-member-checkbox', function () {
+        const memberId = parseInt($(this).data('member-id'));
+        const memberName = $(this).data('member-name');
 
-      // 체크박스 클릭시, 이벤트 -> 그룹 채팅 or 친구 추가에서 사용될 사용자 아이디도 같이 넣어 놓는다.
-      $('#org-list').off('change', '.org-member-checkbox').on('change','.org-member-checkbox', function () {
-          const name = $(this).data('member-name');
-           userIds.push(parseInt($(this).data('member-id')));
-           userNams.push($(this).data('member-name'));
-
-          if (this.checked) {
-            orgSelectedMembers.add(JSON.stringify({name}));
-          } else {
-            orgSelectedMembers.delete(JSON.stringify({name}));
-          }
-          updateOrgSelectedCount();
+        if (this.checked) {
+          userIds.add(memberId);
+          userNams.add(memberName);
+          orgSelectedMembers.add(memberId); // 고유 id로 관리
+        } else {
+          userIds.delete(memberId);
+          userNams.delete(memberName);
+          orgSelectedMembers.delete(memberId);
+        }
+        updateOrgSelectedCount();
       });
 
-      // 친구추가 버튼 클릭 이벤트
+      // 친구추가 버튼
       $('#org-add-friend-btn').off('click').on('click', function () {
         if (orgSelectedMembers.size === 0) {
           return alert('직원을 선택하세요.');
         }
-        let userData = {id : userIds};
 
-        // 이미 선택된 사용자를 다시 추가하지 않도록 체크박스 해제 및 orgSelectedMembers 초기화
-        $('.org-member-checkbox:checked').prop('checked', false);
-        orgSelectedMembers.clear();
-        updateOrgSelectedCount();
+        const userData = { id: Array.from(userIds) };
 
         $.ajax({
           type: "POST",
@@ -209,30 +215,32 @@
           data: JSON.stringify(userData),
           dataType: "json",
           success: function (data) {
-            console.log(data)
+            console.log(data);
             showAlert('성공적으로 추가되었습니다.', 'success');
+
+            // 체크박스 해제 & 선택 초기화
+            $('.org-member-checkbox:checked').prop('checked', false);
+            orgSelectedMembers.clear();
+            resetSelectionSetsToSelf();
+            updateOrgSelectedCount();
           }
         });
-
-
       });
 
-      // 대화 버튼 클릭 이벤트
+      // 대화 버튼
       $('#org-chat-btn').off('click').on('click', function () {
         if (orgSelectedMembers.size === 0) {
           return alert('직원을 선택하세요.');
         }
 
-        let groupRoomName ="";
-        // 유저 이름들 만들기
-        for(let name1 of userNams) {
-          groupRoomName += name1 + ' ';
-        }
+        // 그룹방 이름: 선택된 사용자 이름 + 본인 이름
+        const namesArr = Array.from(userNams);
+        const groupRoomName = namesArr.join(' ');
 
-        let groupData = {
-          id: userIds,
+        const groupData = {
+          id: Array.from(userIds),
           name: groupRoomName,
-        }
+        };
         console.log(groupData);
 
         $.ajax({
@@ -242,10 +250,16 @@
           data: JSON.stringify(groupData),
           dataType: "json",
           success: function (data) {
-            let groupChatRoom = data.data;
+            const groupChatRoom = data.data;
             console.log("groupChatRoom:", groupChatRoom);
-            let roomId = groupChatRoom.roomId;
+            const roomId = groupChatRoom.roomId;
             openChatPopup(roomId);
+
+            // 체크박스 해제 & 선택 초기화
+            $('.org-member-checkbox:checked').prop('checked', false);
+            orgSelectedMembers.clear();
+            resetSelectionSetsToSelf();
+            updateOrgSelectedCount();
           }
         });
       });
@@ -264,7 +278,7 @@
       );
     }
 
-    // 알림창을 표시하는 함수
+    // 알림창 표시
     function showAlert(message, type) {
       const alertHtml = `
     <div class="alert alert-\${type} alert-dismissible fade show" role="alert">
@@ -273,26 +287,20 @@
     </div>
   `;
 
-      // 1. 새로운 알림창 jQuery 객체를 먼저 생성합니다.
       const $newAlert = $(alertHtml);
-
-      // 2. 생성한 객체를 컨테이너에 추가합니다.
       $('#alert-container').append($newAlert);
 
-      // 3. 3초 후에 해당 객체가 사라지도록 설정합니다.
       setTimeout(() => {
         $newAlert.fadeOut(500, function() {
-          // fadeOut 애니메이션이 끝난 후 요소를 완전히 제거합니다.
           $(this).remove();
         });
-      }, 1000); // 3000ms = 3초
+      }, 1000);
     }
 
     // 컨텍스트 메뉴 & 프로필 모달
     const contextMenu = document.getElementById('context-menu');
-    let contextMenuTarget = null;                   //우클릭 눌렀을 때 요소 저장
+    let contextMenuTarget = null;
 
-    // 컨텍스트 메뉴 닫기, 다른 곳 클릭하거나, 했을 때도 적용.
     function closeContextMenu() {
       $('#context-menu').hide();
       contextMenuTarget = null;
@@ -300,38 +308,36 @@
     $(document).on('click', closeContextMenu);
     $(window).on('scroll resize', closeContextMenu);
 
-    // 조직도 직원 우클릭 메뉴
     function setupMemberContextMenu(selector) {
       $(selector).off('contextmenu').on('contextmenu', function (e) {
         e.preventDefault();
         closeContextMenu();
 
         contextMenuTarget = this;
-        let selectUserId = $(this).data('member-id');
-        console.log("selectUserId: ",selectUserId);
+        const selectUserId = $(this).data('member-id');
+        console.log("selectUserId: ", selectUserId);
 
-        // "프로필 상세보기" 버튼 누르게 되면 데이터가 온단다
-        let menuHtml = `<button id='view-profile-btn'>프로필 상세 보기</button>`;
+        const menuHtml = `<button id='view-profile-btn'>프로필 상세 보기</button>`;
         $('#context-menu').html(menuHtml).css({
           top: e.clientY + 'px',
           left: e.clientX + 'px'
         }).show();
+
         $('#view-profile-btn').off('click').on('click', function () {
           closeContextMenu();
-          $.getJSON(`/api/chat/userInfo?userId=\${selectUserId}`,function (data) {
-            let result = data.data;
-            let profileImg = result.profileImgPath
-                    ? `https://storage.googleapis.com/grouvy-bucket/\${member.imgPath}`
+          $.getJSON(`/api/chat/userInfo?userId=\${selectUserId}`, function (data) {
+            const result = data.data;
+            const profileImg = result.profileImgPath
+                    ? `https://storage.googleapis.com/grouvy-bucket/\${result.profileImgPath}`
                     : `https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg`;
 
-            let htmlContent = "";
-            htmlContent += `
-            <img src='\${profileImg}' class='modal_profile_img mb-2'>
-            <div class='mb-2'><span class='modal_profile_label'>이름: </span><span class='modal_profile_value'>\${result.name}</span></div>
-            <div class='mb-2'><span class='modal_profile_label'>직급: </span><span class='modal_profile_value'>\${result.positionName}</span></div>
-            <div class='mb-2'><span class='modal_profile_label'>부서: </span><span class='modal_profile_value'>\${result.deptName}</span></div>
-            <div class='mb-2'><span class='modal_profile_label'>연락처: </span><span class='modal_profile_value'>\${result.phoneNumber}</span></div>
-            <div class='mb-2'><span class='modal_profile_label'>이메일: </span><span class='modal_profile_value'>\${result.email}</span></div>
+            const htmlContent = `
+              <img src='\${profileImg}' class='modal_profile_img mb-2'>
+              <div class='mb-2'><span class='modal_profile_label'>이름: </span><span class='modal_profile_value'>\${result.name}</span></div>
+              <div class='mb-2'><span class='modal_profile_label'>직급: </span><span class='modal_profile_value'>\${result.positionName}</span></div>
+              <div class='mb-2'><span class='modal_profile_label'>부서: </span><span class='modal_profile_value'>\${result.deptName}</span></div>
+              <div class='mb-2'><span class='modal_profile_label'>연락처: </span><span class='modal_profile_value'>\${result.phoneNumber}</span></div>
+              <div class='mb-2'><span class='modal_profile_label'>이메일: </span><span class='modal_profile_value'>\${result.email}</span></div>
             `;
 
             $('#profile-modal-body').html(htmlContent);
@@ -340,16 +346,6 @@
         });
       });
     }
-
-    // 채팅방 이름으로 팝업 오픈
-    /*function openChatPopupByName(name) {
-      let idx = chatRooms.findIndex(r => r.name === name);
-      if (idx === -1) {
-        chatRooms.push({id: chatRooms.length, name, last: '-', unread: 0});
-        idx = chatRooms.length - 1;
-      }
-      openChatPopup(idx);
-    }*/
 
     // 페이지 로드 시 조직도 리스트 렌더링
     $(document).ready(function () {
