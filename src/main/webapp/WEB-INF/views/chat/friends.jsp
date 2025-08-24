@@ -362,8 +362,11 @@
             $.getJSON(`/api/chat/userInfo?userId=\${selectUserId}`, function (data) {     // 직원 정보를 ajax로 받는다.
               console.log(data);
               let result = data.data;
+              let profileImg = result.profileImgPath
+                  ? `https://storage.googleapis.com/grouvy-bucket/\${member.imgPath}`
+                  : `https://storage.googleapis.com/grouvy-bucket/default-profile.jpeg`;
               htmlContent += `
-             <img src='\${result.profileImgPath}' class='modal_profile_img mb-2'>
+             <img src='\${profileImg}' class='modal_profile_img mb-2'>
             <div class='mb-2'><span class='modal_profile_label'>이름: </span><span class='modal_profile_value'>\${result.name}</span></div>
             <div class='mb-2'><span class='modal_profile_label'>직급: </span><span class='modal_profile_value'>\${result.positionName}</span></div>
             <div class='mb-2'><span class='modal_profile_label'>부서: </span><span class='modal_profile_value'>\${result.deptName}</span></div>

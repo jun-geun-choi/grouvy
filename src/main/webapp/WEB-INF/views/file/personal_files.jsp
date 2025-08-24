@@ -446,8 +446,6 @@ footer {
 <body>
 <%@include file="../common/nav.jsp" %>
 
-<%@ include file="../common/nav.jsp" %>
-
     <main>
         <div class="container">
             <div class="sidebar">
